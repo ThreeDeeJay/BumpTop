@@ -1,0 +1,52 @@
+#Template from: https://github.com/ThreeDeeJay/GitHub-Actions-build-templates/blob/main/Windows-MSBuild.yml
+name: Build
+
+env:
+  GH_TOKEN: ${{github.token}}
+  Branch: ${{github.ref_name}}
+  Platform: #Any CPU|Win32|x86|x64 - Check .sln file for available ones
+  Configuration: Release
+  Artifacts: build/Release
+  Title: ${{github.event.repository.name}}
+  Solution: ${{github.event.repository.name}}.sln # .
+  Executable: ${{github.event.repository.name}}.exe # *
+  DXSDK_DIR: C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\
+
+on:
+  push:
+    Branches: $Branch
+  pull_request:
+    Branches: $Branch
+  workflow_dispatch:
+
+jobs:
+  Windows:
+    runs-on: windows-2022
+    steps:
+
+    - name: Clone repo and submodules
+      run: git clone --recurse-submodules https://${{github.repository_owner}}:${{github.token}}@github.com/${{github.repository}}.git "${{github.workspace}}" --branch ${{env.Branch}}
+
+    - name: Get current date, commit hash and count
+      run: |
+        echo "FirstCommitHash=$(git rev-list --max-parents=0 HEAD)" >> $env:GITHUB_ENV
+        echo "CommitHash=$(git rev-parse HEAD)" >> $env:GITHUB_ENV
+        echo "CommitHashShort=$(git rev-parse --short=7 HEAD)" >> $env:GITHUB_ENV
+        echo "CommitCount=$(git rev-list --count HEAD)" >> $env:GITHUB_ENV
+        echo "CommitDate=$(git show -s --date=format:'%Y-%m-%d' --format=%cd)" >> $env:GITHUB_ENV
+
+    - name: Cache DirectX SDK
+      id: DXSDK_Jun10
+      uses: actions/cache@v4
+      with:
+        path: ${{env.DXSDK_DIR}}
+        key: DXSDK_Jun10
+    - name: Install DirectX SDK
+      if: steps.DXSDK_Jun10.outputs.cache-hit != 'true'
+      shell: powershell
+      run: |
+        Invoke-WebRequest -Method Get -Uri https://download.microsoft.com/download/a/e/7/ae743f1f-632b-4809-87a9-aa1bb3458e31/DXSDK_Jun10.exe -OutFile DXSDK_Jun10.exe -UseBasicParsing
+        Start-Process -Wait ./DXSDK_Jun10.exe -ArgumentList "/U"
+    - name: Set DXSDK_DIR
+      run: echo "DXSDK_DIR=C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\" >> $env:GITHUB_ENV
+
