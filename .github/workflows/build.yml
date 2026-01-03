@@ -54,7 +54,7 @@ jobs:
       shell: powershell
       run: |
         Invoke-WebRequest -Method Get -Uri https://www.python.org/ftp/python/2.6.6/python-2.6.6.msi -OutFile python-2.6.6.msi -UseBasicParsing
-        Start-Process -Wait ./python-2.6.6.msi -ArgumentList "/quiet" "InstallAllUsers=1" "PrependPath=1" 
+        Start-Process -Wait ./python-2.6.6.msi -ArgumentList "/quiet", "InstallAllUsers=1", "PrependPath=1" 
 
     - name: Install Qt
       uses: jurplel/install-qt-action@v4
