@@ -58,126 +58,130 @@ jobs:
     - name: Download dependencies
       run: |
         curl http://download.qt-project.org/archive/qt/4.6/qt-everywhere-opensource-src-4.6.1.tar.gz -o "trunk/mac/Dependencies/qt-everywhere-opensource-src-4.6.1.tar.gz"
-        curl https://raw.githubusercontent.com/TortoiseGit/tortoisesvn/refs/heads/master/src/SVN/SVNRev.h -o "trunk/win/Source/BT_SVNRevision.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_opt.h -o "trunk/win/Source/svn_opt.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_delta.h -o "trunk/win/Source/svn_delta.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_opt_impl.h -o "trunk/win/Source/svn_opt_impl.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/mod_authz_svn.h -o "trunk/win/Source/mod_authz_svn.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/mod_dav_svn.h -o "trunk/win/Source/mod_dav_svn.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_auth.h -o "trunk/win/Source/svn_auth.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_base64.h -o "trunk/win/Source/svn_base64.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_cache_config.h -o "trunk/win/Source/svn_cache_config.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_checksum.h -o "trunk/win/Source/svn_checksum.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_client.h -o "trunk/win/Source/svn_client.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_cmdline.h -o "trunk/win/Source/svn_cmdline.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_compat.h -o "trunk/win/Source/svn_compat.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_config.h -o "trunk/win/Source/svn_config.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_ctype.h -o "trunk/win/Source/svn_ctype.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_dav.h -o "trunk/win/Source/svn_dav.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_diff.h -o "trunk/win/Source/svn_diff.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_dirent_uri.h -o "trunk/win/Source/svn_dirent_uri.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_dso.h -o "trunk/win/Source/svn_dso.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_error.h -o "trunk/win/Source/svn_error.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_error_codes.h -o "trunk/win/Source/svn_error_codes.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_fs.h -o "trunk/win/Source/svn_fs.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_hash.h -o "trunk/win/Source/svn_hash.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_io.h -o "trunk/win/Source/svn_io.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_iter.h -o "trunk/win/Source/svn_iter.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_md5.h -o "trunk/win/Source/svn_md5.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_mergeinfo.h -o "trunk/win/Source/svn_mergeinfo.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_nls.h -o "trunk/win/Source/svn_nls.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_path.h -o "trunk/win/Source/svn_path.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_pools.h -o "trunk/win/Source/svn_pools.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_props.h -o "trunk/win/Source/svn_props.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_quoprint.h -o "trunk/win/Source/svn_quoprint.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_ra.h -o "trunk/win/Source/svn_ra.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_ra_svn.h -o "trunk/win/Source/svn_ra_svn.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_repos.h -o "trunk/win/Source/svn_repos.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_sorts.h -o "trunk/win/Source/svn_sorts.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_string.h -o "trunk/win/Source/svn_string.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_subst.h -o "trunk/win/Source/svn_subst.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_time.h -o "trunk/win/Source/svn_time.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_types.h -o "trunk/win/Source/svn_types.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_types_impl.h -o "trunk/win/Source/svn_types_impl.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_user.h -o "trunk/win/Source/svn_user.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_utf.h -o "trunk/win/Source/svn_utf.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_version.h -o "trunk/win/Source/svn_version.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_wc.h -o "trunk/win/Source/svn_wc.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_x509.h -o "trunk/win/Source/svn_x509.h"
-        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_xml.h -o "trunk/win/Source/svn_xml.h"
-        New-Item -ItemType File -Path 'trunk\win\Source\apr.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_allocator.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_anylock.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_atomic.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_base64.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_buckets.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_buffer.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_crypto.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_cstr.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_date.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_dbd.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_dbm.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_dso.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_encode.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_env.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_errno.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_escape.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_file_info.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_file_io.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_fnmatch.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_general.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_getopt.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_global_mutex.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_hash.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_hooks.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_inherit.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_jose.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_json.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_ldap.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_lib.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_md4.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_md5.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_memcache.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_mmap.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_network_io.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_optional.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_optional_hooks.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_perms_set.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_poll.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_pools.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_portable.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_proc_mutex.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_queue.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_random.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_redis.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_reslist.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_ring.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_rmm.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_sdbm.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_sha1.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_shm.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_signal.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_siphash.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_skiplist.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_strings.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_strmatch.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_tables.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_thread_cond.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_thread_mutex.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_thread_pool.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_thread_proc.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_thread_rwlock.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_time.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_uri.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_user.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_uuid.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_version.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_want.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_xlate.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apr_xml.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apu.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apu_errno.h'
-        New-Item -ItemType File -Path 'trunk\win\Source\apu_version.h'
+        New-Item -ItemType File -Path 'trunk\win\Source\BT_SVNRevision.h'
+
+#        curl https://raw.githubusercontent.com/TortoiseGit/tortoisesvn/refs/heads/master/src/SVN/SVNRev.h -o "trunk/win/Source/BT_SVNRevision.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_opt.h -o "trunk/win/Source/svn_opt.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_delta.h -o "trunk/win/Source/svn_delta.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_opt_impl.h -o "trunk/win/Source/svn_opt_impl.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/mod_authz_svn.h -o "trunk/win/Source/mod_authz_svn.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/mod_dav_svn.h -o "trunk/win/Source/mod_dav_svn.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_auth.h -o "trunk/win/Source/svn_auth.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_base64.h -o "trunk/win/Source/svn_base64.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_cache_config.h -o "trunk/win/Source/svn_cache_config.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_checksum.h -o "trunk/win/Source/svn_checksum.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_client.h -o "trunk/win/Source/svn_client.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_cmdline.h -o "trunk/win/Source/svn_cmdline.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_compat.h -o "trunk/win/Source/svn_compat.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_config.h -o "trunk/win/Source/svn_config.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_ctype.h -o "trunk/win/Source/svn_ctype.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_dav.h -o "trunk/win/Source/svn_dav.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_diff.h -o "trunk/win/Source/svn_diff.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_dirent_uri.h -o "trunk/win/Source/svn_dirent_uri.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_dso.h -o "trunk/win/Source/svn_dso.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_error.h -o "trunk/win/Source/svn_error.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_error_codes.h -o "trunk/win/Source/svn_error_codes.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_fs.h -o "trunk/win/Source/svn_fs.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_hash.h -o "trunk/win/Source/svn_hash.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_io.h -o "trunk/win/Source/svn_io.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_iter.h -o "trunk/win/Source/svn_iter.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_md5.h -o "trunk/win/Source/svn_md5.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_mergeinfo.h -o "trunk/win/Source/svn_mergeinfo.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_nls.h -o "trunk/win/Source/svn_nls.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_path.h -o "trunk/win/Source/svn_path.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_pools.h -o "trunk/win/Source/svn_pools.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_props.h -o "trunk/win/Source/svn_props.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_quoprint.h -o "trunk/win/Source/svn_quoprint.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_ra.h -o "trunk/win/Source/svn_ra.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_ra_svn.h -o "trunk/win/Source/svn_ra_svn.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_repos.h -o "trunk/win/Source/svn_repos.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_sorts.h -o "trunk/win/Source/svn_sorts.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_string.h -o "trunk/win/Source/svn_string.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_subst.h -o "trunk/win/Source/svn_subst.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_time.h -o "trunk/win/Source/svn_time.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_types.h -o "trunk/win/Source/svn_types.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_types_impl.h -o "trunk/win/Source/svn_types_impl.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_user.h -o "trunk/win/Source/svn_user.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_utf.h -o "trunk/win/Source/svn_utf.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_version.h -o "trunk/win/Source/svn_version.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_wc.h -o "trunk/win/Source/svn_wc.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_x509.h -o "trunk/win/Source/svn_x509.h"
+#        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_xml.h -o "trunk/win/Source/svn_xml.h"
+
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_allocator.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_anylock.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_atomic.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_base64.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_buckets.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_buffer.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_crypto.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_cstr.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_date.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_dbd.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_dbm.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_dso.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_encode.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_env.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_errno.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_escape.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_file_info.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_file_io.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_fnmatch.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_general.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_getopt.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_global_mutex.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_hash.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_hooks.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_inherit.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_jose.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_json.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_ldap.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_lib.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_md4.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_md5.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_memcache.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_mmap.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_network_io.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_optional.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_optional_hooks.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_perms_set.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_poll.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_pools.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_portable.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_proc_mutex.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_queue.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_random.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_redis.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_reslist.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_ring.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_rmm.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_sdbm.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_sha1.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_shm.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_signal.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_siphash.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_skiplist.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_strings.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_strmatch.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_tables.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_thread_cond.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_thread_mutex.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_thread_pool.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_thread_proc.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_thread_rwlock.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_time.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_uri.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_user.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_uuid.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_version.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_want.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_xlate.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apr_xml.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apu.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apu_errno.h'
+#        New-Item -ItemType File -Path 'trunk\win\Source\apu_version.h'
+
 #curl https://raw.githubusercontent.com/apache/apr/refs/heads/trunk/include/apr.h.in -o "trunk/win/Source/apr.h"
 
     - name: Add MSBuild to PATH
