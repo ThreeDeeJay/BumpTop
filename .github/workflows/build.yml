@@ -8,8 +8,7 @@ env:
   Configuration: Release
   Artifacts: build/Release
   Title: ${{github.event.repository.name}}
-  Solution: ${{github.event.repository.name}}.sln # .
-  Executable: ${{github.event.repository.name}}.exe # *
+  Solution: trunk/win/Source/BumpTop.sln
   DXSDK_DIR: C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\
 
 on:
@@ -57,13 +56,9 @@ jobs:
         Start-Process -Wait ./python-2.6.6.msi -ArgumentList "/quiet", "InstallAllUsers=1", "PrependPath=1" 
 
     - name: Install Qt
-      uses: jurplel/install-qt-action@v4
-      with:
-        version: '4.6.1'
-        host: 'windows'
-        target: 'desktop'
-        arch: 'win64_msvc2019_64'
-        modules: 'addons.qtmultimedia'
+      shell: powershell
+      run: |
+        Invoke-WebRequest -Method Get -Uri http://download.qt-project.org/archive/qt/4.6/qt-everywhere-opensource-src-4.6.1.tar.gz -OutFile trunk/mac/Dependencies/qt-everywhere-opensource-src-4.6.1.tar.gz -UseBasicParsing
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
