@@ -105,7 +105,8 @@ jobs:
         curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_wc.h -o "trunk/win/Source/svn_wc.h"
         curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_x509.h -o "trunk/win/Source/svn_x509.h"
         curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_xml.h -o "trunk/win/Source/svn_xml.h"
-        curl https://raw.githubusercontent.com/apache/apr/refs/heads/trunk/include/apr.h.in -o "trunk/win/Source/apr.h"
+        echo.>"trunk/win/Source/apr.h"
+#curl https://raw.githubusercontent.com/apache/apr/refs/heads/trunk/include/apr.h.in -o "trunk/win/Source/apr.h"
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
