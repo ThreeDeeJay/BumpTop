@@ -236,7 +236,7 @@ jobs:
 
     - name: Install VS2010
       run: |
-        Invoke-WebRequest -Method Get -Uri https://web.archive.org/web/20130811055544/http://download.microsoft.com/download/1/E/5/1E5F1C0A-0D5B-426A-A603-1798B951DDAE/VS2010Express1.iso -OutFile VS2010Express1.iso -UseBasicParsing
+        curl -L https://web.archive.org/web/20130811055544/http://download.microsoft.com/download/1/E/5/1E5F1C0A-0D5B-426A-A603-1798B951DDAE/VS2010Express1.iso -o "VS2010Express1.iso"
         Mount-DiskImage -ImagePath "${{github.workspace}}\VS2010Express1.iso"
         Start-Process -Wait "E:\VCExpress\setup.exe" -ArgumentList "/q", "/norestart"
 
