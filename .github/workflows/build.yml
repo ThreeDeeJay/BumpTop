@@ -55,9 +55,10 @@ jobs:
         Invoke-WebRequest -Method Get -Uri https://www.python.org/ftp/python/2.6.6/python-2.6.6.msi -OutFile python-2.6.6.msi -UseBasicParsing
         Start-Process -Wait ./python-2.6.6.msi -ArgumentList "/quiet", "InstallAllUsers=1", "PrependPath=1" 
 
-    - name: Install Qt
+    - name: Download dependencies
       run: |
         curl http://download.qt-project.org/archive/qt/4.6/qt-everywhere-opensource-src-4.6.1.tar.gz -o "trunk/mac/Dependencies/qt-everywhere-opensource-src-4.6.1.tar.gz"
+        curl https://raw.githubusercontent.com/TortoiseGit/tortoisesvn/refs/heads/master/src/SVN/SVNRev.h -o "BT_SVNRevision.h"
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
