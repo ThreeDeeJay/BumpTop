@@ -56,9 +56,8 @@ jobs:
         Start-Process -Wait ./python-2.6.6.msi -ArgumentList "/quiet", "InstallAllUsers=1", "PrependPath=1" 
 
     - name: Install Qt
-      shell: powershell
       run: |
-        Invoke-WebRequest -Method Get -Uri http://download.qt-project.org/archive/qt/4.6/qt-everywhere-opensource-src-4.6.1.tar.gz -OutFile trunk/mac/Dependencies/qt-everywhere-opensource-src-4.6.1.tar.gz -UseBasicParsing
+        curl http://download.qt-project.org/archive/qt/4.6/qt-everywhere-opensource-src-4.6.1.tar.gz -o "trunk/mac/Dependencies/qt-everywhere-opensource-src-4.6.1.tar.gz"
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
