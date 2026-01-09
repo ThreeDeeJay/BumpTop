@@ -234,13 +234,16 @@ jobs:
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
 
-#    - name: Install DirectX SDK
-#      if: steps.DXSDK_Jun10.outputs.cache-hit != 'true'
-#      shell: powershell
-#      run: |
-#        Invoke-WebRequest -Method Get -Uri https://web.archive.org/web/20130811055544/http://download.microsoft.com/download/1/E/5/1E5F1C0A-0D5B-426A-A603-1798B951DDAE/VS2010Express1.iso -OutFile VS2010Express1.iso -UseBasicParsing
-#        Start-Process -Wait ./DXSDK_Jun10.exe -ArgumentList "/U"
+    - name: Install DirectX SDK
+      if: steps.DXSDK_Jun10.outputs.cache-hit != 'true'
+      shell: powershell
+      run: |
+        Invoke-WebRequest -Method Get -Uri https://web.archive.org/web/20130811055544/http://download.microsoft.com/download/1/E/5/1E5F1C0A-0D5B-426A-A603-1798B951DDAE/VS2010Express1.iso -OutFile VS2010Express1.iso -UseBasicParsing
+        Mount-DiskImage -ImagePath "${{github.workspace}}\VS2010Express1.iso"
+        Start-Process -Wait "E:\VCExpress\setup.exe" -ArgumentList "/q", "/norestart"
 
+    - name: List files
+      run: ls -R
 
     - name: Restore NuGet packages
       working-directory: ${{env.GITHUB_WORKSPACE}}
@@ -249,8 +252,7 @@ jobs:
     - name: Build
       run: msbuild /m "${{env.Solution}}" /p:Configuration="${{env.Configuration}}" /p:PlatformToolset="v142" /p:AdditionalDependencies="legacy_stdio_definitions.lib" /p:WarnAndContinue="true" #/p:Platform="${{env.Platform}}" /p:IncludePath="C:\Path\to\Include" /p:LibPath="C:\Path\to\Lib" /p:AdditionalIncludePaths="C:\Path\to\external\include" /p:AdditionalLibraryDirectories="C:\Path\to\external\lib" /p:LanguageStandard="stdcpp17"
 
-    - name: List files
-      run: ls -R
+
 
     - name: Upload Installer Artifact to GitHub
       uses: actions/upload-artifact@v4
