@@ -59,6 +59,8 @@ jobs:
       run: |
         curl http://download.qt-project.org/archive/qt/4.6/qt-everywhere-opensource-src-4.6.1.tar.gz -o "trunk/mac/Dependencies/qt-everywhere-opensource-src-4.6.1.tar.gz"
         curl https://raw.githubusercontent.com/TortoiseGit/tortoisesvn/refs/heads/master/src/SVN/SVNRev.h -o "trunk/win/Source/BT_SVNRevision.h"
+        curl https://raw.githubusercontent.com/apache/subversion/refs/heads/trunk/subversion/include/svn_opt.h -o "trunk/win/Source/svn_opt.h"
+        
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
