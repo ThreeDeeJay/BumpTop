@@ -241,7 +241,7 @@ jobs:
         Start-Process -Wait "E:\VCExpress\setup.exe" -ArgumentList "/q", "/norestart"
 
     - name: List files
-      run: ls -R
+      run: ls / -R
 
     - name: Restore NuGet packages
       working-directory: ${{env.GITHUB_WORKSPACE}}
