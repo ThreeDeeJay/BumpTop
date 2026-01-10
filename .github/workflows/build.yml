@@ -240,11 +240,11 @@ jobs:
         Mount-DiskImage -ImagePath "${{github.workspace}}\VS2010Express1.iso"
         Start-Process -Wait "E:\VCExpress\setup.exe" -ArgumentList "/q", "/norestart"
 
-    - name: List files
-      run: |
-        CD C:
-        ls / -R
-        CD "${{github.workspace}}"
+#    - name: List files
+#      run: |
+#        CD C:
+#        ls / -R
+#        CD "${{github.workspace}}"
 
     - name: Restore NuGet packages
       working-directory: ${{env.GITHUB_WORKSPACE}}
