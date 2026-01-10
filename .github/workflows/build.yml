@@ -8,7 +8,7 @@ env:
   Configuration: Release
   Artifacts: build/Release
   Title: ${{github.event.repository.name}}
-  Solution: trunk/win/Source/BumpTop.sln
+  Solution: trunk/mac/Build/Windows/BumpTop.sln
   DXSDK_DIR: C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\
 
 on:
