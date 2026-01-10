@@ -251,7 +251,7 @@ jobs:
       run: nuget restore "${{env.Solution}}"
 
     - name: Build
-      run: msbuild /m "${{env.Solution}}" /p:Configuration="${{env.Configuration}}" /p:PlatformToolset="v142" /p:AdditionalDependencies="Psapi.lib;Shlwapi.lib;WinInet.lib;libci.lib;legacy_stdio_definitions.lib;d3dx8.lib;d3d8.lib;%(AdditionalDependencies)" /p:ContinueOnError="WarnAndContinue" #/p:Platform="${{env.Platform}}" /p:IncludePath="C:\Path\to\Include" /p:LibPath="C:\Path\to\Lib" /p:AdditionalIncludePaths="C:\Path\to\external\include" /p:AdditionalLibraryDirectories="C:\Path\to\external\lib" /p:LanguageStandard="stdcpp17"
+      run: msbuild /m "${{env.Solution}}" /p:Configuration="${{env.Configuration}}" /p:PlatformToolset="v142" /p:AdditionalDependencies="legacy_stdio_definitions.lib" /p:ContinueOnError="WarnAndContinue" #/p:Platform="${{env.Platform}}" /p:IncludePath="C:\Path\to\Include" /p:LibPath="C:\Path\to\Lib" /p:AdditionalIncludePaths="C:\Path\to\external\include" /p:AdditionalLibraryDirectories="C:\Path\to\external\lib" /p:LanguageStandard="stdcpp17"
 
     - name: Upload Installer Artifact to GitHub
       uses: actions/upload-artifact@v4
