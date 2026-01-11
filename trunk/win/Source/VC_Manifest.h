@@ -2,15 +2,15 @@
 #define VC_MANIFEST_H 
 
 /*----------------------------------------------------------------------------*/
-
+#pragma comment(lib, "legacy_stdio_definitions.lib")
 #if (_MSC_VER >= 1400) && (_MSC_VER < 1600)
-
+#pragma comment(lib, "legacy_stdio_definitions.lib")
 /*----------------------------------------------------------------------------*/
 
 #pragma message ( "Setting up manifest..." )
 
 /*----------------------------------------------------------------------------*/
-
+#pragma comment(lib, "legacy_stdio_definitions.lib")
 #ifndef _CRT_ASSEMBLY_VERSION
 #include <crtassem.h>
 #endif 
@@ -24,7 +24,7 @@
     #pragma message ( "processorArchitecture=x86" )
     #define MF_PROCESSORARCHITECTURE "x86"
 #endif 
-
+#pragma comment(lib, "legacy_stdio_definitions.lib")
 /*----------------------------------------------------------------------------*/
 
 #pragma message ( "Microsoft.Windows.Common-Controls=6.0.0.0") 
@@ -33,7 +33,7 @@
                           "version='6.0.0.0' " \
                           "processorArchitecture='" MF_PROCESSORARCHITECTURE "' " \
                           "publicKeyToken='6595b64144ccf1df'\"" )
-
+#pragma comment(lib, "legacy_stdio_definitions.lib")
 /*----------------------------------------------------------------------------*/
 
 #ifdef _DEBUG
@@ -55,6 +55,7 @@
 /*----------------------------------------------------------------------------*/
 
 #if 0	// not using MFC 
+#pragma comment(lib, "legacy_stdio_definitions.lib")
 #ifdef _MFC_ASSEMBLY_VERSION
     #ifdef _DEBUG
         #pragma message ( __LIBRARIES_ASSEMBLY_NAME_PREFIX ".MFC=" _CRT_ASSEMBLY_VERSION ) 
@@ -79,5 +80,6 @@
 #endif /* _MSC_VER */
 
 /*----------------------------------------------------------------------------*/
+#pragma comment(lib, "legacy_stdio_definitions.lib")
 
 #endif // VC_MANIFEST_H
