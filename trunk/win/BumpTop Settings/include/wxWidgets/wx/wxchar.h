@@ -386,12 +386,12 @@
         #define  wxSprintf   _stprintf
     #endif
 
-    #define  wxSscanf    _stscanf
+    #define  wxsscanf_s    _stscanf
     #define  wxTmpnam    _ttmpnam
     #define  wxUngetc    _tungetc
     #define  wxVfprintf  _vftprintf
     #define  wxVprintf   _vtprintf
-    #define  wxVsscanf   _vstscanf
+    #define  wxVsscanf_s   _vstscanf
     #define  wxVsprintf  _vstprintf
 
     /* special case: these functions are missing under Win9x with Unicows so we */
@@ -771,11 +771,11 @@
         #define  wxPuts      puts
         #define  wxScanf     scanf
         #define  wxSprintf   sprintf
-        #define  wxSscanf    sscanf
+        #define  wxsscanf_s    sscanf_s
         #define  wxUngetc    ungetc
         #define  wxVfprintf  vfprintf
         #define  wxVprintf   vprintf
-        #define  wxVsscanf   vsscanf
+        #define  wxVsscanf_s   vsscanf_s
         #define  wxVsprintf  vsprintf
 
         /* stdlib.h functions */
@@ -1038,9 +1038,9 @@ WXDLLIMPEXP_BASE bool wxOKlibc(); /* for internal use */
         semantics we need
      */
     int wxScanf( const wxChar *format, ... ) ATTRIBUTE_PRINTF_1;
-    int wxSscanf( const wxChar *str, const wxChar *format, ... ) ATTRIBUTE_PRINTF_2;
+    int wxsscanf_s( const wxChar *str, const wxChar *format, ... ) ATTRIBUTE_PRINTF_2;
     int wxFscanf( FILE *stream, const wxChar *format, ... ) ATTRIBUTE_PRINTF_2;
-    int wxVsscanf( const wxChar *str, const wxChar *format, va_list ap );
+    int wxVsscanf_s( const wxChar *str, const wxChar *format, va_list ap );
     int wxPrintf( const wxChar *format, ... ) ATTRIBUTE_PRINTF_1;
     int wxSprintf( wxChar *str, const wxChar *format, ... ) ATTRIBUTE_PRINTF_2;
     int wxFprintf( FILE *stream, const wxChar *format, ... ) ATTRIBUTE_PRINTF_2;

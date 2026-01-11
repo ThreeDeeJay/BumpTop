@@ -2266,9 +2266,9 @@ def CheckLanguage(filename, clean_lines, linenum, file_extension, include_state,
     error(filename, linenum, 'runtime/printf', 4,
           'Almost always, snprintf is better than %s' % match.group(1))
 
-  if Search(r'\bsscanf\b', line):
+  if Search(r'\bsscanf_s\b', line):
     error(filename, linenum, 'runtime/printf', 1,
-          'sscanf can be ok, but is slow and can overflow buffers.')
+          'sscanf_s can be ok, but is slow and can overflow buffers.')
 
   # Check for suspicious usage of "if" like
   # } if (a == b) {

@@ -102,7 +102,7 @@ public:
     // Example : ScanParam("COLOR", "\"#%X\"", &clr);
     // This is always with with_commas=false
     // Returns number of scanned values
-    // (like sscanf() does)
+    // (like sscanf_s() does)
     // NOTE: unlike scanf family, this function only accepts
     //       *one* parameter !
     int ScanParam(const wxString& par, const wxChar *format, void *param) const;

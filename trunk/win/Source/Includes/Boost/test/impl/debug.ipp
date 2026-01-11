@@ -279,7 +279,7 @@ process_info::process_info( int pid )
     while( *name_end && *name_end != ')' )
         ++name_end;
 
-    std::sscanf( name_end+1, "%*s%d", &m_parent_pid );
+    std::sscanf_s( name_end+1, "%*s%d", &m_parent_pid );
 
     m_binary_name.assign( name_beg+1, name_end );
 

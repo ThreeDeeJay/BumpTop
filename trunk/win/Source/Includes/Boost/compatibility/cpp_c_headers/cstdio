@@ -51,7 +51,7 @@ namespace std {
   using ::freopen;
   using ::getchar;
   using ::remove;
-  using ::sscanf;
+  using ::sscanf_s;
 }
 
 #endif // CSTDIO_HEADER

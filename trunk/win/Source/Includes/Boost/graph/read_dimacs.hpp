@@ -142,7 +142,7 @@ int read_dimacs_max_flow_internal(Graph& g,
 
       if (
           /* reading problem line: type of problem, no of nodes, no of arcs */
-          std::sscanf ( in_line.c_str(), "%*c %3s %ld %ld", pr_type, &n, &m )
+          std::sscanf_s ( in_line.c_str(), "%*c %3s %ld %ld", pr_type, &n, &m )
           != P_FIELDS
           )
         /*wrong number of parameters in the problem line*/
@@ -168,7 +168,7 @@ int read_dimacs_max_flow_internal(Graph& g,
         { err_no = EN8; goto error; }
 
       /* reading source  or sink */
-      k = std::sscanf ( in_line.c_str(),"%*c %ld %c", &i, &nd );
+      k = std::sscanf_s ( in_line.c_str(),"%*c %ld %c", &i, &nd );
       --i; // index from 0
       if ( k < NODE_FIELDS )
         /* node line is incorrect */
@@ -216,7 +216,7 @@ int read_dimacs_max_flow_internal(Graph& g,
 
       if (
           /* reading an arc description */
-          std::sscanf ( in_line.c_str(),"%*c %ld %ld %ld",
+          std::sscanf_s ( in_line.c_str(),"%*c %ld %ld %ld",
                         &tail, &head, &cap )
           != ARC_FIELDS
           )

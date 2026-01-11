@@ -307,7 +307,7 @@ inline std::basic_istream<charT, traits>& operator>>(std::basic_istream<charT, t
    std::string s;
    real_concept_base_type d;
    is >> s;
-   std::sscanf(s.c_str(), "%Lf", &d);
+   std::sscanf_s(s.c_str(), "%Lf", &d);
    a = d;
    return is;
 #else

@@ -152,7 +152,7 @@ public:
     int GetValue(int WXUNUSED(dummy) = 1) const
     {
         int n;
-        if ( (wxSscanf(wxTextCtrl::GetValue(), wxT("%d"), &n) != 1) )
+        if ( (wxsscanf_s(wxTextCtrl::GetValue(), wxT("%d"), &n) != 1) )
             n = INT_MIN;
 
         return n;
