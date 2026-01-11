@@ -113,12 +113,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL|Win32'">
     <PreBuildEvent>
       <Message>Pre-build scripts</Message>
-      <Command>"C:\Program Files\TortoiseSVN\bin\SubWCRev.exe" . BT_SVNRevision.txt BT_SVNRevision.h
-"$(SolutionDir)\bin\make" -f "$(SolutionDir)\MOC_Makefile"
-"$(SolutionDir)\bin\protoc" --proto_path="$(SolutionDir)\ProtoBuf" --cpp_out="$(SolutionDir)\" "$(SolutionDir)\ProtoBuf\*.proto"
-"$(ProjectDir)LUpdateString\lupdate.exe" -log "$(ProjectDir)LUpdateString\unwrapped_strings.txt" "$(ProjectDir)LUpdateString\BumpTop_strings.pro"
-python "$(SolutionDir)\bin\processJavaScriptSources.py"
-python "$(SolutionDir)\bin\processHtmlSources.py"
+      <Command>"C:\Program Files\TortoiseSVN\bin\SubWCRev.exe" . BT_SVNRevision.txt BT_SVNRevision.h || exit /b 0
+"$(SolutionDir)\bin\make" -f "$(SolutionDir)\MOC_Makefile" || exit /b 0
+"$(SolutionDir)\bin\protoc" --proto_path="$(SolutionDir)\ProtoBuf" --cpp_out="$(SolutionDir)\" "$(SolutionDir)\ProtoBuf\*.proto" || exit /b 0
+"$(ProjectDir)LUpdateString\lupdate.exe" -log "$(ProjectDir)LUpdateString\unwrapped_strings.txt" "$(ProjectDir)LUpdateString\BumpTop_strings.pro" || exit /b 0
+python "$(SolutionDir)\bin\processJavaScriptSources.py" || exit /b 0
+python "$(SolutionDir)\bin\processHtmlSources.py" || exit /b 0
 </Command>
     </PreBuildEvent>
     <Midl>
@@ -190,11 +190,11 @@ python "$(SolutionDir)\bin\processHtmlSources.py"
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_GL|Win32'">
     <PreBuildEvent>
       <Message>Pre-build scripts</Message>
-      <Command>"C:\Program Files\TortoiseSVN\bin\SubWCRev.exe" . BT_SVNRevision.txt BT_SVNRevision.h
-"$(SolutionDir)\bin\make" -f "$(SolutionDir)\MOC_Makefile"
-"$(ProjectDir)LUpdateString\lupdate.exe" -log "$(ProjectDir)LUpdateString\unwrapped_strings.txt" "$(ProjectDir)LUpdateString\BumpTop_strings.pro"
-python "$(SolutionDir)\bin\processJavaScriptSources.py"
-python "$(SolutionDir)\bin\processHtmlSources.py"
+      <Command>"C:\Program Files\TortoiseSVN\bin\SubWCRev.exe" . BT_SVNRevision.txt BT_SVNRevision.h || exit /b 0
+"$(SolutionDir)\bin\make" -f "$(SolutionDir)\MOC_Makefile" || exit /b 0
+"$(ProjectDir)LUpdateString\lupdate.exe" -log "$(ProjectDir)LUpdateString\unwrapped_strings.txt" "$(ProjectDir)LUpdateString\BumpTop_strings.pro" || exit /b 0
+python "$(SolutionDir)\bin\processJavaScriptSources.py" || exit /b 0
+python "$(SolutionDir)\bin\processHtmlSources.py" || exit /b 0
 </Command>
     </PreBuildEvent>
     <CustomBuildStep>
@@ -269,12 +269,12 @@ python "$(SolutionDir)\bin\processHtmlSources.py"
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
       <Message>Pre-build scripts</Message>
-      <Command>"C:\Program Files\TortoiseSVN\bin\SubWCRev.exe" . BT_SVNRevision.txt BT_SVNRevision.h
-"$(SolutionDir)\bin\make" -f "$(SolutionDir)\MOC_Makefile"
-"$(ProjectDir)LUpdateString\lupdate.exe" -log "$(ProjectDir)LUpdateString\unwrapped_strings.txt" "$(ProjectDir)LUpdateString\BumpTop_strings.pro"
-python "$(SolutionDir)\bin\processJavaScriptSources.py"
-python "$(SolutionDir)\bin\processHtmlSources.py"
-python "$(SolutionDir)\bin\mergeWebStringsIntoTS.py"
+      <Command>"C:\Program Files\TortoiseSVN\bin\SubWCRev.exe" . BT_SVNRevision.txt BT_SVNRevision.h || exit /b 0
+"$(SolutionDir)\bin\make" -f "$(SolutionDir)\MOC_Makefile" || exit /b 0
+"$(ProjectDir)LUpdateString\lupdate.exe" -log "$(ProjectDir)LUpdateString\unwrapped_strings.txt" "$(ProjectDir)LUpdateString\BumpTop_strings.pro" || exit /b 0
+python "$(SolutionDir)\bin\processJavaScriptSources.py" || exit /b 0
+python "$(SolutionDir)\bin\processHtmlSources.py" || exit /b 0
+python "$(SolutionDir)\bin\mergeWebStringsIntoTS.py" || exit /b 0
 </Command>
     </PreBuildEvent>
     <CustomBuildStep>
@@ -350,12 +350,12 @@ python "$(SolutionDir)\bin\mergeWebStringsIntoTS.py"
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <PreBuildEvent>
       <Message>Pre-build scripts</Message>
-      <Command>"C:\Program Files\TortoiseSVN\bin\SubWCRev.exe" . BT_SVNRevision.txt BT_SVNRevision.h
-"$(SolutionDir)\bin\make" -f "$(SolutionDir)\MOC_Makefile"
-"$(SolutionDir)\bin\protoc" --proto_path="$(SolutionDir)\ProtoBuf" --cpp_out="$(SolutionDir)\" "$(SolutionDir)\ProtoBuf\*.proto"
-"$(ProjectDir)LUpdateString\lupdate.exe" -log "$(ProjectDir)LUpdateString\unwrapped_strings.txt" "$(ProjectDir)LUpdateString\BumpTop_strings.pro"
-python "$(SolutionDir)\bin\processJavaScriptSources.py"
-python "$(SolutionDir)\bin\processHtmlSources.py"
+      <Command>"C:\Program Files\TortoiseSVN\bin\SubWCRev.exe" . BT_SVNRevision.txt BT_SVNRevision.h || exit /b 0
+"$(SolutionDir)\bin\make" -f "$(SolutionDir)\MOC_Makefile" || exit /b 0
+"$(SolutionDir)\bin\protoc" --proto_path="$(SolutionDir)\ProtoBuf" --cpp_out="$(SolutionDir)\" "$(SolutionDir)\ProtoBuf\*.proto" || exit /b 0
+"$(ProjectDir)LUpdateString\lupdate.exe" -log "$(ProjectDir)LUpdateString\unwrapped_strings.txt" "$(ProjectDir)LUpdateString\BumpTop_strings.pro" || exit /b 0
+python "$(SolutionDir)\bin\processJavaScriptSources.py" || exit /b 0
+python "$(SolutionDir)\bin\processHtmlSources.py" || exit /b 0
 </Command>
     </PreBuildEvent>
     <Midl>
