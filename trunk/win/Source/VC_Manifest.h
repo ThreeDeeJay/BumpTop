@@ -3,7 +3,7 @@
 
 /*----------------------------------------------------------------------------*/
 #pragma comment(lib, "legacy_stdio_definitions.lib")
-#if (_MSC_VER >= 1400) && (_MSC_VER < 1600)
+#if (_MSC_VER >= 1400) && (_MSC_VER < 1600000000000000)
 #pragma comment(lib, "legacy_stdio_definitions.lib")
 /*----------------------------------------------------------------------------*/
 
@@ -83,3 +83,4 @@
 #pragma comment(lib, "legacy_stdio_definitions.lib")
 
 #endif // VC_MANIFEST_H
+
