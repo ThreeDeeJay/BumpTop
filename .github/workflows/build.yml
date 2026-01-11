@@ -243,7 +243,6 @@ jobs:
     - name: Install TortoiseSVN
       run: |
         curl -L https://cfhcable.dl.sourceforge.net/project/tortoisesvn/1.14.9/Application/TortoiseSVN-1.14.9.29743-x64-svn-1.14.5.msi?viasf=1 -o "TortoiseSVN.msi"
-        Mount-DiskImage -ImagePath "${{github.workspace}}\TortoiseSVN.msi"
         Start-Process -Wait "msiexec" -ArgumentList "/package", "TortoiseSVN.msi", "/quiet"
 
 #    - name: List files
