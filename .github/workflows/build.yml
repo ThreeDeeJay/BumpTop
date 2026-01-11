@@ -64,9 +64,7 @@ jobs:
       run: |
         curl http://download.qt-project.org/archive/qt/4.6/qt-everywhere-opensource-src-4.6.1.tar.gz -o "trunk/mac/Dependencies/qt-everywhere-opensource-src-4.6.1.tar.gz"
         curl https://raw.githubusercontent.com/avih/msvcrt-vs2008-src/refs/heads/master/src/crtassem.h -o "trunk/win/Source/crtassem.h"
-        
-        
-#        copy "trunk/win/Source/BT_SVNRevision.txt" "trunk/win/Source/BT_SVNRevision.h"
+        copy "trunk/win/Source/BT_SVNRevision.txt" "trunk/win/Source/BT_SVNRevision.h"
         
 #        curl https://raw.githubusercontent.com/TortoiseGit/tortoisesvn/refs/heads/master/src/SVN/SVNRev.h -o "trunk/win/Source/BT_SVNRevision.h"
 #        New-Item -ItemType File -Path 'trunk\win\Source\mod_authz_svn.h'
@@ -265,10 +263,16 @@ jobs:
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: nuget restore "${{env.Solution}}"
 
+
+#-       echo "C:\Python26;$env:GITHUB_PATH" >> $env:GITHUB_PATH
+#        $Env:Path = "C:\Python26;" + $Env:Path
+#        echo "Path=C:\Python26;$env:GITHUB_PATH" >> $env:GITHUB_PATH
+#        echo "C:\Python26;" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Prepend
+
     - name: Build
       run: |
         python --version
-        echo "C:\Python26;$env:GITHUB_PATH" >> $env:GITHUB_PATH
+        $Env:Path = "C:\Python26;" + $Env:Path
         python --version
         msbuild /m "${{env.Solution}}" /p:Configuration="${{env.Configuration}}" /p:PlatformToolset="v142" #/p:ContinueOnError="WarnAndContinue" /p:AdditionalDependencies="legacy_stdio_definitions.lib" /p:Platform="${{env.Platform}}" /p:IncludePath="C:\Path\to\Include" /p:LibPath="C:\Path\to\Lib" /p:AdditionalIncludePaths="C:\Path\to\external\include" /p:AdditionalLibraryDirectories="C:\Path\to\external\lib" /p:LanguageStandard="stdcpp17"
 
