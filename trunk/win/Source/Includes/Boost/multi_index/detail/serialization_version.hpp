@@ -1,4 +1,4 @@
-/* Copyright 2003-2010 Joaquin M Lopez Munoz.
+/* Copyright 2003-2023 Joaquin M Lopez Munoz.
  * Distributed under the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at
  * http://www.boost.org/LICENSE_1_0.txt)
@@ -9,13 +9,12 @@
 #ifndef BOOST_MULTI_INDEX_DETAIL_SERIALIZATION_VERSION_HPP
 #define BOOST_MULTI_INDEX_DETAIL_SERIALIZATION_VERSION_HPP
 
-#if defined(_MSC_VER)&&(_MSC_VER>=1200)
+#if defined(_MSC_VER)
 #pragma once
 #endif
 
 #include <boost/config.hpp> /* keep it first to prevent nasty warns in MSVC */
-#include <boost/serialization/split_member.hpp>
-#include <boost/serialization/version.hpp>
+#include <boost/core/serialization.hpp>
 
 namespace boost{
 
@@ -42,7 +41,11 @@ struct serialization_version
 private:
   friend class boost::serialization::access;
 
-  BOOST_SERIALIZATION_SPLIT_MEMBER()
+  template<class Archive>
+  void serialize(Archive& ar,const unsigned int version)
+  {
+    core::split_member(ar,*this,version);
+  }
 
   template<class Archive>
   void save(Archive&,const unsigned int)const{}
@@ -60,7 +63,6 @@ private:
 
 } /* namespace multi_index */
 
-#if !defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
 namespace serialization {
 template<typename T>
 struct version<boost::multi_index::detail::serialization_version<T> >
@@ -68,7 +70,6 @@ struct version<boost::multi_index::detail::serialization_version<T> >
   BOOST_STATIC_CONSTANT(int,value=version<T>::value);
 };
 } /* namespace serialization */
-#endif
 
 } /* namespace boost */
 

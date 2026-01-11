@@ -4,8 +4,8 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if !defined(SPIRIT_KARMA_SEQUENCE_FEB_28_2007_0247PM)
-#define SPIRIT_KARMA_SEQUENCE_FEB_28_2007_0247PM
+#ifndef BOOST_SPIRIT_KARMA_OPERATOR_SEQUENCE_HPP
+#define BOOST_SPIRIT_KARMA_OPERATOR_SEQUENCE_HPP
 
 #if defined(_MSC_VER)
 #pragma once
@@ -37,6 +37,9 @@
 #include <boost/mpl/not.hpp>
 #include <boost/fusion/include/transform.hpp>
 #include <boost/mpl/accumulate.hpp>
+#include <boost/proto/operators.hpp>
+#include <boost/proto/tags.hpp>
+#include <boost/config.hpp>
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace boost { namespace spirit
@@ -72,9 +75,11 @@ namespace boost { namespace spirit { namespace traits
             };
 
             // never called, but needed for decltype-based result_of (C++0x)
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
             template <typename Element>
             typename result<element_properties(Element)>::type
-            operator()(Element&) const;
+            operator()(Element&&) const;
+#endif
         };
 
         typedef typename mpl::accumulate<
@@ -135,14 +140,14 @@ namespace boost { namespace spirit { namespace karma
                 OutputIterator, Context, Delimiter> fail_function;
             typedef traits::attribute_not_unused<Context> predicate;
 
-            // wrap the attribute in a tuple if it is not a tuple or if the 
+            // wrap the attribute in a tuple if it is not a tuple or if the
             // attribute of this sequence is a single element tuple
             typedef typename attribute<Context>::type_ attr_type_;
             typename traits::wrap_if_not_tuple<Attribute
               , typename mpl::and_<
                     traits::one_element_sequence<attr_type_>
                   , mpl::not_<traits::one_element_sequence<Attribute> >
-                >::type 
+                >::type
             >::type attr(attr_);
 
             // return false if *any* of the generators fail
@@ -152,12 +157,12 @@ namespace boost { namespace spirit { namespace karma
             typedef typename traits::attribute_size<Attribute>::type size_type;
 
             // fail generating if sequences have not the same (logical) length
-            return !r && (!Strict::value || 
-                // This ignores container element count (which is not good), 
-                // but allows valid attributes to succeed. This will lead to 
+            return !r && (!Strict::value ||
+                // This ignores container element count (which is not good),
+                // but allows valid attributes to succeed. This will lead to
                 // false positives (failing generators, even if they shouldn't)
-                // if the embedded component is restricting the number of 
-                // container elements it consumes (i.e. repeat). This solution 
+                // if the embedded component is restricting the number of
+                // container elements it consumes (i.e. repeat). This solution
                 // is not optimal but much better than letting _all_ repetitive
                 // components fail.
                 Pred1::value ||
@@ -181,17 +186,17 @@ namespace boost { namespace spirit { namespace karma
                 typename add_const<Attribute>::type
             >::type iterator_type;
 
-            typedef 
-                typename traits::make_indirect_iterator<iterator_type>::type 
+            typedef
+                typename traits::make_indirect_iterator<iterator_type>::type
             indirect_iterator_type;
             typedef detail::pass_container<
-              fail_function, Attribute, indirect_iterator_type, mpl::true_>
+                fail_function, Attribute, indirect_iterator_type, mpl::true_>
             pass_container;
 
             iterator_type begin = traits::begin(attr_);
             iterator_type end = traits::end(attr_);
 
-            pass_container pass(fail_function(sink, ctx, d), 
+            pass_container pass(fail_function(sink, ctx, d),
                 indirect_iterator_type(begin), indirect_iterator_type(end));
             bool r = fusion::any(elements, pass);
 
@@ -207,11 +212,11 @@ namespace boost { namespace spirit { namespace karma
         bool generate(OutputIterator& sink, Context& ctx, Delimiter const& d
           , Attribute const& attr) const
         {
-            typedef typename traits::is_container<Attribute>::type 
+            typedef typename traits::is_container<Attribute>::type
                 is_container;
 
             typedef typename attribute<Context>::type_ attr_type_;
-            typedef typename traits::one_element_sequence<attr_type_>::type 
+            typedef typename traits::one_element_sequence<attr_type_>::type
                 is_one_element_sequence;
 
             return generate_impl(sink, ctx, d, attr, is_container()
@@ -231,7 +236,7 @@ namespace boost { namespace spirit { namespace karma
     };
 
     template <typename Elements>
-    struct sequence 
+    struct sequence
       : base_sequence<Elements, mpl::false_, sequence<Elements> >
     {
         typedef base_sequence<Elements, mpl::false_, sequence> base_sequence_;
@@ -241,10 +246,10 @@ namespace boost { namespace spirit { namespace karma
     };
 
     template <typename Elements>
-    struct strict_sequence 
+    struct strict_sequence
       : base_sequence<Elements, mpl::true_, strict_sequence<Elements> >
     {
-        typedef base_sequence<Elements, mpl::true_, strict_sequence> 
+        typedef base_sequence<Elements, mpl::true_, strict_sequence>
             base_sequence_;
 
         strict_sequence(Elements const& subject)
@@ -257,12 +262,12 @@ namespace boost { namespace spirit { namespace karma
     namespace detail
     {
         template <typename Elements, bool strict_mode = false>
-        struct make_sequence 
+        struct make_sequence
           : make_nary_composite<Elements, sequence>
         {};
 
         template <typename Elements>
-        struct make_sequence<Elements, true> 
+        struct make_sequence<Elements, true>
           : make_nary_composite<Elements, strict_sequence>
         {};
     }
@@ -280,7 +285,7 @@ namespace boost { namespace spirit { namespace karma
     {
         typedef iterator_range<detail::indirect_iterator<Iterator> > type;
     };
-}}} 
+}}}
 
 namespace boost { namespace spirit { namespace traits
 {

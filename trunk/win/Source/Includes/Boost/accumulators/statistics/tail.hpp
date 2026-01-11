@@ -18,6 +18,7 @@
 #include <boost/parameter/keyword.hpp>
 #include <boost/iterator/reverse_iterator.hpp>
 #include <boost/iterator/permutation_iterator.hpp>
+#include <boost/accumulators/accumulators_fwd.hpp>
 #include <boost/accumulators/framework/accumulator_base.hpp>
 #include <boost/accumulators/framework/extractor.hpp>
 #include <boost/accumulators/numeric/functional.hpp>
@@ -31,6 +32,9 @@ namespace boost { namespace accumulators
 // cache_size named parameters
 BOOST_PARAMETER_NESTED_KEYWORD(tag, right_tail_cache_size, cache_size)
 BOOST_PARAMETER_NESTED_KEYWORD(tag, left_tail_cache_size, cache_size)
+
+BOOST_ACCUMULATORS_IGNORE_GLOBAL(right_tail_cache_size)
+BOOST_ACCUMULATORS_IGNORE_GLOBAL(left_tail_cache_size)
 
 namespace detail
 {
@@ -84,7 +88,7 @@ namespace detail
         }
 
     private:
-        stat_assign_visitor &operator =(stat_assign_visitor const &);
+        BOOST_DELETED_FUNCTION(stat_assign_visitor &operator =(stat_assign_visitor const &))
         Args const &args;
         std::size_t index;
     };
@@ -244,8 +248,11 @@ namespace impl
         ///////////////////////////////////////////////////////////////////////////////
         //
         struct indirect_cmp
-          : std::binary_function<std::size_t, std::size_t, bool>
         {
+            typedef std::size_t first_argument_type;
+            typedef std::size_t second_argument_type;
+            typedef bool result_type;
+
             indirect_cmp(std::vector<Sample> const &s)
               : samples(s)
             {
@@ -257,10 +264,21 @@ namespace impl
             }
 
         private:
-            indirect_cmp &operator =(indirect_cmp const &);
+            BOOST_DELETED_FUNCTION(indirect_cmp &operator =(indirect_cmp const &))
             std::vector<Sample> const &samples;
         };
 
+    public:
+        // make this accumulator serializeable
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int file_version)
+        { 
+            ar & is_sorted;
+            ar & indices;
+            ar & samples;
+        }
+
+    private:
         mutable bool is_sorted;
         mutable std::vector<std::size_t> indices;
         std::vector<Sample> samples;

@@ -46,6 +46,7 @@
 #include <boost/config.hpp>
 #include <boost/graph/graph_traits.hpp>
 #include <boost/property_map/property_map.hpp>
+#include <boost/property_map/parallel/parallel_property_maps.hpp>
 #include <boost/graph/iteration_macros.hpp>
 #include <limits>
 #include <list>
@@ -433,7 +434,7 @@ void
 delta_stepping_impl<Graph, PredecessorMap, DistanceMap, EdgeWeightMap>::
 synchronize()
 {
-  using boost::graph::parallel::synchronize;
+  using boost::parallel::synchronize;
 
   // Synchronize at the process group level.
   synchronize(pg);

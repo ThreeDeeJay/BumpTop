@@ -8,11 +8,8 @@
 =============================================================================*/
 #ifndef BOOST_SPIRIT_INCLUDE_PHOENIX_STL
 #define BOOST_SPIRIT_INCLUDE_PHOENIX_STL
+#include <boost/config/header_deprecated.hpp>
+BOOST_HEADER_DEPRECATED("<boost/phoenix/stl.hpp>")
 
-#ifndef BOOST_SPIRIT_USE_PHOENIX_V3
-#include <boost/spirit/home/phoenix/stl.hpp>
-#else
 #include <boost/phoenix/stl.hpp>
-#endif
-
 #endif

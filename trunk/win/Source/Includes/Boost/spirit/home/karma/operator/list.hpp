@@ -4,8 +4,8 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if !defined(SPIRIT_KARMA_LIST_MAY_01_2007_0229PM)
-#define SPIRIT_KARMA_LIST_MAY_01_2007_0229PM
+#ifndef BOOST_SPIRIT_KARMA_OPERATOR_LIST_HPP
+#define BOOST_SPIRIT_KARMA_OPERATOR_LIST_HPP
 
 #if defined(_MSC_VER)
 #pragma once
@@ -24,6 +24,8 @@
 #include <boost/spirit/home/support/container.hpp>
 #include <boost/spirit/home/support/handles_container.hpp>
 #include <boost/spirit/home/karma/detail/attributes.hpp>
+#include <boost/proto/operators.hpp>
+#include <boost/proto/tags.hpp>
 
 namespace boost { namespace spirit
 {
@@ -47,12 +49,12 @@ namespace boost { namespace spirit { namespace karma
         template <typename F, typename Attribute>
         bool generate_left(F f, Attribute const&, mpl::false_) const
         {
-            // Failing subject generators are just skipped. This allows to 
+            // Failing subject generators are just skipped. This allows to
             // selectively generate items in the provided attribute.
             while (!f.is_at_end())
             {
                 bool r = !f(left);
-                if (r) 
+                if (r)
                     return true;
                 if (!f.is_at_end())
                     f.next();
@@ -66,7 +68,7 @@ namespace boost { namespace spirit { namespace karma
             return !f(left);
         }
 
-        // There is no way to distinguish a failed generator from a 
+        // There is no way to distinguish a failed generator from a
         // generator to be skipped. We assume the user takes responsibility
         // for ending the loop if no attribute is specified.
         template <typename F>
@@ -80,9 +82,9 @@ namespace boost { namespace spirit { namespace karma
         typedef Right right_type;
 
         typedef mpl::int_<
-            left_type::properties::value 
-          | right_type::properties::value 
-          | generator_properties::buffering 
+            left_type::properties::value
+          | right_type::properties::value
+          | generator_properties::buffering
           | generator_properties::counting
         > properties;
 
@@ -96,7 +98,7 @@ namespace boost { namespace spirit { namespace karma
         {};
 
         base_list(Left const& left, Right const& right)
-          : left(left), right(right) 
+          : left(left), right(right)
         {}
 
         template <
@@ -113,8 +115,8 @@ namespace boost { namespace spirit { namespace karma
                 typename add_const<Attribute>::type
             >::type iterator_type;
 
-            typedef 
-                typename traits::make_indirect_iterator<iterator_type>::type 
+            typedef
+                typename traits::make_indirect_iterator<iterator_type>::type
             indirect_iterator_type;
             typedef detail::pass_container<
                 fail_function, Attribute, indirect_iterator_type, mpl::false_>
@@ -123,7 +125,7 @@ namespace boost { namespace spirit { namespace karma
             iterator_type it = traits::begin(attr);
             iterator_type end = traits::end(attr);
 
-            pass_container pass(fail_function(sink, ctx, d), 
+            pass_container pass(fail_function(sink, ctx, d),
                 indirect_iterator_type(it), indirect_iterator_type(end));
 
             if (generate_left(pass, attr, Strict()))
@@ -160,7 +162,7 @@ namespace boost { namespace spirit { namespace karma
     };
 
     template <typename Left, typename Right>
-    struct list 
+    struct list
       : base_list<Left, Right, mpl::false_, list<Left, Right> >
     {
         typedef base_list<Left, Right, mpl::false_, list> base_list_;
@@ -170,7 +172,7 @@ namespace boost { namespace spirit { namespace karma
     };
 
     template <typename Left, typename Right>
-    struct strict_list 
+    struct strict_list
       : base_list<Left, Right, mpl::true_, strict_list<Left, Right> >
     {
         typedef base_list<Left, Right, mpl::true_, strict_list> base_list_;
@@ -185,12 +187,12 @@ namespace boost { namespace spirit { namespace karma
     namespace detail
     {
         template <typename Subject, bool strict_mode = false>
-        struct make_list 
+        struct make_list
           : make_binary_composite<Subject, list>
         {};
 
         template <typename Subject>
-        struct make_list<Subject, true> 
+        struct make_list<Subject, true>
           : make_binary_composite<Subject, strict_list>
         {};
     }
@@ -216,13 +218,13 @@ namespace boost { namespace spirit { namespace traits
     template <typename Left, typename Right, typename Attribute
       , typename Context, typename Iterator>
     struct handles_container<karma::list<Left, Right>, Attribute
-          , Context, Iterator> 
+          , Context, Iterator>
       : mpl::true_ {};
 
     template <typename Left, typename Right, typename Attribute
       , typename Context, typename Iterator>
     struct handles_container<karma::strict_list<Left, Right>, Attribute
-          , Context, Iterator> 
+          , Context, Iterator>
       : mpl::true_ {};
 }}}
 

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2009. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2012. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -11,26 +11,37 @@
 #ifndef BOOST_INTERPROCESS_DETAIL_OS_FILE_FUNCTIONS_HPP
 #define BOOST_INTERPROCESS_DETAIL_OS_FILE_FUNCTIONS_HPP
 
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+#
+#if defined(BOOST_HAS_PRAGMA_ONCE)
+#  pragma once
+#endif
+
 #include <boost/interprocess/detail/config_begin.hpp>
 #include <boost/interprocess/detail/workaround.hpp>
 #include <boost/interprocess/errors.hpp>
 #include <boost/interprocess/permissions.hpp>
 
+#include <climits>
 #include <string>
+#include <boost/move/detail/type_traits.hpp> //make_unsigned
 
-#if (defined BOOST_INTERPROCESS_WINDOWS)
+#if defined (BOOST_INTERPROCESS_WINDOWS)
 #  include <boost/interprocess/detail/win32_api.hpp>
+#  include <wchar.h> //wcsxxx()
 #else
 #  ifdef BOOST_HAS_UNISTD_H
 #     include <fcntl.h>
 #     include <unistd.h>
 #     include <sys/types.h>
 #     include <sys/stat.h>
-#     include <errno.h>
-#     include <cstdio>
 #     include <dirent.h>
+#     include <cerrno>
+#     include <cstdio>
 #     if 0
-#        include <sys/file.h> 
+#        include <sys/file.h>
 #     endif
 #  else
 #    error Unknown platform
@@ -43,10 +54,10 @@
 namespace boost {
 namespace interprocess {
 
-#if (defined BOOST_INTERPROCESS_WINDOWS)
+#if defined (BOOST_INTERPROCESS_WINDOWS)
 
-typedef void *             file_handle_t;
-typedef long long          offset_t;
+typedef void *                   file_handle_t;
+typedef __int64  offset_t;
 typedef struct mapping_handle_impl_t{
    void *   handle;
    bool     is_shm;
@@ -56,7 +67,7 @@ typedef enum { read_only      = winapi::generic_read
              , read_write     = winapi::generic_read | winapi::generic_write
              , copy_on_write
              , read_private
-             , invalid_mode   = 0xffff 
+             , invalid_mode   = 0xffff
              } mode_t;
 
 typedef enum { file_begin     = winapi::file_begin
@@ -64,7 +75,10 @@ typedef enum { file_begin     = winapi::file_begin
              , file_current   = winapi::file_current
              } file_pos_t;
 
-namespace detail{
+typedef unsigned long      map_options_t;
+static const map_options_t default_map_options = map_options_t(-1);
+
+namespace ipcdetail{
 
 inline mapping_handle_t mapping_handle_from_file_handle(file_handle_t hnd)
 {
@@ -85,40 +99,95 @@ inline mapping_handle_t mapping_handle_from_shm_handle(file_handle_t hnd)
 inline file_handle_t file_handle_from_mapping_handle(mapping_handle_t hnd)
 {  return hnd.handle; }
 
-inline bool create_directory(const char *path)
+template<class CharT>
+inline bool create_directory(const CharT *path)
 {  return winapi::create_directory(path); }
 
-inline const char *get_temporary_path()
-{  return std::getenv("TMP"); }
+template<class CharT>
+inline bool open_or_create_directory(const CharT *path)
+{
+   //If fails, check that it's because it already exists
+   return create_directory(path)
+      ||  error_info(system_error_code()).get_error_code() == already_exists_error;
+}
 
+template<class CharT>
+inline bool open_or_create_shared_directory(const CharT *path)
+{
+   return open_or_create_directory(path);
+}
 
+template <class CharT>
+inline bool remove_directory(const CharT *path)
+{  return winapi::remove_directory(path); }
+
+inline bool get_temporary_path(char *buffer, std::size_t buf_len, std::size_t &required_len)
+{
+   required_len = 0;
+   //std::size_t is always bigger or equal than unsigned long in Windows systems
+   //In case std::size_t is bigger than unsigned long
+   unsigned long ulbuflen = static_cast<unsigned long>(buf_len); //Potentially losing convertion in 64 bits
+   if(buf_len != ulbuflen){   //maybe overflowed
+      return false;
+   }
+   required_len = winapi::get_temp_path(ulbuflen, buffer);
+   const bool ret = required_len && (buf_len > required_len);
+   if(ret && buffer[required_len-1] == '\\'){
+      buffer[required_len-1] = '\0';
+   }
+   return ret;
+}
+
+inline bool get_temporary_path(wchar_t *buffer, std::size_t buf_len, std::size_t &required_len)
+{
+   required_len = 0;
+   //std::size_t is always bigger or equal than unsigned long in Windows systems
+   //In case std::size_t is bigger than unsigned long
+   unsigned long ulbuflen = static_cast<unsigned long>(buf_len); //Potentially losing convertion in 64 bits
+   if(buf_len != ulbuflen){   //maybe overflowed
+      return false;
+   }
+   required_len = winapi::get_temp_path(ulbuflen, buffer);
+   const bool ret = !(buf_len < required_len);
+   if(ret && buffer[required_len-1] == L'\\'){
+      buffer[required_len-1] = L'\0';
+   }
+   return ret;
+}
+
+template<class CharT>
 inline file_handle_t create_new_file
-   (const char *name, mode_t mode, const permissions & perm = permissions(), bool temporary = false)
-{  
+   (const CharT *name, mode_t mode, const permissions & perm = permissions(), bool temporary = false)
+{
    unsigned long attr = temporary ? winapi::file_attribute_temporary : 0;
    return winapi::create_file
       ( name, (unsigned int)mode, winapi::create_new, attr
-      , (winapi::interprocess_security_attributes*)perm.get_permissions());  
+      , (winapi::interprocess_security_attributes*)perm.get_permissions());
 }
 
+template <class CharT>
 inline file_handle_t create_or_open_file
-   (const char *name, mode_t mode, const permissions & perm = permissions(), bool temporary = false)
-{  
+   (const CharT *name, mode_t mode, const permissions & perm = permissions(), bool temporary = false)
+{
    unsigned long attr = temporary ? winapi::file_attribute_temporary : 0;
    return winapi::create_file
       ( name, (unsigned int)mode, winapi::open_always, attr
-      , (winapi::interprocess_security_attributes*)perm.get_permissions());  
+      , (winapi::interprocess_security_attributes*)perm.get_permissions());
 }
 
+template<class CharT>
 inline file_handle_t open_existing_file
-   (const char *name, mode_t mode, bool temporary = false)
-{  
+   (const CharT *name, mode_t mode, bool temporary = false)
+{
    unsigned long attr = temporary ? winapi::file_attribute_temporary : 0;
    return winapi::create_file
-      (name, (unsigned int)mode, winapi::open_existing, attr, 0);  
+      (name, (unsigned int)mode, winapi::open_existing, attr, 0);
 }
 
 inline bool delete_file(const char *name)
+{  return winapi::unlink_file(name);   }
+
+inline bool delete_file(const wchar_t *name)
 {  return winapi::unlink_file(name);   }
 
 inline bool truncate_file (file_handle_t hnd, std::size_t size)
@@ -127,13 +196,22 @@ inline bool truncate_file (file_handle_t hnd, std::size_t size)
    if(!winapi::get_file_size(hnd, filesize))
       return false;
 
-   if(size > (unsigned long long)filesize){
-      if(!winapi::set_file_pointer_ex(hnd, filesize, 0, winapi::file_begin)){
+   typedef ::boost::move_detail::make_unsigned<offset_t>::type uoffset_t;
+   const uoffset_t max_filesize = uoffset_t(-1)/2u;
+   const uoffset_t uoff_size    = uoffset_t(size);
+   //Avoid unused variable warnings in 32 bit systems
+   if(uoff_size > max_filesize){
+      winapi::set_last_error(winapi::error_file_too_large);
+      return false;
+   }
+
+   if(offset_t(size) > filesize){
+      if(!winapi::set_file_pointer(hnd, filesize, 0, winapi::file_begin)){
          return false;
-      }      
+      }
       //We will write zeros in the end of the file
       //since set_end_of_file does not guarantee this
-      for(std::size_t remaining = size - filesize, write_size = 0
+      for(std::size_t remaining = size - std::size_t(filesize), write_size = 0
          ;remaining > 0
          ;remaining -= write_size){
          const std::size_t DataSize = 512;
@@ -147,7 +225,7 @@ inline bool truncate_file (file_handle_t hnd, std::size_t size)
       }
    }
    else{
-      if(!winapi::set_file_pointer_ex(hnd, size, 0, winapi::file_begin)){
+      if(!winapi::set_file_pointer(hnd, static_cast<unsigned long>(size), 0, winapi::file_begin)){
          return false;
       }
       if(!winapi::set_end_of_file(hnd)){
@@ -161,13 +239,13 @@ inline bool get_file_size(file_handle_t hnd, offset_t &size)
 {  return winapi::get_file_size(hnd, size);  }
 
 inline bool set_file_pointer(file_handle_t hnd, offset_t off, file_pos_t pos)
-{  return winapi::set_file_pointer_ex(hnd, off, 0, (unsigned long) pos); }
+{  return winapi::set_file_pointer(hnd, off, 0, (unsigned long) pos); }
 
 inline bool get_file_pointer(file_handle_t hnd, offset_t &off)
-{  return winapi::set_file_pointer_ex(hnd, 0, &off, winapi::file_current); }
+{  return winapi::set_file_pointer(hnd, 0, &off, winapi::file_current); }
 
 inline bool write_file(file_handle_t hnd, const void *data, std::size_t numdata)
-{  
+{
    unsigned long written;
    return 0 != winapi::write_file(hnd, data, (unsigned long)numdata, &written, 0);
 }
@@ -179,9 +257,9 @@ inline bool close_file(file_handle_t hnd)
 {  return 0 != winapi::close_handle(hnd);   }
 
 inline bool acquire_file_lock(file_handle_t hnd)
-{  
+{
    static winapi::interprocess_overlapped overlapped;
-   const unsigned long len = 0xffffffff;
+   const unsigned long len = ((unsigned long)-1);
 //   winapi::interprocess_overlapped overlapped;
 //   std::memset(&overlapped, 0, sizeof(overlapped));
    return winapi::lock_file_ex
@@ -189,78 +267,124 @@ inline bool acquire_file_lock(file_handle_t hnd)
 }
 
 inline bool try_acquire_file_lock(file_handle_t hnd, bool &acquired)
-{  
-   const unsigned long len = 0xffffffff;
+{
+   const unsigned long len = ((unsigned long)-1);
    winapi::interprocess_overlapped overlapped;
    std::memset(&overlapped, 0, sizeof(overlapped));
    if(!winapi::lock_file_ex
-      (hnd, winapi::lockfile_exclusive_lock | winapi::lockfile_fail_immediately, 
+      (hnd, winapi::lockfile_exclusive_lock | winapi::lockfile_fail_immediately,
        0, len, len, &overlapped)){
-      return winapi::get_last_error() == winapi::error_lock_violation ? 
+      return winapi::get_last_error() == winapi::error_lock_violation ?
                acquired = false, true : false;
-   
+
    }
-   return (acquired = true);
+   acquired = true;
+   return true;
 }
 
 inline bool release_file_lock(file_handle_t hnd)
-{  
-   const unsigned long len = 0xffffffff;
+{
+   const unsigned long len = ((unsigned long)-1);
    winapi::interprocess_overlapped overlapped;
    std::memset(&overlapped, 0, sizeof(overlapped));
    return winapi::unlock_file_ex(hnd, 0, len, len, &overlapped);
 }
 
 inline bool acquire_file_lock_sharable(file_handle_t hnd)
-{  
-   const unsigned long len = 0xffffffff;
+{
+   const unsigned long len = ((unsigned long)-1);
    winapi::interprocess_overlapped overlapped;
    std::memset(&overlapped, 0, sizeof(overlapped));
    return winapi::lock_file_ex(hnd, 0, 0, len, len, &overlapped);
 }
 
 inline bool try_acquire_file_lock_sharable(file_handle_t hnd, bool &acquired)
-{  
-   const unsigned long len = 0xffffffff;
+{
+   const unsigned long len = ((unsigned long)-1);
    winapi::interprocess_overlapped overlapped;
    std::memset(&overlapped, 0, sizeof(overlapped));
    if(!winapi::lock_file_ex
       (hnd, winapi::lockfile_fail_immediately, 0, len, len, &overlapped)){
-      return winapi::get_last_error() == winapi::error_lock_violation ? 
+      return winapi::get_last_error() == winapi::error_lock_violation ?
                acquired = false, true : false;
    }
-   return (acquired = true);
+   
+   acquired = true;
+   return true;
 }
 
 inline bool release_file_lock_sharable(file_handle_t hnd)
 {  return release_file_lock(hnd);   }
 
+template<class CharT>
+struct os_file_traits;
+
+template<>
+struct os_file_traits<char>
+{
+   static const char *any_file()
+   {  return "\\*.*";   }
+
+   static const char *backslash()
+   {  return "\\";   }
+
+   static char dot()
+   {  return '.';   }
+
+   typedef winapi::win32_find_data_a win32_find_data_t;
+
+   static int cmp(const char *a, const char *b)
+   {  return std::strcmp(a, b); }
+};
+
+template<>
+struct os_file_traits<wchar_t>
+{
+   static const wchar_t *any_file()
+   {  return L"\\*.*";   }
+
+   static const wchar_t *backslash()
+   {  return L"\\";   }
+
+   static wchar_t dot()
+   {  return L'.';   }
+
+   typedef winapi::win32_find_data_w win32_find_data_t;
+
+   static int cmp(const wchar_t *a, const wchar_t *b)
+   {  return std::wcscmp(a, b); }
+};
+
+template<class CharT>
 inline bool delete_subdirectories_recursive
-   (const std::string &refcstrRootDirectory, const char *dont_delete_this, unsigned int count)
+   (const std::basic_string<CharT> &refcstrRootDirectory, const CharT *dont_delete_this, unsigned int count)
 {
    bool               bSubdirectory = false;       // Flag, indicating whether
                                                    // subdirectories have been found
    void *             hFile;                       // Handle to directory
-   std::string        strFilePath;                 // Filepath
-   std::string        strPattern;                  // Pattern
-   winapi::win32_find_data_t  FileInformation;     // File information
+   std::basic_string<CharT>        strFilePath;                 // Filepath
+   std::basic_string<CharT>        strPattern;                  // Pattern
+   typedef os_file_traits<CharT> traits_t;
+   typename traits_t::win32_find_data_t  FileInformation;     // File information
 
    //Find all files and directories
-   strPattern = refcstrRootDirectory + "\\*.*";
+   strPattern = refcstrRootDirectory + traits_t::any_file();
    hFile = winapi::find_first_file(strPattern.c_str(), &FileInformation);
    if(hFile != winapi::invalid_handle_value){
       do{
          //If it's not "." or ".." or the pointed root_level dont_delete_this erase it
-         if(FileInformation.cFileName[0] != '.' &&
-            !(dont_delete_this && count == 0 && std::strcmp(dont_delete_this, FileInformation.cFileName) == 0)){
+         if(FileInformation.cFileName[0] != traits_t::dot() &&
+            !(dont_delete_this && count == 0 && traits_t::cmp(dont_delete_this, FileInformation.cFileName) == 0)){
             strFilePath.erase();
-            strFilePath = refcstrRootDirectory + "\\" + FileInformation.cFileName;
+            strFilePath = refcstrRootDirectory + traits_t::backslash() + FileInformation.cFileName;
 
             //If it's a directory, go recursive
             if(FileInformation.dwFileAttributes & winapi::file_attribute_directory){
                // Delete subdirectory
-               if(!delete_subdirectories_recursive(strFilePath, dont_delete_this, count+1))
+               if(!delete_subdirectories_recursive(strFilePath, dont_delete_this, count+1)){
+                  winapi::find_close(hFile);
                   return false;
+               }
             }
             //If it's a file, just delete it
             else{
@@ -268,7 +392,7 @@ inline bool delete_subdirectories_recursive
                //if(::SetFileAttributes(strFilePath.c_str(), winapi::file_attribute_normal) == 0)
                //return winapi::get_last_error();
                // Delete file
-               winapi::delete_file(strFilePath.c_str());
+               winapi::unlink_file(strFilePath.c_str());
             }
          }
       //Go to the next file
@@ -299,7 +423,8 @@ inline bool delete_subdirectories_recursive
 }
 
 //This function erases all the subdirectories of a directory except the one pointed by "dont_delete_this"
-inline bool delete_subdirectories(const std::string &refcstrRootDirectory, const char *dont_delete_this)
+template <class CharT>
+inline bool delete_subdirectories(const std::basic_string<CharT> &refcstrRootDirectory, const CharT *dont_delete_this)
 {
    return delete_subdirectories_recursive(refcstrRootDirectory, dont_delete_this, 0u);
 }
@@ -309,7 +434,7 @@ template<class Function>
 inline bool for_each_file_in_dir(const char *dir, Function f)
 {
    void *             hFile;                       // Handle to directory
-   winapi::win32_find_data_t  FileInformation;     // File information
+   winapi::win32_find_data_a  FileInformation;     // File information
 
    //Get base directory
    std::string str(dir);
@@ -342,7 +467,7 @@ inline bool for_each_file_in_dir(const char *dir, Function f)
 }
 
 
-#else    //#if (defined BOOST_INTERPROCESS_WINDOWS)
+#else    //#if defined (BOOST_INTERPROCESS_WINDOWS)
 
 typedef int       file_handle_t;
 typedef off_t     offset_t;
@@ -357,7 +482,7 @@ typedef enum { read_only      = O_RDONLY
              , read_write     = O_RDWR
              , copy_on_write
              , read_private
-             , invalid_mode   = 0xffff 
+             , invalid_mode   = 0xffff
              } mode_t;
 
 typedef enum { file_begin     = SEEK_SET
@@ -365,7 +490,10 @@ typedef enum { file_begin     = SEEK_SET
              , file_current   = SEEK_CUR
              } file_pos_t;
 
-namespace detail{
+typedef int map_options_t;
+static const map_options_t default_map_options = map_options_t(-1);
+
+namespace ipcdetail{
 
 inline mapping_handle_t mapping_handle_from_file_handle(file_handle_t hnd)
 {
@@ -379,28 +507,53 @@ inline file_handle_t file_handle_from_mapping_handle(mapping_handle_t hnd)
 {  return hnd.handle; }
 
 inline bool create_directory(const char *path)
-{  return ::mkdir(path, 0777) == 0 && ::chmod(path, 0777) == 0; }
-
-inline const char *get_temporary_path()
 {
-   const char *names[] = {"/tmp", "TMPDIR", "TMP", "TEMP" };
-   const int names_size = sizeof(names)/sizeof(names[0]);
-   struct stat data;
-   for(int i = 0; i != names_size; ++i){
-      if(::stat(names[i], &data) == 0){
-         return names[i];
-      }
+   ::mode_t m = ::mode_t(0777);
+   int r = BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::mkdir(path, m));
+   return  r == 0;
+}
+
+inline bool open_or_create_directory(const char *path)
+{
+   ::mode_t m = ::mode_t(0777);
+   int r = BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::mkdir(path, m));
+   return r == 0 || (errno == EEXIST);
+}
+
+inline bool open_or_create_shared_directory(const char *path)
+{
+   const ::mode_t m = ::mode_t(01777);
+   int rc = BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::mkdir(path, m));
+   const bool created = rc == 0;
+   const bool created_or_exists = created || (errno == EEXIST);
+   //Try to maximize the chance that the sticky bit is set in shared dirs
+   //created with old versions that did not set it (for security reasons)
+   rc = BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::chmod(path, m));
+   return created ? (rc == 0) : created_or_exists;
+}
+
+inline bool remove_directory(const char *path)
+{  return ::rmdir(path) == 0; }
+
+inline bool get_temporary_path(char *buffer, std::size_t buf_len, std::size_t &required_len)
+{
+   required_len = 5u;
+   if(buf_len < required_len)
+      return false;
+   else{
+      std::strcpy(buffer, "/tmp");
    }
-   return "/tmp";
+   return true;
 }
 
 inline file_handle_t create_new_file
    (const char *name, mode_t mode, const permissions & perm = permissions(), bool temporary = false)
-{  
+{
    (void)temporary;
-   int ret = ::open(name, ((int)mode) | O_EXCL | O_CREAT, perm.get_permissions());
+   int ret = BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::open(name, ((int)mode) | O_EXCL | O_CREAT, perm.get_permissions()));
    if(ret >= 0){
-      ::fchmod(ret, perm.get_permissions());
+      int rc = BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::fchmod(ret, perm.get_permissions()));
+      (void)rc;
    }
    return ret;
 }
@@ -412,16 +565,20 @@ inline file_handle_t create_or_open_file
    int ret = -1;
    //We need a loop to change permissions correctly using fchmod, since
    //with "O_CREAT only" ::open we don't know if we've created or opened the file.
-   while(1){
-      ret = ::open(name, ((int)mode) | O_EXCL | O_CREAT, perm.get_permissions());
+   while(true){
+      ret = BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::open(name, ((int)mode) | O_EXCL | O_CREAT, perm.get_permissions()));
       if(ret >= 0){
-         ::fchmod(ret, perm.get_permissions());
+         int rc = BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::fchmod(ret, perm.get_permissions()));
+         (void)rc;
          break;
       }
       else if(errno == EEXIST){
-         if((ret = ::open(name, (int)mode)) >= 0 || errno != ENOENT){
+         if((ret = BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::open(name, (int)mode))) >= 0 || errno != ENOENT){
             break;
          }
+      }
+      else{
+         break;
       }
    }
    return ret;
@@ -429,21 +586,29 @@ inline file_handle_t create_or_open_file
 
 inline file_handle_t open_existing_file
    (const char *name, mode_t mode, bool temporary = false)
-{  
+{
    (void)temporary;
-   return ::open(name, (int)mode);
+   return BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::open(name, (int)mode));
 }
 
 inline bool delete_file(const char *name)
-{  return ::unlink(name) == 0;   }
+{  return BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::unlink(name)) == 0;   }
 
 inline bool truncate_file (file_handle_t hnd, std::size_t size)
-{  return 0 == ::ftruncate(hnd, size);   }
+{
+   typedef boost::move_detail::make_unsigned<off_t>::type uoff_t;
+   BOOST_INTERPROCESS_STATIC_ASSERT(( sizeof(uoff_t) >= sizeof(std::size_t) ));
+   if( uoff_t(-1)/2u < uoff_t(size) ){
+      errno = EINVAL;
+      return false;
+   }
+   return 0 == BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::ftruncate(hnd, off_t(size)));
+}
 
 inline bool get_file_size(file_handle_t hnd, offset_t &size)
-{  
+{
    struct stat data;
-   bool ret = 0 == ::fstat(hnd, &data);
+   bool ret = 0 == BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::fstat(hnd, &data));
    if(ret){
       size = data.st_size;
    }
@@ -451,16 +616,16 @@ inline bool get_file_size(file_handle_t hnd, offset_t &size)
 }
 
 inline bool set_file_pointer(file_handle_t hnd, offset_t off, file_pos_t pos)
-{  return ((off_t)(-1)) != ::lseek(hnd, off, (int)pos); }
+{  return ((off_t)(-1)) != BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::lseek(hnd, off, (int)pos)); }
 
 inline bool get_file_pointer(file_handle_t hnd, offset_t &off)
-{  
-   off = ::lseek(hnd, 0, SEEK_CUR);
+{
+   off = BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::lseek(hnd, 0, SEEK_CUR));
    return off != ((off_t)-1);
 }
 
 inline bool write_file(file_handle_t hnd, const void *data, std::size_t numdata)
-{  return (ssize_t(numdata)) == ::write(hnd, data, numdata);  }
+{  return (ssize_t(numdata)) == BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::write(hnd, data, numdata));  }
 
 inline file_handle_t invalid_file()
 {  return -1;  }
@@ -475,7 +640,7 @@ inline bool acquire_file_lock(file_handle_t hnd)
    lock.l_whence  = SEEK_SET;
    lock.l_start   = 0;
    lock.l_len     = 0;
-   return -1 != ::fcntl(hnd, F_SETLKW, &lock);
+   return -1 != BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::fcntl(hnd, F_SETLKW, &lock));
 }
 
 inline bool try_acquire_file_lock(file_handle_t hnd, bool &acquired)
@@ -485,10 +650,10 @@ inline bool try_acquire_file_lock(file_handle_t hnd, bool &acquired)
    lock.l_whence  = SEEK_SET;
    lock.l_start   = 0;
    lock.l_len     = 0;
-   int ret = ::fcntl(hnd, F_SETLK, &lock);
+   int ret = BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::fcntl(hnd, F_SETLK, &lock));
    if(ret == -1){
       return (errno == EAGAIN || errno == EACCES) ?
-               acquired = false, true : false;
+               (acquired = false, true) : false;
    }
    return (acquired = true);
 }
@@ -500,30 +665,30 @@ inline bool release_file_lock(file_handle_t hnd)
    lock.l_whence  = SEEK_SET;
    lock.l_start   = 0;
    lock.l_len     = 0;
-   return -1 != ::fcntl(hnd, F_SETLK, &lock);
+   return -1 != BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::fcntl(hnd, F_SETLK, &lock));
 }
 
 inline bool acquire_file_lock_sharable(file_handle_t hnd)
-{  
+{
    struct ::flock lock;
    lock.l_type    = F_RDLCK;
    lock.l_whence  = SEEK_SET;
    lock.l_start   = 0;
    lock.l_len     = 0;
-   return -1 != ::fcntl(hnd, F_SETLKW, &lock);
+   return -1 != BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::fcntl(hnd, F_SETLKW, &lock));
 }
 
 inline bool try_acquire_file_lock_sharable(file_handle_t hnd, bool &acquired)
-{  
+{
    struct flock lock;
    lock.l_type    = F_RDLCK;
    lock.l_whence  = SEEK_SET;
    lock.l_start   = 0;
    lock.l_len     = 0;
-   int ret = ::fcntl(hnd, F_SETLK, &lock);
+   int ret = BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::fcntl(hnd, F_SETLK, &lock));
    if(ret == -1){
-      return (errno == EAGAIN || errno == EACCES) ? 
-               acquired = false, true : false;
+      return (errno == EAGAIN || errno == EACCES) ?
+               (acquired = false, true) : false;
    }
    return (acquired = true);
 }
@@ -533,30 +698,30 @@ inline bool release_file_lock_sharable(file_handle_t hnd)
 
 #if 0
 inline bool acquire_file_lock(file_handle_t hnd)
-{  return 0 == ::flock(hnd, LOCK_EX); }
+{  return 0 == BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::flock(hnd, LOCK_EX)); }
 
 inline bool try_acquire_file_lock(file_handle_t hnd, bool &acquired)
 {
-   int ret = ::flock(hnd, LOCK_EX | LOCK_NB);
+   int ret = BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::flock(hnd, LOCK_EX | LOCK_NB));
    acquired = ret == 0;
    return (acquired || errno == EWOULDBLOCK);
 }
 
 inline bool release_file_lock(file_handle_t hnd)
-{  return 0 == ::flock(hnd, LOCK_UN); }
+{  return 0 == BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::flock(hnd, LOCK_UN)); }
 
 inline bool acquire_file_lock_sharable(file_handle_t hnd)
-{  return 0 == ::flock(hnd, LOCK_SH); }
+{  return 0 == BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::flock(hnd, LOCK_SH)); }
 
 inline bool try_acquire_file_lock_sharable(file_handle_t hnd, bool &acquired)
 {
-   int ret = ::flock(hnd, LOCK_SH | LOCK_NB);
+   int ret = BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::flock(hnd, LOCK_SH | LOCK_NB));
    acquired = ret == 0;
    return (acquired || errno == EWOULDBLOCK);
 }
 
 inline bool release_file_lock_sharable(file_handle_t hnd)
-{  return 0 == ::flock(hnd, LOCK_UN); }
+{  return 0 == BOOST_INTERPROCESS_EINTR_RETRY(int, -1, ::flock(hnd, LOCK_UN)); }
 #endif
 
 inline bool delete_subdirectories_recursive
@@ -570,7 +735,7 @@ inline bool delete_subdirectories_recursive
    struct dir_close
    {
       DIR *d_;
-      dir_close(DIR *d) : d_(d) {}
+      dir_close(DIR *dirp) : d_(dirp) {}
       ~dir_close() { ::closedir(d_); }
    } dc(d); (void)dc;
 
@@ -583,7 +748,7 @@ inline bool delete_subdirectories_recursive
             || (de->d_name[1] == '.' && de->d_name[2] == '\0' )) ){
          continue;
       }
-      if(dont_delete_this && std::strcmp(dont_delete_this, de->d_name) == 0){  
+      if(dont_delete_this && std::strcmp(dont_delete_this, de->d_name) == 0){
          continue;
       }
       fn = refcstrRootDirectory;
@@ -619,7 +784,7 @@ inline bool for_each_file_in_dir(const char *dir, Function f)
    struct dir_close
    {
       DIR *d_;
-      dir_close(DIR *d) : d_(d) {}
+      dir_close(DIR *dirp) : d_(dirp) {}
       ~dir_close() { ::closedir(d_); }
    } dc(d); (void)dc;
 
@@ -654,22 +819,39 @@ inline bool delete_subdirectories(const std::string &refcstrRootDirectory, const
    return delete_subdirectories_recursive(refcstrRootDirectory, dont_delete_this );
 }
 
-#endif   //#if (defined BOOST_INTERPROCESS_WINDOWS)
+#endif   //#if defined (BOOST_INTERPROCESS_WINDOWS)
 
-inline bool open_or_create_directory(const char *dir_name)
+inline std::string get_temporary_path()
 {
-   //If fails, check that it's because it already exists
-   if(!create_directory(dir_name)){
-      error_info info(system_error_code());
-      if(info.get_error_code() != already_exists_error){
-         return false;
-      }
+   std::size_t required_len = 0;
+   get_temporary_path((char*)0, 0, required_len);
+   std::string ret_str(required_len, char(0));
+   get_temporary_path(&ret_str[0], ret_str.size(), required_len);
+   while(!ret_str.empty() && !ret_str[ret_str.size()-1]){
+      ret_str.erase(ret_str.size()-1);
    }
-   return true;
+
+   return ret_str;
 }
 
+#ifdef BOOST_INTERPROCESS_WCHAR_NAMED_RESOURCES
 
-}  //namespace detail{
+inline std::wstring get_temporary_wpath()
+{
+   std::size_t required_len = 0;
+   get_temporary_path((wchar_t*)0, 0, required_len);
+   std::wstring ret_str(required_len, char(0));
+   get_temporary_path(&ret_str[0], ret_str.size(), required_len);
+   while(!ret_str.empty() && !ret_str[ret_str.size()-1]){
+      ret_str.erase(ret_str.size()-1);
+   }
+
+   return ret_str;
+}
+
+#endif
+
+}  //namespace ipcdetail{
 }  //namespace interprocess {
 }  //namespace boost {
 

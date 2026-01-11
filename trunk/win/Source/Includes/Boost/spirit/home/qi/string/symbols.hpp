@@ -23,10 +23,10 @@
 #include <boost/spirit/home/support/info.hpp>
 #include <boost/spirit/home/support/unused.hpp>
 #include <boost/spirit/home/support/string_traits.hpp>
-
-#include <boost/fusion/include/at.hpp>
-#include <boost/range.hpp>
-#include <boost/type_traits/add_reference.hpp>
+#include <boost/proto/extends.hpp>
+#include <boost/proto/traits.hpp>
+#include <boost/range/begin.hpp>
+#include <boost/range/end.hpp>
 #include <boost/shared_ptr.hpp>
 
 #if defined(BOOST_MSVC)
@@ -166,6 +166,7 @@ namespace boost { namespace spirit { namespace qi
             return sym.remove(str);
         }
 
+#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
         // non-const version needed to suppress proto's += kicking in
         template <typename Str>
         friend adder const&
@@ -181,7 +182,23 @@ namespace boost { namespace spirit { namespace qi
         {
             return sym.remove(str);
         }
+#else
+        // for rvalue references
+        template <typename Str>
+        friend adder const&
+        operator+=(symbols& sym, Str&& str)
+        {
+            return sym.add(str);
+        }
 
+        // for rvalue references
+        template <typename Str>
+        friend remover const&
+        operator-=(symbols& sym, Str&& str)
+        {
+            return sym.remove(str);
+        }
+#endif
         template <typename F>
         void for_each(F f) const
         {
@@ -240,14 +257,14 @@ public:
         template <typename Iterator, typename Context
           , typename Skipper, typename Attribute>
         bool parse(Iterator& first, Iterator const& last
-          , Context& /*context*/, Skipper const& skipper, Attribute& attr) const
+          , Context& /*context*/, Skipper const& skipper, Attribute& attr_) const
         {
             qi::skip_over(first, last, skipper);
 
             if (value_type* val_ptr
                 = lookup->find(first, last, Filter()))
             {
-                spirit::traits::assign_to(*val_ptr, attr);
+                spirit::traits::assign_to(*val_ptr, attr_);
                 return true;
             }
             return false;
@@ -268,13 +285,17 @@ public:
             return name_;
         }
 
+#ifdef _MSC_VER
+#  pragma warning(push)
+#  pragma warning(disable: 4512) // assignment operator could not be generated.
+#endif
         struct adder
         {
             template <typename, typename = unused_type, typename = unused_type>
             struct result { typedef adder const& type; };
 
-            adder(symbols& sym)
-              : sym(sym)
+            adder(symbols& sym_)
+              : sym(sym_)
             {
             }
 
@@ -305,10 +326,6 @@ public:
             }
 
             symbols& sym;
-
-        private:
-            // silence MSVC warning C4512: assignment operator could not be generated
-            adder& operator= (adder const&);
         };
 
         struct remover
@@ -316,8 +333,8 @@ public:
             template <typename, typename = unused_type, typename = unused_type>
             struct result { typedef remover const& type; };
 
-            remover(symbols& sym)
-              : sym(sym)
+            remover(symbols& sym_)
+              : sym(sym_)
             {
             }
 
@@ -348,11 +365,10 @@ public:
             }
 
             symbols& sym;
-
-        private:
-            // silence MSVC warning C4512: assignment operator could not be generated
-            remover& operator= (remover const&);
         };
+#ifdef _MSC_VER
+#  pragma warning(pop)
+#endif
 
         adder add;
         remover remove;
@@ -404,7 +420,7 @@ namespace boost { namespace spirit { namespace traits
     template <typename Char, typename T, typename Lookup, typename Filter
       , typename Attr, typename Context, typename Iterator>
     struct handles_container<qi::symbols<Char, T, Lookup, Filter>, Attr, Context, Iterator>
-      : traits::is_container<Attr> {}; 
+      : traits::is_container<Attr> {};
 }}}
 
 #if defined(BOOST_MSVC)

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2009. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2012. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -11,7 +11,11 @@
 #ifndef BOOST_INTERPROCESS_NAMED_MUTEX_HPP
 #define BOOST_INTERPROCESS_NAMED_MUTEX_HPP
 
-#if (defined _MSC_VER) && (_MSC_VER >= 1200)
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+#
+#if defined(BOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
@@ -19,17 +23,18 @@
 #include <boost/interprocess/detail/workaround.hpp>
 #include <boost/interprocess/creation_tags.hpp>
 #include <boost/interprocess/exceptions.hpp>
-#include <boost/interprocess/sync/emulation/named_creation_functor.hpp>
+#include <boost/interprocess/timed_utils.hpp>
 #include <boost/interprocess/detail/interprocess_tester.hpp>
 #include <boost/interprocess/permissions.hpp>
 
 #if defined(BOOST_INTERPROCESS_NAMED_MUTEX_USES_POSIX_SEMAPHORES)
-   #include <boost/interprocess/sync/posix/semaphore_wrapper.hpp>
+   #include <boost/interprocess/sync/posix/named_mutex.hpp>
+   #define BOOST_INTERPROCESS_NAMED_MUTEX_USE_POSIX
+#elif !defined(BOOST_INTERPROCESS_FORCE_GENERIC_EMULATION) && defined (BOOST_INTERPROCESS_WINDOWS)
+   #include <boost/interprocess/sync/windows/named_mutex.hpp>
+   #define BOOST_INTERPROCESS_NAMED_MUTEX_USE_WINAPI
 #else
-   #include <boost/interprocess/shared_memory_object.hpp>
-   #include <boost/interprocess/sync/interprocess_mutex.hpp>
-   #include <boost/interprocess/detail/managed_open_or_create_impl.hpp>
-   #include <boost/interprocess/detail/posix_time_types_wrk.hpp>
+   #include <boost/interprocess/sync/shm/named_mutex.hpp>
 #endif
 
 //!\file
@@ -40,37 +45,67 @@ namespace interprocess {
 
 class named_condition;
 
-//!A mutex with a global name, so it can be found from different 
+//!A mutex with a global name, so it can be found from different
 //!processes. This mutex can't be placed in shared memory, and
 //!each process should have it's own named_mutex.
 class named_mutex
 {
-   /// @cond
+   #if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
 
    //Non-copyable
    named_mutex();
    named_mutex(const named_mutex &);
    named_mutex &operator=(const named_mutex &);
    friend class named_condition;
-   /// @endcond
+   #endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
 
    public:
-   //!Creates a global interprocess_mutex with a name.
+   //!Creates a global mutex with a name.
    //!Throws interprocess_exception on error.
-   named_mutex(create_only_t create_only, const char *name, const permissions &perm = permissions());
+   named_mutex(create_only_t, const char *name, const permissions &perm = permissions());
 
-   //!Opens or creates a global mutex with a name. 
+   //!Opens or creates a global mutex with a name.
    //!If the mutex is created, this call is equivalent to
    //!named_mutex(create_only_t, ... )
    //!If the mutex is already created, this call is equivalent
    //!named_mutex(open_only_t, ... )
    //!Does not throw
-   named_mutex(open_or_create_t open_or_create, const char *name, const permissions &perm = permissions());
+   named_mutex(open_or_create_t, const char *name, const permissions &perm = permissions());
 
    //!Opens a global mutex with a name if that mutex is previously
    //!created. If it is not previously created this function throws
    //!interprocess_exception.
-   named_mutex(open_only_t open_only, const char *name);
+   named_mutex(open_only_t, const char *name);
+
+   #if defined(BOOST_INTERPROCESS_WCHAR_NAMED_RESOURCES) || defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
+
+   //!Creates a global mutex with a name.
+   //!Throws interprocess_exception on error.
+   //! 
+   //!Note: This function is only available on operating systems with
+   //!      native wchar_t APIs (e.g. Windows).
+   named_mutex(create_only_t, const wchar_t *name, const permissions &perm = permissions());
+
+   //!Opens or creates a global mutex with a name.
+   //!If the mutex is created, this call is equivalent to
+   //!named_mutex(create_only_t, ... )
+   //!If the mutex is already created, this call is equivalent
+   //!named_mutex(open_only_t, ... )
+   //!Does not throw
+   //! 
+   //!Note: This function is only available on operating systems with
+   //!      native wchar_t APIs (e.g. Windows).
+   named_mutex(open_or_create_t, const wchar_t *name, const permissions &perm = permissions());
+
+   //!Opens a global mutex with a name if that mutex is previously
+   //!created. If it is not previously created this function throws
+   //!interprocess_exception.
+   //! 
+   //!Note: This function is only available on operating systems with
+   //!      native wchar_t APIs (e.g. Windows).
+   named_mutex(open_only_t, const wchar_t *name);
+
+   #endif   //defined(BOOST_INTERPROCESS_WCHAR_NAMED_RESOURCES) || defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
 
    //!Destroys *this and indicates that the calling process is finished using
    //!the resource. The destructor function will deallocate
@@ -81,151 +116,148 @@ class named_mutex
    ~named_mutex();
 
    //!Unlocks a previously locked
-   //!interprocess_mutex.
+   //!mutex.
    void unlock();
 
-   //!Locks interprocess_mutex, sleeps when interprocess_mutex is already locked.
+   //!Requires: The calling thread does not own the mutex.
+   //!
+   //!Locks the mutex, sleeps when the mutex is already locked.
    //!Throws interprocess_exception if a severe error is found
+   //!
+   //!Note: A program may deadlock if the thread that has ownership calls 
+   //!   this function. If the implementation can detect the deadlock,
+   //!   an exception could be thrown.
    void lock();
 
-   //!Tries to lock the interprocess_mutex, returns false when interprocess_mutex 
+   //!Requires: The calling thread does not own the mutex.
+   //!
+   //!Tries to lock the mutex, returns false when the mutex
    //!is already locked, returns true when success.
    //!Throws interprocess_exception if a severe error is found
+   //!
+   //!Note: A program may deadlock if the thread that has ownership calls 
+   //!   this function. If the implementation can detect the deadlock,
+   //!   an exception could be thrown.
    bool try_lock();
 
-   //!Tries to lock the interprocess_mutex until time abs_time,
+   //!Requires: The calling thread does not own the mutex.
+   //!
+   //!Tries to lock the the mutex until time abs_time,
    //!Returns false when timeout expires, returns true when locks.
    //!Throws interprocess_exception if a severe error is found
-   bool timed_lock(const boost::posix_time::ptime &abs_time);
+   //!
+   //!Note: A program may deadlock if the thread that has ownership calls 
+   //!   this function. If the implementation can detect the deadlock,
+   //!   an exception could be thrown.
+   template<class TimePoint>
+   bool timed_lock(const TimePoint &abs_time);
+
+   //!Same as `timed_lock`, but this function is modeled after the
+   //!standard library interface.
+   template<class TimePoint> bool try_lock_until(const TimePoint &abs_time)
+   {  return this->timed_lock(abs_time);  }
+
+   //!Same as `timed_lock`, but this function is modeled after the
+   //!standard library interface.
+   template<class Duration>  bool try_lock_for(const Duration &dur)
+   {  return this->timed_lock(ipcdetail::duration_to_ustime(dur)); }
 
    //!Erases a named mutex from the system.
    //!Returns false on error. Never throws.
    static bool remove(const char *name);
 
-   /// @cond
+   #if defined(BOOST_INTERPROCESS_WCHAR_NAMED_RESOURCES) || defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
+
+   //!Erases a named mutex from the system.
+   //!Returns false on error. Never throws.
+   //! 
+   //!Note: This function is only available on operating systems with
+   //!      native wchar_t APIs (e.g. Windows).
+   static bool remove(const wchar_t *name);
+
+   #endif   //defined(BOOST_INTERPROCESS_WCHAR_NAMED_RESOURCES) || defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
+
+   #if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
    private:
-   friend class detail::interprocess_tester;
+   friend class ipcdetail::interprocess_tester;
    void dont_close_on_destruction();
 
-   #if defined(BOOST_INTERPROCESS_NAMED_MUTEX_USES_POSIX_SEMAPHORES)
-   detail::named_semaphore_wrapper m_sem;
+   public:
+   #if defined(BOOST_INTERPROCESS_NAMED_MUTEX_USE_POSIX)
+      typedef ipcdetail::posix_named_mutex      internal_mutex_type;
+   #elif defined(BOOST_INTERPROCESS_NAMED_MUTEX_USE_WINAPI)
+      typedef ipcdetail::winapi_named_mutex    internal_mutex_type;
    #else
-   interprocess_mutex *mutex() const
-   {  return static_cast<interprocess_mutex*>(m_shmem.get_user_address()); }
-
-   detail::managed_open_or_create_impl<shared_memory_object> m_shmem;
-   typedef detail::named_creation_functor<interprocess_mutex> construct_func_t;
+      typedef ipcdetail::shm_named_mutex        internal_mutex_type;
    #endif
-   /// @endcond
+   internal_mutex_type &internal_mutex()
+   {  return m_mut; }
+
+   internal_mutex_type m_mut;
+
+   #endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
 };
 
-/// @cond
-
-#if defined(BOOST_INTERPROCESS_NAMED_MUTEX_USES_POSIX_SEMAPHORES)
+#if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
 
 inline named_mutex::named_mutex(create_only_t, const char *name, const permissions &perm)
-   :  m_sem(detail::DoCreate, name, 1, perm)
+   :  m_mut(create_only_t(), name, perm)
 {}
 
 inline named_mutex::named_mutex(open_or_create_t, const char *name, const permissions &perm)
-   :  m_sem(detail::DoOpenOrCreate, name, 1, perm)
+   :  m_mut(open_or_create_t(), name, perm)
 {}
 
 inline named_mutex::named_mutex(open_only_t, const char *name)
-   :  m_sem(detail::DoOpen, name, 1, permissions())
+   :  m_mut(open_only_t(), name)
 {}
 
+#if defined(BOOST_INTERPROCESS_WCHAR_NAMED_RESOURCES) || defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
+
+inline named_mutex::named_mutex(create_only_t, const wchar_t *name, const permissions &perm)
+   :  m_mut(create_only_t(), name, perm)
+{}
+
+inline named_mutex::named_mutex(open_or_create_t, const wchar_t *name, const permissions &perm)
+   :  m_mut(open_or_create_t(), name, perm)
+{}
+
+inline named_mutex::named_mutex(open_only_t, const wchar_t *name)
+   :  m_mut(open_only_t(), name)
+{}
+
+#endif   //defined(BOOST_INTERPROCESS_WCHAR_NAMED_RESOURCES) || defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
+
 inline void named_mutex::dont_close_on_destruction()
-{  detail::interprocess_tester::dont_close_on_destruction(m_sem);  }
+{  ipcdetail::interprocess_tester::dont_close_on_destruction(m_mut); }
 
 inline named_mutex::~named_mutex()
 {}
 
 inline void named_mutex::lock()
-{  m_sem.wait();  }
+{  m_mut.lock();  }
 
 inline void named_mutex::unlock()
-{  m_sem.post();  }
+{  m_mut.unlock();  }
 
 inline bool named_mutex::try_lock()
-{  return m_sem.try_wait();  }
+{  return m_mut.try_lock();  }
 
-inline bool named_mutex::timed_lock(const boost::posix_time::ptime &abs_time)
-{
-   if(abs_time == boost::posix_time::pos_infin){
-      this->lock();
-      return true;
-   }
-   return m_sem.timed_wait(abs_time);
-}
+template<class TimePoint>
+inline bool named_mutex::timed_lock(const TimePoint &abs_time)
+{  return m_mut.timed_lock(abs_time);  }
 
 inline bool named_mutex::remove(const char *name)
-{  return detail::named_semaphore_wrapper::remove(name);   }
+{  return internal_mutex_type::remove(name);   }
 
-#else
+#if defined(BOOST_INTERPROCESS_WCHAR_NAMED_RESOURCES) || defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
 
-inline void named_mutex::dont_close_on_destruction()
-{  detail::interprocess_tester::dont_close_on_destruction(m_shmem);  }
-
-inline named_mutex::~named_mutex()
-{}
-
-inline named_mutex::named_mutex(create_only_t, const char *name, const permissions &perm)
-   :  m_shmem  (create_only
-               ,name
-               ,sizeof(interprocess_mutex) +
-                  detail::managed_open_or_create_impl<shared_memory_object>::
-                     ManagedOpenOrCreateUserOffset
-               ,read_write
-               ,0
-               ,construct_func_t(detail::DoCreate)
-               ,perm)
-{}
-
-inline named_mutex::named_mutex(open_or_create_t, const char *name, const permissions &perm)
-   :  m_shmem  (open_or_create
-               ,name
-               ,sizeof(interprocess_mutex) +
-                  detail::managed_open_or_create_impl<shared_memory_object>::
-                     ManagedOpenOrCreateUserOffset
-               ,read_write
-               ,0
-               ,construct_func_t(detail::DoOpenOrCreate)
-               ,perm)
-{}
-
-inline named_mutex::named_mutex(open_only_t, const char *name)
-   :  m_shmem  (open_only
-               ,name
-               ,read_write
-               ,0
-               ,construct_func_t(detail::DoOpen))
-{}
-
-inline void named_mutex::lock()
-{  this->mutex()->lock();  }
-
-inline void named_mutex::unlock()
-{  this->mutex()->unlock();  }
-
-inline bool named_mutex::try_lock()
-{  return this->mutex()->try_lock();  }
-
-inline bool named_mutex::timed_lock(const boost::posix_time::ptime &abs_time)
-{
-   if(abs_time == boost::posix_time::pos_infin){
-      this->lock();
-      return true;
-   }
-   return this->mutex()->timed_lock(abs_time);
-}
-
-inline bool named_mutex::remove(const char *name)
-{  return shared_memory_object::remove(name); }
+inline bool named_mutex::remove(const wchar_t *name)
+{  return internal_mutex_type::remove(name);   }
 
 #endif
 
-/// @endcond
+#endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
 
 }  //namespace interprocess {
 }  //namespace boost {

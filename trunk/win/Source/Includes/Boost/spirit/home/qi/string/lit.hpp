@@ -89,8 +89,8 @@ namespace boost { namespace spirit { namespace qi
         char_type;
         typedef std::basic_string<char_type> string_type;
 
-        literal_string(typename add_reference<String>::type str)
-          : str(str)
+        literal_string(typename add_reference<String>::type str_)
+          : str(str_)
         {}
 
         template <typename Context, typename Iterator>
@@ -104,10 +104,10 @@ namespace boost { namespace spirit { namespace qi
         template <typename Iterator, typename Context
           , typename Skipper, typename Attribute>
         bool parse(Iterator& first, Iterator const& last
-          , Context& /*context*/, Skipper const& skipper, Attribute& attr) const
+          , Context& /*context*/, Skipper const& skipper, Attribute& attr_) const
         {
             qi::skip_over(first, last, skipper);
-            return detail::string_parse(str, first, last, attr);
+            return detail::string_parse(str, first, last, attr_);
         }
 
         template <typename Context>
@@ -117,10 +117,6 @@ namespace boost { namespace spirit { namespace qi
         }
 
         String str;
-
-    private:
-        // silence MSVC warning C4512: assignment operator could not be generated
-        literal_string& operator= (literal_string const&);
     };
 
     template <typename String, bool no_attribute>
@@ -138,7 +134,7 @@ namespace boost { namespace spirit { namespace qi
           , str_hi(in)
         {
 #if BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1600))
-            encoding; // suppresses warning: C4100: 'encoding' : unreferenced formal parameter
+            (void)encoding; // suppresses warning: C4100: 'encoding' : unreferenced formal parameter
 #endif
             typename string_type::iterator loi = str_lo.begin();
             typename string_type::iterator hii = str_hi.begin();
@@ -163,10 +159,10 @@ namespace boost { namespace spirit { namespace qi
         template <typename Iterator, typename Context
           , typename Skipper, typename Attribute>
         bool parse(Iterator& first, Iterator const& last
-          , Context& /*context*/, Skipper const& skipper, Attribute& attr) const
+          , Context& /*context*/, Skipper const& skipper, Attribute& attr_) const
         {
             qi::skip_over(first, last, skipper);
-            return detail::string_parse(str_lo, str_hi, first, last, attr);
+            return detail::string_parse(str_lo, str_hi, first, last, attr_);
         }
 
         template <typename Context>

@@ -8,9 +8,8 @@
 =============================================================================*/
 #ifndef BOOST_SPIRIT_INCLUDE_PHOENIX_LIMITS
 #define BOOST_SPIRIT_INCLUDE_PHOENIX_LIMITS
+#include <boost/config/header_deprecated.hpp>
+BOOST_HEADER_DEPRECATED("<boost/phoenix/core/limits.hpp>")
 
-#ifdef BOOST_SPIRIT_USE_PHOENIX_V3
 #include <boost/phoenix/core/limits.hpp>
-#endif
-
 #endif

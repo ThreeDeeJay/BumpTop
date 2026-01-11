@@ -2,7 +2,7 @@
 // detail/win_mutex.hpp
 // ~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2025 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,7 +17,7 @@
 
 #include <boost/asio/detail/config.hpp>
 
-#if defined(BOOST_WINDOWS)
+#if defined(BOOST_ASIO_WINDOWS)
 
 #include <boost/asio/detail/noncopyable.hpp>
 #include <boost/asio/detail/scoped_lock.hpp>
@@ -42,6 +42,12 @@ public:
   ~win_mutex()
   {
     ::DeleteCriticalSection(&crit_section_);
+  }
+
+  // Try to lock the mutex.
+  bool try_lock()
+  {
+    return ::TryEnterCriticalSection(&crit_section_) != 0;
   }
 
   // Lock the mutex.
@@ -75,6 +81,6 @@ private:
 # include <boost/asio/detail/impl/win_mutex.ipp>
 #endif // defined(BOOST_ASIO_HEADER_ONLY)
 
-#endif // defined(BOOST_WINDOWS)
+#endif // defined(BOOST_ASIO_WINDOWS)
 
 #endif // BOOST_ASIO_DETAIL_WIN_MUTEX_HPP

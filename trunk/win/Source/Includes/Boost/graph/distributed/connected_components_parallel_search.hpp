@@ -16,6 +16,7 @@
 
 #include <boost/assert.hpp>
 #include <boost/property_map/property_map.hpp>
+#include <boost/property_map/parallel/parallel_property_maps.hpp>
 #include <boost/graph/parallel/algorithm.hpp>
 #include <boost/pending/indirect_cmp.hpp>
 #include <boost/graph/graph_traits.hpp>
@@ -290,8 +291,6 @@ namespace boost { namespace graph { namespace distributed {
     typedef typename boost::graph::parallel::process_group_type<Graph>
       ::type process_group_type;
     typedef typename process_group_type::process_id_type process_id_type;
-    typedef typename property_map<Graph, vertex_owner_t>
-      ::const_type vertex_owner_map;
     typedef std::queue<vertex_descriptor> work_queue;
 
     static const component_value_type max_component = 

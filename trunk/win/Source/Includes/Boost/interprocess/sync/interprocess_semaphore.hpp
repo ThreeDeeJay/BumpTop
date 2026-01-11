@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2009. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2012. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -11,54 +11,57 @@
 #ifndef BOOST_INTERPROCESS_SEMAPHORE_HPP
 #define BOOST_INTERPROCESS_SEMAPHORE_HPP
 
-/// @cond
+#if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
 
-#if (defined _MSC_VER) && (_MSC_VER >= 1200)
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+#
+#if defined(BOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
 #include <boost/interprocess/detail/config_begin.hpp>
 #include <boost/interprocess/detail/workaround.hpp>
+
 #include <boost/interprocess/creation_tags.hpp>
 #include <boost/interprocess/exceptions.hpp>
-#include <boost/interprocess/detail/posix_time_types_wrk.hpp>
+#include <boost/interprocess/sync/detail/locks.hpp>
+#include <boost/interprocess/sync/detail/common_algorithms.hpp>
 
-#if !defined(BOOST_INTERPROCESS_FORCE_GENERIC_EMULATION) && \
-   (defined(BOOST_INTERPROCESS_POSIX_PROCESS_SHARED) && defined(BOOST_INTERPROCESS_POSIX_NAMED_SEMAPHORES))
-   #include <fcntl.h>      //O_CREAT, O_*... 
-   #include <unistd.h>     //close
-   #include <string>       //std::string
-   #include <semaphore.h>  //sem_* family, SEM_VALUE_MAX
-   #include <sys/stat.h>   //mode_t, S_IRWXG, S_IRWXO, S_IRWXU,
-   #include <boost/interprocess/sync/posix/semaphore_wrapper.hpp>
-   #define BOOST_INTERPROCESS_USE_POSIX
+#if   !defined(BOOST_INTERPROCESS_FORCE_GENERIC_EMULATION) && \
+       defined(BOOST_INTERPROCESS_POSIX_PROCESS_SHARED)    && \
+       defined(BOOST_INTERPROCESS_POSIX_UNNAMED_SEMAPHORES)
+   #include <boost/interprocess/sync/posix/semaphore.hpp>
+   #define BOOST_INTERPROCESS_SEMAPHORE_USE_POSIX
+#elif !defined(BOOST_INTERPROCESS_FORCE_GENERIC_EMULATION) && defined (BOOST_INTERPROCESS_WINDOWS)
+   //Experimental...
+   #include <boost/interprocess/sync/windows/semaphore.hpp>
+   #define BOOST_INTERPROCESS_SEMAPHORE_USE_WINAPI
 #else
-   #include <boost/interprocess/detail/atomic.hpp>
-   #include <boost/cstdint.hpp>
-   #include <boost/interprocess/detail/os_thread_functions.hpp>
-   #define BOOST_INTERPROCESS_USE_GENERIC_EMULATION
+   //spin_semaphore is used
+   #include <boost/interprocess/sync/spin/semaphore.hpp>
 #endif
 
-/// @endcond
+#endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
 
 //!\file
 //!Describes a interprocess_semaphore class for inter-process synchronization
 
 namespace boost {
-
 namespace interprocess {
 
-//!Wraps a interprocess_semaphore that can be placed in shared memory and can be 
+//!Wraps a interprocess_semaphore that can be placed in shared memory and can be
 //!shared between processes. Allows timed lock tries
 class interprocess_semaphore
 {
-   /// @cond
+   #if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
    //Non-copyable
    interprocess_semaphore(const interprocess_semaphore &);
    interprocess_semaphore &operator=(const interprocess_semaphore &);
-   /// @endcond
+   #endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
    public:
-   //!Creates a interprocess_semaphore with the given initial count. 
+   //!Creates a interprocess_semaphore with the given initial count.
    //!interprocess_exception if there is an error.*/
    interprocess_semaphore(unsigned int initialCount);
 
@@ -72,7 +75,7 @@ class interprocess_semaphore
    void post();
 
    //!Decrements the interprocess_semaphore. If the interprocess_semaphore value is not greater than zero,
-   //!then the calling process/thread blocks until it can decrement the counter. 
+   //!then the calling process/thread blocks until it can decrement the counter.
    //!If there is an error an interprocess_exception exception is thrown.
    void wait();
 
@@ -86,33 +89,54 @@ class interprocess_semaphore
    //!to the posted or the timeout expires. If the timeout expires, the
    //!function returns false. If the interprocess_semaphore is posted the function
    //!returns true. If there is an error throws sem_exception
-   bool timed_wait(const boost::posix_time::ptime &abs_time);
+   template<class TimePoint>
+   bool timed_wait(const TimePoint &abs_time);
 
    //!Returns the interprocess_semaphore count
 //   int get_count() const;
-   /// @cond
+   #if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
    private:
-   #if defined(BOOST_INTERPROCESS_USE_GENERIC_EMULATION)
-   volatile boost::uint32_t m_count;
-   #else 
-   detail::semaphore_wrapper m_sem;
-   #endif   //#if defined(BOOST_INTERPROCESS_USE_GENERIC_EMULATION)
-   /// @endcond
+   #if defined(BOOST_INTERPROCESS_SEMAPHORE_USE_POSIX)
+      typedef ipcdetail::posix_semaphore internal_sem_t;
+   #elif defined(BOOST_INTERPROCESS_SEMAPHORE_USE_WINAPI)
+      typedef ipcdetail::winapi_semaphore internal_sem_t;
+   #else
+      typedef ipcdetail::spin_semaphore internal_sem_t;
+   #endif   //#if defined(BOOST_INTERPROCESS_FORCE_GENERIC_EMULATION)
+   internal_sem_t m_sem;
+   #endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
 };
 
 }  //namespace interprocess {
-
 }  //namespace boost {
 
-#ifdef BOOST_INTERPROCESS_USE_GENERIC_EMULATION
-#  undef BOOST_INTERPROCESS_USE_GENERIC_EMULATION
-#  include <boost/interprocess/sync/emulation/interprocess_semaphore.hpp>
-#endif
+namespace boost {
+namespace interprocess {
 
-#ifdef BOOST_INTERPROCESS_USE_POSIX
-#  undef BOOST_INTERPROCESS_USE_POSIX
-#  include <boost/interprocess/sync/posix/interprocess_semaphore.hpp>
-#endif
+inline interprocess_semaphore::interprocess_semaphore(unsigned int initialCount)
+   : m_sem(initialCount)
+{}
+
+inline interprocess_semaphore::~interprocess_semaphore(){}
+
+inline void interprocess_semaphore::wait()
+{
+   ipcdetail::lock_to_wait<internal_sem_t> ltw(m_sem);
+   timeout_when_locking_aware_lock(ltw);
+}
+
+inline bool interprocess_semaphore::try_wait()
+{ return m_sem.try_wait(); }
+
+template<class TimePoint>
+inline bool interprocess_semaphore::timed_wait(const TimePoint &abs_time)
+{ return m_sem.timed_wait(abs_time); }
+
+inline void interprocess_semaphore::post()
+{ m_sem.post(); }
+
+}  //namespace interprocess {
+}  //namespace boost {
 
 #include <boost/interprocess/detail/config_end.hpp>
 

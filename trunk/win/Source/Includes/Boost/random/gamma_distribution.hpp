@@ -8,7 +8,7 @@
  *
  * See http://www.boost.org for most recent version including documentation.
  *
- * $Id: gamma_distribution.hpp 71018 2011-04-05 21:27:52Z steven_watanabe $
+ * $Id$
  *
  */
 
@@ -159,7 +159,7 @@ public:
      * the gamma distribution.
      */
     template<class Engine>
-    result_type operator()(Engine& eng)
+    result_type operator()(Engine& eng) const
     {
 #ifndef BOOST_NO_STDC_NAMESPACE
         // allow for Koenig lookup

@@ -12,7 +12,7 @@
 #ifndef BOOST_BIMAP_RELATION_ACCESS_BUILDER_HPP
 #define BOOST_BIMAP_RELATION_ACCESS_BUILDER_HPP
 
-#if defined(_MSC_VER) && (_MSC_VER>=1200)
+#if defined(_MSC_VER)
 #pragma once
 #endif
 
@@ -24,7 +24,7 @@
 #include <boost/type_traits/is_const.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/not.hpp>
-#include <boost/utility/enable_if.hpp>
+#include <boost/core/enable_if.hpp>
 
 
 /******************************************************************************

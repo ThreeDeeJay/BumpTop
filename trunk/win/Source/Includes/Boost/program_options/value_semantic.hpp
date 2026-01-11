@@ -13,10 +13,10 @@
 #include <boost/function/function1.hpp>
 #include <boost/lexical_cast.hpp>
 
-
 #include <string>
 #include <vector>
 #include <typeinfo>
+#include <limits>
 
 namespace boost { namespace program_options {
 
@@ -51,7 +51,7 @@ namespace boost { namespace program_options {
         
         /** Parses a group of tokens that specify a value of option.
             Stores the result in 'value_store', using whatever representation
-            is desired. May be be called several times if value of the same
+            is desired. May be called several times if value of the same
             option is specified more than once.
         */
         virtual void parse(boost::any& value_store, 
@@ -71,7 +71,7 @@ namespace boost { namespace program_options {
         virtual ~value_semantic() {}
     };
 
-    /** Helper class which perform necessary character conversions in the 
+    /** Helper class which performs necessary character conversions in the 
         'parse' method and forwards the data further.
     */
     template<class charT>
@@ -92,7 +92,7 @@ namespace boost { namespace program_options {
     private: // base overrides
         void parse(boost::any& value_store, 
                    const std::vector<std::string>& new_tokens,
-                   bool utf8) const;
+                   bool utf8) const override;
     protected: // interface for derived classes.
         virtual void xparse(boost::any& value_store, 
                             const std::vector<std::string>& new_tokens) 
@@ -112,7 +112,7 @@ namespace boost { namespace program_options {
     private: // base overrides
         void parse(boost::any& value_store, 
                    const std::vector<std::string>& new_tokens,
-                   bool utf8) const;
+                   bool utf8) const override;
     protected: // interface for derived classes.
 #if !defined(BOOST_NO_STD_WSTRING)
         virtual void xparse(boost::any& value_store, 
@@ -130,33 +130,34 @@ namespace boost { namespace program_options {
         : m_zero_tokens(zero_tokens)
         {}
 
-        std::string name() const;
+        std::string name() const override;
 
-        unsigned min_tokens() const;
-        unsigned max_tokens() const;
+        unsigned min_tokens() const override;
+        unsigned max_tokens() const override;
 
-        bool is_composing() const { return false; }
+        bool is_composing() const override { return false; }
 
-        bool is_required() const { return false; }
+        bool is_required() const override { return false; }
         
         /** If 'value_store' is already initialized, or new_tokens
-            has more than one elements, throws. Otherwise, assigns
+            has more than one element, throws. Otherwise, assigns
             the first string from 'new_tokens' to 'value_store', without
             any modifications.
          */
         void xparse(boost::any& value_store,
-                    const std::vector<std::string>& new_tokens) const;
+                    const std::vector<std::string>& new_tokens) const override;
 
         /** Does nothing. */
-        bool apply_default(boost::any&) const { return false; }
+        bool apply_default(boost::any&) const override { return false; }
 
         /** Does nothing. */
-        void notify(const boost::any&) const {}        
+        void notify(const boost::any&) const override {}
     private:
         bool m_zero_tokens;
     };
 
-    /** Base class for all option that have a fixed type, and are
+#ifndef BOOST_NO_RTTI
+    /** Base class for all options that have a fixed type, and are
         willing to announce this type to the outside world.
         Any 'value_semantics' for which you want to find out the
         type can be dynamic_cast-ed to typed_value_base. If conversion
@@ -172,20 +173,23 @@ namespace boost { namespace program_options {
         // class is silly, but just in case.
         virtual ~typed_value_base() {}
     };
+#endif
 
 
     /** Class which handles value of a specific type. */
     template<class T, class charT = char>
-    class typed_value : public value_semantic_codecvt_helper<charT>,
-                        public typed_value_base
+    class typed_value : public value_semantic_codecvt_helper<charT>
+#ifndef BOOST_NO_RTTI
+                      , public typed_value_base
+#endif
     {
     public:
         /** Ctor. The 'store_to' parameter tells where to store
             the value when it's known. The parameter can be NULL. */
         typed_value(T* store_to) 
         : m_store_to(store_to), m_composing(false),
-          m_multitoken(false), m_zero_tokens(false),
-          m_required(false)
+          m_implicit(false), m_multitoken(false),
+          m_zero_tokens(false), m_required(false)
         {} 
 
         /** Specifies default value, which will be used
@@ -214,16 +218,20 @@ namespace boost { namespace program_options {
 
         /** Specifies an implicit value, which will be used
             if the option is given, but without an adjacent value.
-            Using this implies that an explicit value is optional, but if
-            given, must be strictly adjacent to the option, i.e.: '-ovalue'
-            or '--option=value'.  Giving '-o' or '--option' will cause the
-            implicit value to be applied.
+            Using this implies that an explicit value is optional.
         */
         typed_value* implicit_value(const T &v)
         {
             m_implicit_value = boost::any(v);
             m_implicit_value_as_text =
                 boost::lexical_cast<std::string>(v);
+            return this;
+        }
+
+        /** Specifies the name used for the value in the help message.  */
+        typed_value* value_name(const std::string& name)
+        {
+            m_value_name = name;
             return this;
         }
 
@@ -261,13 +269,21 @@ namespace boost { namespace program_options {
             return this;
         }
 
-        /** Specifies that the value can span multiple tokens. */
+        /** Specifies that the value can span multiple tokens. 
+        */
         typed_value* multitoken()
         {
             m_multitoken = true;
             return this;
         }
 
+        /** Specifies that no tokens may be provided as the value of
+            this option, which means that only presence of the option
+            is significant. For such option to be useful, either the
+            'validate' function should be specialized, or the 
+            'implicit_value' method should be also used. In most
+            cases, you can use the 'bool_switch' function instead of
+            using this method. */
         typed_value* zero_tokens() 
         {
             m_zero_tokens = true;
@@ -283,11 +299,11 @@ namespace boost { namespace program_options {
 
     public: // value semantic overrides
 
-        std::string name() const;
+        std::string name() const override;
 
-        bool is_composing() const { return m_composing; }
+        bool is_composing() const override { return m_composing; }
 
-        unsigned min_tokens() const
+        unsigned min_tokens() const override
         {
             if (m_zero_tokens || !m_implicit_value.empty()) {
                 return 0;
@@ -296,9 +312,9 @@ namespace boost { namespace program_options {
             }
         }
 
-        unsigned max_tokens() const {
+        unsigned max_tokens() const override {
             if (m_multitoken) {
-                return 32000;
+                return std::numeric_limits<unsigned>::max BOOST_PREVENT_MACRO_SUBSTITUTION();
             } else if (m_zero_tokens) {
                 return 0;
             } else {
@@ -306,19 +322,19 @@ namespace boost { namespace program_options {
             }
         }
 
-        bool is_required() const { return m_required; }
+        bool is_required() const override { return m_required; }
 
         /** Creates an instance of the 'validator' class and calls
             its operator() to perform the actual conversion. */
         void xparse(boost::any& value_store, 
                     const std::vector< std::basic_string<charT> >& new_tokens) 
-            const;
+            const override;
 
         /** If default value was specified via previous call to 
             'default_value', stores that value into 'value_store'.
             Returns true if default value was stored.
         */
-        virtual bool apply_default(boost::any& value_store) const
+        virtual bool apply_default(boost::any& value_store) const override
         {
             if (m_default_value.empty()) {
                 return false;
@@ -331,14 +347,16 @@ namespace boost { namespace program_options {
         /** If an address of variable to store value was specified
             when creating *this, stores the value there. Otherwise,
             does nothing. */
-        void notify(const boost::any& value_store) const;
+        void notify(const boost::any& value_store) const override;
 
     public: // typed_value_base overrides
         
-        const std::type_info& value_type() const
+#ifndef BOOST_NO_RTTI
+        const std::type_info& value_type() const override
         {
             return typeid(T);
         }
+#endif
         
 
     private:
@@ -346,6 +364,7 @@ namespace boost { namespace program_options {
         
         // Default value is stored as boost::any and not
         // as boost::optional to avoid unnecessary instantiations.
+        std::string m_value_name;
         boost::any m_default_value;
         std::string m_default_value_as_text;
         boost::any m_implicit_value;

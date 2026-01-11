@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2005-2009. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2005-2012. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -15,39 +15,45 @@
 #ifndef BOOST_INTERPROCESS_MUTEX_HPP
 #define BOOST_INTERPROCESS_MUTEX_HPP
 
-/// @cond
+#if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
 
-#if (defined _MSC_VER) && (_MSC_VER >= 1200)
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+#
+#if defined(BOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
 #include <boost/interprocess/detail/config_begin.hpp>
+#include <boost/interprocess/exceptions.hpp>
 #include <boost/interprocess/detail/workaround.hpp>
-#include <boost/interprocess/detail/posix_time_types_wrk.hpp>
+#include <boost/interprocess/timed_utils.hpp>
 #include <boost/assert.hpp>
+#include <boost/interprocess/sync/detail/common_algorithms.hpp>
 
 #if !defined(BOOST_INTERPROCESS_FORCE_GENERIC_EMULATION) && defined (BOOST_INTERPROCESS_POSIX_PROCESS_SHARED)
-   #include <pthread.h>
-   #include <errno.h>   
-   #include <boost/interprocess/sync/posix/pthread_helpers.hpp>
-   #define BOOST_INTERPROCESS_USE_POSIX
+   #include <boost/interprocess/sync/posix/mutex.hpp>
+   #define BOOST_INTERPROCESS_MUTEX_USE_POSIX
+#elif !defined(BOOST_INTERPROCESS_FORCE_GENERIC_EMULATION) && defined (BOOST_INTERPROCESS_WINDOWS)
+   //Experimental...
+   #define BOOST_INTERPROCESS_MUTEX_USE_WINAPI
+   #include <boost/interprocess/sync/windows/mutex.hpp>
 #else
-   #include <boost/interprocess/sync/emulation/mutex.hpp>
-   #define BOOST_INTERPROCESS_USE_GENERIC_EMULATION
+   //spin_mutex is used
+   #include <boost/interprocess/sync/spin/mutex.hpp>
+   namespace boost {
+   namespace interprocess {
+   namespace ipcdetail{
+   namespace robust_emulation_helpers {
 
-namespace boost {
-namespace interprocess {
-namespace detail{
-namespace robust_emulation_helpers {
+   template<class T>
+   class mutex_traits;
 
-template<class T>
-class mutex_traits;
-
-}}}}
-
+   }}}}
 #endif
 
-/// @endcond
+#endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
 
 //!\file
 //!Describes a mutex class that can be placed in memory shared by
@@ -58,16 +64,30 @@ namespace interprocess {
 
 class interprocess_condition;
 
-//!Wraps a interprocess_mutex that can be placed in shared memory and can be 
+//!Wraps a interprocess_mutex that can be placed in shared memory and can be
 //!shared between processes. Allows timed lock tries
 class interprocess_mutex
 {
-   /// @cond
+   #if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
    //Non-copyable
    interprocess_mutex(const interprocess_mutex &);
    interprocess_mutex &operator=(const interprocess_mutex &);
    friend class interprocess_condition;
-   /// @endcond
+
+   public:
+   #if defined(BOOST_INTERPROCESS_MUTEX_USE_POSIX)
+      typedef ipcdetail::posix_mutex internal_mutex_type;
+   #elif defined(BOOST_INTERPROCESS_MUTEX_USE_WINAPI)
+      typedef ipcdetail::winapi_mutex internal_mutex_type;
+   #else
+      typedef ipcdetail::spin_mutex internal_mutex_type;
+      private:
+      friend class ipcdetail::robust_emulation_helpers::mutex_traits<interprocess_mutex>;
+      void take_ownership(){ m_mutex.take_ownership(); }
+      public:
+   #endif
+
+   #endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
    public:
 
    //!Constructor.
@@ -78,70 +98,100 @@ class interprocess_mutex
    //!the result is undefined. Does not throw.
    ~interprocess_mutex();
 
+   //!Requires: The calling thread does not own the mutex.
+   //!
    //!Effects: The calling thread tries to obtain ownership of the mutex, and
    //!   if another thread has ownership of the mutex, it waits until it can
    //!   obtain the ownership. If a thread takes ownership of the mutex the
    //!   mutex must be unlocked by the same mutex.
    //!Throws: interprocess_exception on error.
+   //! 
+   //!Note: A program may deadlock if the thread that has ownership calls 
+   //!   this function. If the implementation can detect the deadlock,
+   //!   an exception could be thrown.
    void lock();
 
+   //!Requires: The calling thread does not own the mutex.
+   //!
    //!Effects: The calling thread tries to obtain ownership of the mutex, and
    //!   if another thread has ownership of the mutex returns immediately.
    //!Returns: If the thread acquires ownership of the mutex, returns true, if
    //!   the another thread has ownership of the mutex, returns false.
    //!Throws: interprocess_exception on error.
+   //! 
+   //!Note: A program may deadlock if the thread that has ownership calls 
+   //!   this function. If the implementation can detect the deadlock,
+   //!   an exception could be thrown.
    bool try_lock();
 
+   //!Requires: The calling thread does not own the mutex.
+   //!
    //!Effects: The calling thread will try to obtain exclusive ownership of the
    //!   mutex if it can do so in until the specified time is reached. If the
    //!   mutex supports recursive locking, the mutex must be unlocked the same
-   //!   number of times it is locked. 
+   //!   number of times it is locked.
    //!Returns: If the thread acquires ownership of the mutex, returns true, if
-   //!   the timeout expires returns false. 
+   //!   the timeout expires returns false.
    //!Throws: interprocess_exception on error.
-   bool timed_lock(const boost::posix_time::ptime &abs_time);
+   //! 
+   //!Note: A program may deadlock if the thread that has ownership calls 
+   //!   this function. If the implementation can detect the deadlock,
+   //!   an exception could be thrown.
+   template<class TimePoint>
+   bool timed_lock(const TimePoint &abs_time);
+
+   //!Same as `timed_lock`, but this function is modeled after the
+   //!standard library interface.
+   template<class TimePoint> bool try_lock_until(const TimePoint &abs_time)
+   {  return this->timed_lock(abs_time);  }
+
+   //!Same as `timed_lock`, but this function is modeled after the
+   //!standard library interface.
+   template<class Duration>  bool try_lock_for(const Duration &dur)
+   {  return this->timed_lock(ipcdetail::duration_to_ustime(dur)); }
 
    //!Effects: The calling thread releases the exclusive ownership of the mutex.
    //!Throws: interprocess_exception on error.
    void unlock();
-   /// @cond
-   private:
 
-   #if   defined(BOOST_INTERPROCESS_USE_GENERIC_EMULATION)
-   friend class detail::robust_emulation_helpers::mutex_traits<interprocess_mutex>;
-   void take_ownership(){ mutex.take_ownership(); }
-   detail::emulation_mutex mutex;
-   #elif defined(BOOST_INTERPROCESS_USE_POSIX)
-      pthread_mutex_t   m_mut;
-   #endif   //#if (defined BOOST_INTERPROCESS_WINDOWS)
-   /// @endcond
+   #if !defined(BOOST_INTERPROCESS_DOXYGEN_INVOKED)
+   internal_mutex_type &internal_mutex()
+   {  return m_mutex;   }
+
+   const internal_mutex_type &internal_mutex() const
+   {  return m_mutex;   }
+
+   private:
+   internal_mutex_type m_mutex;
+   #endif   //#ifndef BOOST_INTERPROCESS_DOXYGEN_INVOKED
 };
 
 }  //namespace interprocess {
 }  //namespace boost {
 
-#ifdef BOOST_INTERPROCESS_USE_GENERIC_EMULATION
-#  undef BOOST_INTERPROCESS_USE_GENERIC_EMULATION
 
 namespace boost {
 namespace interprocess {
 
 inline interprocess_mutex::interprocess_mutex(){}
+
 inline interprocess_mutex::~interprocess_mutex(){}
-inline void interprocess_mutex::lock(){ mutex.lock(); }
-inline bool interprocess_mutex::try_lock(){ return mutex.try_lock(); }
-inline bool interprocess_mutex::timed_lock(const boost::posix_time::ptime &abs_time){ return mutex.timed_lock(abs_time); }
-inline void interprocess_mutex::unlock(){ mutex.unlock(); }
+
+inline void interprocess_mutex::lock()
+{  ipcdetail::timeout_when_locking_aware_lock(m_mutex);  }
+
+inline bool interprocess_mutex::try_lock()
+{ return m_mutex.try_lock(); }
+
+template <class TimePoint>
+inline bool interprocess_mutex::timed_lock(const TimePoint &abs_time)
+{ return m_mutex.timed_lock(abs_time); }
+
+inline void interprocess_mutex::unlock()
+{ m_mutex.unlock(); }
 
 }  //namespace interprocess {
 }  //namespace boost {
-
-#endif
-
-#ifdef BOOST_INTERPROCESS_USE_POSIX
-#include <boost/interprocess/sync/posix/interprocess_mutex.hpp>
-#  undef BOOST_INTERPROCESS_USE_POSIX
-#endif
 
 #include <boost/interprocess/detail/config_end.hpp>
 

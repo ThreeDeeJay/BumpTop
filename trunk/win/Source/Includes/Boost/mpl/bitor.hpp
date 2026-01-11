@@ -11,21 +11,19 @@
 //
 // See http://www.boost.org/libs/mpl for documentation.
 
-// $Id: bitor.hpp 63520 2010-07-02 08:59:55Z agurtovoy $
-// $Date: 2010-07-02 04:59:55 -0400 (Fri, 02 Jul 2010) $
-// $Revision: 63520 $
+// $Id$
+// $Date$
+// $Revision$
 
 // agurt, 23/jan/10: workaround a conflict with <iso646.h> header's 
 // macros, see http://tinyurl.com/ycwdxco; 'defined(bitor)'
 // has to be checked in a separate condition, otherwise GCC complains 
 // about 'bitor' being an alternative token
-#if defined(_MSC_VER) 
-#ifndef __GCCXML__
+#if defined(_MSC_EXTENSIONS)
 #if defined(bitor)
 #   pragma push_macro("bitor")
 #   undef bitor
 #   define bitor(x)
-#endif
 #endif
 #endif
 
@@ -34,11 +32,9 @@
 #define AUX778076_OP_TOKEN  |
 #include <boost/mpl/aux_/arithmetic_op.hpp>
 
-#if defined(_MSC_VER)
-#ifndef __GCCXML__
+#if defined(_MSC_EXTENSIONS)
 #if defined(bitor)
 #   pragma pop_macro("bitor")
-#endif
 #endif
 #endif
 

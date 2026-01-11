@@ -3,18 +3,19 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying 
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#if !defined(SPIRIT_LEX_SUPPORT_FUNCTIONS_JUN_08_2009_0211PM)
-#define SPIRIT_LEX_SUPPORT_FUNCTIONS_JUN_08_2009_0211PM
+#ifndef BOOST_SPIRIT_LEX_LEXER_SUPPORT_FUNCTIONS_HPP
+#define BOOST_SPIRIT_LEX_LEXER_SUPPORT_FUNCTIONS_HPP
 
 #if defined(_MSC_VER)
 #pragma once
 #endif
 
-#include <boost/spirit/include/phoenix_core.hpp>
 #include <boost/spirit/home/support/detail/scoped_enum_emulation.hpp>
 #include <boost/spirit/home/lex/lexer/pass_flags.hpp>
-
 #include <boost/spirit/home/lex/lexer/support_functions_expression.hpp>
+#include <boost/phoenix/core/actor.hpp>
+#include <boost/phoenix/core/as_actor.hpp>
+#include <boost/phoenix/core/value.hpp> // includes as_actor specialization
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace boost { namespace spirit { namespace lex
@@ -47,11 +48,11 @@ namespace boost { namespace spirit { namespace lex
         template <typename Env>
         struct result
         {
-            typedef typename
-                remove_const<
+            typedef typename remove_reference< 
+                typename remove_const<
                     typename mpl::at_c<typename Env::args_type, 4>::type
                 >::type
-            context_type;
+            >::type context_type;
             typedef typename context_type::base_iterator_type type;
         };
 

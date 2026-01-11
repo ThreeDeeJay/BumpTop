@@ -1,6 +1,6 @@
 //  Copyright (c) 2001-2011 Hartmut Kaiser
-// 
-//  Distributed under the Boost Software License, Version 1.0. (See accompanying 
+//
+//  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #if !defined(BOOST_SPIRIT_KARMA_NUMERIC_UTILS_FEB_23_2007_0841PM)
@@ -19,17 +19,18 @@
 #include <boost/spirit/home/support/unused.hpp>
 #include <boost/spirit/home/support/numeric_traits.hpp>
 #include <boost/spirit/home/support/detail/pow10.hpp>
-#include <boost/spirit/home/support/detail/sign.hpp>
 #include <boost/spirit/home/karma/detail/generate_to.hpp>
 #include <boost/spirit/home/karma/detail/string_generate.hpp>
 
+#include <boost/core/cmath.hpp>
+
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  The value BOOST_KARMA_NUMERICS_LOOP_UNROLL specifies, how to unroll the 
+//  The value BOOST_KARMA_NUMERICS_LOOP_UNROLL specifies, how to unroll the
 //  integer string generation loop (see below).
 //
-//      Set the value to some integer in between 0 (no unrolling) and the 
-//      largest expected generated integer string length (complete unrolling). 
+//      Set the value to some integer in between 0 (no unrolling) and the
+//      largest expected generated integer string length (complete unrolling).
 //      If not specified, this value defaults to 6.
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -37,15 +38,15 @@
 #define BOOST_KARMA_NUMERICS_LOOP_UNROLL 6
 #endif
 
-#if BOOST_KARMA_NUMERICS_LOOP_UNROLL < 0 
+#if BOOST_KARMA_NUMERICS_LOOP_UNROLL < 0
 #error "Please set the BOOST_KARMA_NUMERICS_LOOP_UNROLL to a non-negative value!"
 #endif
 
 namespace boost { namespace spirit { namespace traits
-{ 
+{
     ///////////////////////////////////////////////////////////////////////
     //
-    //  return the absolute value from a given number, avoiding over- and 
+    //  return the absolute value from a given number, avoiding over- and
     //  underflow
     //
     ///////////////////////////////////////////////////////////////////////
@@ -68,7 +69,11 @@ namespace boost { namespace spirit { namespace traits
             typedef unsignedtype type;                                        \
             static type call(signedtype n)                                    \
             {                                                                 \
-                return (n >= 0) ? n : (unsignedtype)(-n);                     \
+                /* implementation is well-defined for one's complement, */    \
+                /* two's complement, and signed magnitude architectures */    \
+                /* by the C++ Standard. [conv.integral] [expr.unary.op] */    \
+                return (n >= 0) ?  static_cast<type>(n)                       \
+                                : -static_cast<type>(n);                      \
             }                                                                 \
         }                                                                     \
     /**/
@@ -84,6 +89,11 @@ namespace boost { namespace spirit { namespace traits
         }                                                                     \
     /**/
 
+#if defined(BOOST_MSVC)
+# pragma warning(push)
+// unary minus operator applied to unsigned type, result still unsigned
+# pragma warning(disable: 4146)
+#endif
     BOOST_SPIRIT_ABSOLUTE_VALUE(signed char, unsigned char);
     BOOST_SPIRIT_ABSOLUTE_VALUE(char, unsigned char);
     BOOST_SPIRIT_ABSOLUTE_VALUE(short, unsigned short);
@@ -97,6 +107,9 @@ namespace boost { namespace spirit { namespace traits
     BOOST_SPIRIT_ABSOLUTE_VALUE(boost::long_long_type, boost::ulong_long_type);
     BOOST_SPIRIT_ABSOLUTE_VALUE_UNSIGNED(boost::ulong_long_type);
 #endif
+#if defined(BOOST_MSVC)
+# pragma warning(pop)
+#endif
 
 #undef BOOST_SPIRIT_ABSOLUTE_VALUE
 #undef BOOST_SPIRIT_ABSOLUTE_VALUE_UNSIGNED
@@ -107,7 +120,7 @@ namespace boost { namespace spirit { namespace traits
         typedef float type;
         static type call(float n)
         {
-            return (spirit::detail::signbit)(n) ? -n : n;
+            return (std::fabs)(n);
         }
     };
 
@@ -117,7 +130,7 @@ namespace boost { namespace spirit { namespace traits
         typedef double type;
         static type call(double n)
         {
-            return (spirit::detail::signbit)(n) ? -n : n;
+            return (std::fabs)(n);
         }
     };
 
@@ -127,7 +140,7 @@ namespace boost { namespace spirit { namespace traits
         typedef long double type;
         static type call(long double n)
         {
-            return (spirit::detail::signbit)(n) ? -n : n;
+            return (std::fabs)(n);
         }
     };
 
@@ -153,36 +166,36 @@ namespace boost { namespace spirit { namespace traits
     template <typename T, typename Enable/* = void*/>
     struct is_negative
     {
-        static bool call(T n) 
-        { 
-            return (n < 0) ? true : false; 
+        static bool call(T n)
+        {
+            return (n < 0) ? true : false;
         }
     };
 
     template <>
     struct is_negative<float>
     {
-        static bool call(float n) 
-        { 
-            return (spirit::detail::signbit)(n) ? true : false; 
+        static bool call(float n)
+        {
+            return (core::signbit)(n) ? true : false;
         }
     };
 
     template <>
     struct is_negative<double>
     {
-        static bool call(double n) 
-        { 
-            return (spirit::detail::signbit)(n) ? true : false; 
+        static bool call(double n)
+        {
+            return (core::signbit)(n) ? true : false;
         }
     };
 
     template <>
     struct is_negative<long double>
     {
-        static bool call(long double n) 
-        { 
-            return (spirit::detail::signbit)(n) ? true : false; 
+        static bool call(long double n)
+        {
+            return (core::signbit)(n) ? true : false;
         }
     };
 
@@ -196,36 +209,36 @@ namespace boost { namespace spirit { namespace traits
     template <typename T, typename Enable/* = void*/>
     struct is_zero
     {
-        static bool call(T n) 
-        { 
-            return (n == 0) ? true : false; 
+        static bool call(T n)
+        {
+            return (n == 0) ? true : false;
         }
     };
 
     template <>
     struct is_zero<float>
     {
-        static bool call(float n) 
-        { 
-            return (math::fpclassify)(n) == FP_ZERO; 
+        static bool call(float n)
+        {
+            return (core::fpclassify)(n) == core::fp_zero;
         }
     };
 
     template <>
     struct is_zero<double>
     {
-        static bool call(double n) 
-        { 
-            return (math::fpclassify)(n) == FP_ZERO; 
+        static bool call(double n)
+        {
+            return (core::fpclassify)(n) == core::fp_zero;
         }
     };
 
     template <>
     struct is_zero<long double>
     {
-        static bool call(long double n) 
-        { 
-            return (math::fpclassify)(n) == FP_ZERO; 
+        static bool call(long double n)
+        {
+            return (core::fpclassify)(n) == core::fp_zero;
         }
     };
 
@@ -239,8 +252,8 @@ namespace boost { namespace spirit { namespace traits
     template <typename T, typename Enable/* = void*/>
     struct is_nan
     {
-        static bool call(T n) 
-        { 
+        static bool call(T n)
+        {
             // NaN numbers are not equal to anything
             return (n != n) ? true : false;
         }
@@ -249,27 +262,27 @@ namespace boost { namespace spirit { namespace traits
     template <>
     struct is_nan<float>
     {
-        static bool call(float n) 
-        { 
-            return (math::fpclassify)(n) == FP_NAN; 
+        static bool call(float n)
+        {
+            return (core::fpclassify)(n) == core::fp_nan;
         }
     };
 
     template <>
     struct is_nan<double>
     {
-        static bool call(double n) 
-        { 
-            return (math::fpclassify)(n) == FP_NAN; 
+        static bool call(double n)
+        {
+            return (core::fpclassify)(n) == core::fp_nan;
         }
     };
 
     template <>
     struct is_nan<long double>
     {
-        static bool call(long double n) 
-        { 
-            return (math::fpclassify)(n) == FP_NAN; 
+        static bool call(long double n)
+        {
+            return (core::fpclassify)(n) == core::fp_nan;
         }
     };
 
@@ -283,36 +296,37 @@ namespace boost { namespace spirit { namespace traits
     template <typename T, typename Enable/* = void*/>
     struct is_infinite
     {
-        static bool call(T n) 
-        { 
-          return (n == std::numeric_limits<T>::infinity()) ? true : false; 
+        static bool call(T n)
+        {
+            return std::numeric_limits<T>::has_infinity
+                && n == std::numeric_limits<T>::infinity();
         }
     };
 
     template <>
     struct is_infinite<float>
     {
-        static bool call(float n) 
-        { 
-            return (math::fpclassify)(n) == FP_INFINITE; 
+        static bool call(float n)
+        {
+            return (core::fpclassify)(n) == core::fp_infinite;
         }
     };
 
     template <>
     struct is_infinite<double>
     {
-        static bool call(double n) 
-        { 
-            return (math::fpclassify)(n) == FP_INFINITE; 
+        static bool call(double n)
+        {
+            return (core::fpclassify)(n) == core::fp_infinite;
         }
     };
 
     template <>
     struct is_infinite<long double>
     {
-        static bool call(long double n) 
-        { 
-            return (math::fpclassify)(n) == FP_INFINITE; 
+        static bool call(long double n)
+        {
+            return (core::fpclassify)(n) == core::fp_infinite;
         }
     };
 
@@ -343,7 +357,7 @@ namespace boost { namespace spirit { namespace traits
         template <typename T>
         static long call(T n, mpl::false_)
         {
-            // allow for ADL to find the correct overload for floor and 
+            // allow for ADL to find the correct overload for floor and
             // lround
             using namespace std;
             return lround(floor(n));
@@ -367,19 +381,19 @@ namespace boost { namespace spirit { namespace traits
     {
         static long call(float n, mpl::false_)
         {
-            return test_negative(n) ? static_cast<long>(std::ceil(n)) : 
+            return test_negative(n) ? static_cast<long>(std::ceil(n)) :
                 static_cast<long>(std::floor(n));
         }
 
         static long call(double n, mpl::false_)
         {
-            return test_negative(n) ? static_cast<long>(std::ceil(n)) : 
+            return test_negative(n) ? static_cast<long>(std::ceil(n)) :
                 static_cast<long>(std::floor(n));
         }
 
         static long call(long double n, mpl::false_)
         {
-            return test_negative(n) ? static_cast<long>(std::ceil(n)) : 
+            return test_negative(n) ? static_cast<long>(std::ceil(n)) :
                 static_cast<long>(std::floor(n));
         }
 
@@ -408,7 +422,7 @@ namespace boost { namespace spirit { namespace traits
     //
     //  Traits class for radix specific number conversion
     //
-    //      Convert a digit from binary representation to character 
+    //      Convert a digit from binary representation to character
     //      representation:
     //
     //          static int call(unsigned n);
@@ -451,7 +465,7 @@ namespace boost { namespace spirit { namespace traits
     }
 
     template <unsigned Radix, typename CharEncoding, typename Tag>
-    struct convert_digit 
+    struct convert_digit
       : detail::convert_digit<CharEncoding, Tag, (Radix <= 10) ? true : false>
     {};
 
@@ -469,7 +483,7 @@ namespace boost { namespace spirit { namespace traits
         static T call(T& n, mpl::false_)
         {
             // Allow ADL to find the correct overload for floor
-            using namespace std; 
+            using namespace std;
             return floor(n / Radix);
         }
 
@@ -500,7 +514,7 @@ namespace boost { namespace spirit { namespace traits
         static T call(T, T& num, int exp, mpl::false_)
         {
             // Allow ADL to find the correct overload for floor
-            using namespace std; 
+            using namespace std;
             return floor(num / spirit::traits::pow10<T>(exp));
         }
 
@@ -524,7 +538,7 @@ namespace boost { namespace spirit { namespace traits
         template <typename T>
         static long call(T n, mpl::true_)
         {
-            // this cast is safe since we know the result is not larger 
+            // this cast is safe since we know the result is not larger
             // than Radix
             return static_cast<long>(n % Radix);
         }
@@ -533,7 +547,7 @@ namespace boost { namespace spirit { namespace traits
         static long call(T n, mpl::false_)
         {
             // Allow ADL to find the correct overload for fmod
-            using namespace std; 
+            using namespace std;
             return cast_to_long::call(fmod(n, T(Radix)));
         }
 
@@ -545,27 +559,27 @@ namespace boost { namespace spirit { namespace traits
     };
 }}}
 
-namespace boost { namespace spirit { namespace karma 
-{ 
+namespace boost { namespace spirit { namespace karma
+{
     ///////////////////////////////////////////////////////////////////////////
     //
-    //  The int_inserter template takes care of the integer to string 
+    //  The int_inserter template takes care of the integer to string
     //  conversion. If specified, the loop is unrolled for better performance.
     //
-    //      Set the value BOOST_KARMA_NUMERICS_LOOP_UNROLL to some integer in 
-    //      between 0 (no unrolling) and the largest expected generated integer 
-    //      string length (complete unrolling). 
+    //      Set the value BOOST_KARMA_NUMERICS_LOOP_UNROLL to some integer in
+    //      between 0 (no unrolling) and the largest expected generated integer
+    //      string length (complete unrolling).
     //      If not specified, this value defaults to 6.
     //
     ///////////////////////////////////////////////////////////////////////////
 #define BOOST_KARMA_NUMERICS_INNER_LOOP_PREFIX(z, x, data)                    \
         if (!traits::test_zero(n)) {                                          \
-            int ch = radix_type::call(remainder_type::call(n));               \
+            int ch_##x = radix_type::call(remainder_type::call(n));           \
             n = divide_type::call(n, num, ++exp);                             \
     /**/
 
-#define BOOST_KARMA_NUMERICS_INNER_LOOP_SUFFIX(z, x, data)                    \
-            *sink = char(ch);                                                 \
+#define BOOST_KARMA_NUMERICS_INNER_LOOP_SUFFIX(z, x, n_rolls_sub1)            \
+            *sink = char(BOOST_PP_CAT(ch_, BOOST_PP_SUB(n_rolls_sub1, x)));   \
             ++sink;                                                           \
         }                                                                     \
     /**/
@@ -591,12 +605,13 @@ namespace boost { namespace spirit { namespace karma
                 BOOST_KARMA_NUMERICS_LOOP_UNROLL,
                 BOOST_KARMA_NUMERICS_INNER_LOOP_PREFIX, _);
 
-            if (!traits::test_zero(n)) 
+            if (!traits::test_zero(n))
                 call(sink, n, num, exp);
 
             BOOST_PP_REPEAT(
                 BOOST_KARMA_NUMERICS_LOOP_UNROLL,
-                BOOST_KARMA_NUMERICS_INNER_LOOP_SUFFIX, _);
+                BOOST_KARMA_NUMERICS_INNER_LOOP_SUFFIX,
+                BOOST_PP_DEC(BOOST_KARMA_NUMERICS_LOOP_UNROLL));
 
             *sink = char(ch);
             ++sink;
@@ -627,9 +642,9 @@ namespace boost { namespace spirit { namespace karma
         }
 
     public:
-        // Specialization for doubles and floats, falling back to long integers 
+        // Specialization for doubles and floats, falling back to long integers
         // for representable values. These specializations speed up formatting
-        // of floating point numbers considerably as all the required 
+        // of floating point numbers considerably as all the required
         // arithmetics will be executed using integral data types.
         template <typename OutputIterator>
         static bool
@@ -671,7 +686,7 @@ namespace boost { namespace spirit { namespace karma
 
     ///////////////////////////////////////////////////////////////////////////
     //
-    //  The uint_inserter template takes care of the conversion of any integer 
+    //  The uint_inserter template takes care of the conversion of any integer
     //  to a string, while interpreting the number as an unsigned type.
     //
     ///////////////////////////////////////////////////////////////////////////
@@ -697,7 +712,7 @@ namespace boost { namespace spirit { namespace karma
     //
     //  The sign_inserter template generates a sign for a given numeric value.
     //
-    //    The parameter forcesign allows to generate a sign even for positive  
+    //    The parameter forcesign allows to generate a sign even for positive
     //    numbers.
     //
     ///////////////////////////////////////////////////////////////////////////
@@ -705,10 +720,11 @@ namespace boost { namespace spirit { namespace karma
     {
         template <typename OutputIterator>
         static bool
-        call_noforce(OutputIterator& sink, bool /*is_zero*/, bool is_negative)
+        call_noforce(OutputIterator& sink, bool is_zero, bool is_negative,
+            bool sign_if_zero)
         {
             // generate a sign for negative numbers only
-            if (is_negative) {
+            if (is_negative || (is_zero && sign_if_zero)) {
                 *sink = '-';
                 ++sink;
             }
@@ -717,12 +733,13 @@ namespace boost { namespace spirit { namespace karma
 
         template <typename OutputIterator>
         static bool
-        call_force(OutputIterator& sink, bool is_zero, bool is_negative)
+        call_force(OutputIterator& sink, bool is_zero, bool is_negative,
+            bool sign_if_zero)
         {
             // generate a sign for all numbers except zero
-            if (!is_zero) 
+            if (!is_zero || sign_if_zero)
                 *sink = is_negative ? '-' : '+';
-            else 
+            else
                 *sink = ' ';
 
             ++sink;
@@ -732,11 +749,11 @@ namespace boost { namespace spirit { namespace karma
         template <typename OutputIterator>
         static bool
         call(OutputIterator& sink, bool is_zero, bool is_negative
-          , bool forcesign)
+          , bool forcesign, bool sign_if_zero = false)
         {
             return forcesign ?
-                call_force(sink, is_zero, is_negative) :
-                call_noforce(sink, is_zero, is_negative);
+                call_force(sink, is_zero, is_negative, sign_if_zero) :
+                call_noforce(sink, is_zero, is_negative, sign_if_zero);
         }
     };
 
@@ -767,4 +784,3 @@ namespace boost { namespace spirit { namespace karma
 }}}
 
 #endif
-

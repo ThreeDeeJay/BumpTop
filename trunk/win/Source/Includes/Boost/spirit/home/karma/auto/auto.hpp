@@ -90,7 +90,7 @@ namespace boost { namespace spirit { namespace karma
             // without providing any attribute, as the generator doesn't 'know'
             // what to output. The following assertion fires if this situation
             // is detected in your code.
-            BOOST_SPIRIT_ASSERT_MSG(false, auto_not_usable_without_attribute, ());
+            BOOST_SPIRIT_ASSERT_FAIL(OutputIterator, auto_not_usable_without_attribute, ());
             return false;
         }
 
@@ -145,10 +145,6 @@ namespace boost { namespace spirit { namespace karma
 
         T t_;
         generator_impl_type generator_;
-
-    private:
-        // silence MSVC warning C4512: assignment operator could not be generated
-        lit_auto_generator& operator= (lit_auto_generator const&);
     };
 
     ///////////////////////////////////////////////////////////////////////////

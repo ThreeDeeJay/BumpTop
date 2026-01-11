@@ -5,8 +5,8 @@
     Distributed under the Boost Software License, Version 1.0. (See accompanying
     file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 =============================================================================*/
-#if !defined(SPIRIT_PLUS_MARCH_13_2007_0127PM)
-#define SPIRIT_PLUS_MARCH_13_2007_0127PM
+#ifndef BOOST_SPIRIT_QI_OPERATOR_PLUS_HPP
+#define BOOST_SPIRIT_QI_OPERATOR_PLUS_HPP
 
 #if defined(_MSC_VER)
 #pragma once
@@ -21,6 +21,8 @@
 #include <boost/spirit/home/support/has_semantic_action.hpp>
 #include <boost/spirit/home/support/handles_container.hpp>
 #include <boost/spirit/home/support/info.hpp>
+#include <boost/proto/operators.hpp>
+#include <boost/proto/tags.hpp>
 
 namespace boost { namespace spirit
 {
@@ -53,8 +55,8 @@ namespace boost { namespace spirit { namespace qi
             type;
         };
 
-        plus(Subject const& subject)
-          : subject(subject) {}
+        plus(Subject const& subject_)
+          : subject(subject_) {}
 
         template <typename F>
         bool parse_container(F f) const
@@ -72,17 +74,17 @@ namespace boost { namespace spirit { namespace qi
           , typename Skipper, typename Attribute>
         bool parse(Iterator& first, Iterator const& last
           , Context& context, Skipper const& skipper
-          , Attribute& attr) const
+          , Attribute& attr_) const
         {
             typedef detail::fail_function<Iterator, Context, Skipper>
                 fail_function;
 
             // ensure the attribute is actually a container type
-            traits::make_container(attr);
+            traits::make_container(attr_);
 
             Iterator iter = first;
             fail_function f(iter, last, context, skipper);
-            if (!parse_container(detail::make_pass_container(f, attr)))
+            if (!parse_container(detail::make_pass_container(f, attr_)))
                 return false;
 
             first = f.first;

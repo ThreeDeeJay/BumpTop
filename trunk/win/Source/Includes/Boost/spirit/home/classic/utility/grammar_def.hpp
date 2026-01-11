@@ -26,7 +26,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Spirit predefined maximum grammar start parser limit. This limit defines
-//  the maximum number of of possible different parsers exposed from a
+//  the maximum number of possible different parsers exposed from a
 //  particular grammar. This number defaults to 3.
 //  The actual maximum is rounded up in multiples of 3. Thus, if this value
 //  is 4, the actual limit is 6. The ultimate maximum limit in this
@@ -97,7 +97,11 @@ namespace impl {
     struct assign_zero_to_tuple_member {
 
         template <typename TupleT>
-        static void do_(TupleT &t) { t[::phoenix::tuple_index<N>()] = 0; }
+        static void do_(TupleT &t)
+        {
+            ::phoenix::tuple_index<N> const idx;
+            t[idx] = 0;
+        }
     };
 
     template <int N>
@@ -282,6 +286,8 @@ public:
     //  grammar.
         BOOST_STATIC_ASSERT(N > 0 && N < tuple_t::length);
 
+        ::phoenix::tuple_index<N> const idx;
+
     //  If the following assertion is fired, you have probably forgot to call
     //  the start_parser() function from inside the constructor of your
     //  embedded definition class to initialize the start parsers to be exposed
@@ -289,9 +295,9 @@ public:
     //  Another reason may be, that there is a count mismatch between
     //  the number of template parameters to the grammar_def<> class and the
     //  number of parameters used while calling start_parsers().
-        BOOST_SPIRIT_ASSERT(0 != t[::phoenix::tuple_index<N>()]);
+        BOOST_SPIRIT_ASSERT(0 != t[idx]);
 
-        return t[::phoenix::tuple_index<N>()];
+        return t[idx];
     }
 
 private:

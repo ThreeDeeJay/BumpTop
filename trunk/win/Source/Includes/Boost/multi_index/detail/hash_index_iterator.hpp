@@ -1,4 +1,4 @@
-/* Copyright 2003-2008 Joaquin M Lopez Munoz.
+/* Copyright 2003-2023 Joaquin M Lopez Munoz.
  * Distributed under the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at
  * http://www.boost.org/LICENSE_1_0.txt)
@@ -9,7 +9,7 @@
 #ifndef BOOST_MULTI_INDEX_DETAIL_HASH_INDEX_ITERATOR_HPP
 #define BOOST_MULTI_INDEX_DETAIL_HASH_INDEX_ITERATOR_HPP
 
-#if defined(_MSC_VER)&&(_MSC_VER>=1200)
+#if defined(_MSC_VER)
 #pragma once
 #endif
 
@@ -17,8 +17,7 @@
 #include <boost/operators.hpp>
 
 #if !defined(BOOST_MULTI_INDEX_DISABLE_SERIALIZATION)
-#include <boost/serialization/nvp.hpp>
-#include <boost/serialization/split_member.hpp>
+#include <boost/core/serialization.hpp>
 #endif
 
 namespace boost{
@@ -30,20 +29,25 @@ namespace detail{
 /* Iterator class for hashed indices.
  */
 
-template<typename Node,typename BucketArray>
+struct hashed_index_global_iterator_tag{};
+struct hashed_index_local_iterator_tag{};
+
+template<
+  typename Node,typename BucketArray,
+  typename IndexCategory,typename IteratorCategory
+>
 class hashed_index_iterator:
   public forward_iterator_helper<
-    hashed_index_iterator<Node,BucketArray>,
+    hashed_index_iterator<Node,BucketArray,IndexCategory,IteratorCategory>,
     typename Node::value_type,
-    std::ptrdiff_t,
+    typename Node::difference_type,
     const typename Node::value_type*,
     const typename Node::value_type&>
 {
 public:
+  /* coverity[uninit_ctor]: suppress warning */
   hashed_index_iterator(){}
-  hashed_index_iterator(Node* node_,BucketArray* buckets_):
-    node(node_),buckets(buckets_)
-  {}
+  hashed_index_iterator(Node* node_):node(node_){}
 
   const typename Node::value_type& operator*()const
   {
@@ -52,7 +56,7 @@ public:
 
   hashed_index_iterator& operator++()
   {
-    Node::increment(node,buckets->begin(),buckets->end());
+    this->increment(IteratorCategory());
     return *this;
   }
 
@@ -61,7 +65,11 @@ public:
    * see explanation in safe_mode_iterator notes in safe_mode.hpp.
    */
   
-  BOOST_SERIALIZATION_SPLIT_MEMBER()
+  template<class Archive>
+  void serialize(Archive& ar,const unsigned int version)
+  {
+    core::split_member(ar,*this,version);
+  }
 
   typedef typename Node::base_type node_base_type;
 
@@ -69,17 +77,43 @@ public:
   void save(Archive& ar,const unsigned int)const
   {
     node_base_type* bnode=node;
-    ar<<serialization::make_nvp("pointer",bnode);
-    ar<<serialization::make_nvp("pointer",buckets);
+    ar<<core::make_nvp("pointer",bnode);
   }
 
   template<class Archive>
-  void load(Archive& ar,const unsigned int)
+  void load(Archive& ar,const unsigned int version)
+  {
+    load(ar,version,IteratorCategory());
+  }
+
+  template<class Archive>
+  void load(
+    Archive& ar,const unsigned int version,hashed_index_global_iterator_tag)
   {
     node_base_type* bnode;
-    ar>>serialization::make_nvp("pointer",bnode);
+    ar>>core::make_nvp("pointer",bnode);
     node=static_cast<Node*>(bnode);
-    ar>>serialization::make_nvp("pointer",buckets);
+    if(version<1){
+      BucketArray* throw_away; /* consume unused ptr */
+      ar>>core::make_nvp("pointer",throw_away);
+    }
+  }
+
+  template<class Archive>
+  void load(
+    Archive& ar,const unsigned int version,hashed_index_local_iterator_tag)
+  {
+    node_base_type* bnode;
+    ar>>core::make_nvp("pointer",bnode);
+    node=static_cast<Node*>(bnode);
+    if(version<1){
+      BucketArray* buckets;
+      ar>>core::make_nvp("pointer",buckets);
+      if(buckets&&node&&node->impl()==buckets->end()->prior()){
+        /* end local_iterators used to point to end node, now they are null */
+        node=0;
+      }
+    }
   }
 #endif
 
@@ -90,14 +124,29 @@ public:
   Node* get_node()const{return node;}
 
 private:
-  Node*        node;
-  BucketArray* buckets;
+
+  void increment(hashed_index_global_iterator_tag)
+  {
+    Node::template increment<IndexCategory>(node);
+  }
+
+  void increment(hashed_index_local_iterator_tag)
+  {
+    Node::template increment_local<IndexCategory>(node);
+  }
+
+  Node* node;
 };
 
-template<typename Node,typename BucketArray>
+template<
+  typename Node,typename BucketArray,
+  typename IndexCategory,typename IteratorCategory
+>
 bool operator==(
-  const hashed_index_iterator<Node,BucketArray>& x,
-  const hashed_index_iterator<Node,BucketArray>& y)
+  const hashed_index_iterator<
+    Node,BucketArray,IndexCategory,IteratorCategory>& x,
+  const hashed_index_iterator<
+    Node,BucketArray,IndexCategory,IteratorCategory>& y)
 {
   return x.get_node()==y.get_node();
 }
@@ -105,6 +154,27 @@ bool operator==(
 } /* namespace multi_index::detail */
 
 } /* namespace multi_index */
+
+#if !defined(BOOST_MULTI_INDEX_DISABLE_SERIALIZATION)
+/* class version = 1 : hashed_index_iterator does no longer serialize a bucket
+ * array pointer.
+ */
+
+namespace serialization {
+template<
+  typename Node,typename BucketArray,
+  typename IndexCategory,typename IteratorCategory
+>
+struct version<
+  boost::multi_index::detail::hashed_index_iterator<
+    Node,BucketArray,IndexCategory,IteratorCategory
+  >
+>
+{
+  BOOST_STATIC_CONSTANT(int,value=1);
+};
+} /* namespace serialization */
+#endif
 
 } /* namespace boost */
 

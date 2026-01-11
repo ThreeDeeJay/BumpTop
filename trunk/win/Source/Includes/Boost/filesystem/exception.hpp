@@ -1,35 +1,92 @@
-//  boost/filesystem/exception.hpp  ----------------------------------------------------//
+//  boost/filesystem/exception.hpp  -----------------------------------------------------//
 
-//  Copyright Beman Dawes 2010
+//  Copyright Beman Dawes 2003
+//  Copyright Andrey Semashev 2019
 
 //  Distributed under the Boost Software License, Version 1.0.
 //  See http://www.boost.org/LICENSE_1_0.txt
 
 //  Library home page: http://www.boost.org/libs/filesystem
 
-//--------------------------------------------------------------------------------------// 
+#ifndef BOOST_FILESYSTEM_EXCEPTION_HPP
+#define BOOST_FILESYSTEM_EXCEPTION_HPP
 
-#ifndef BOOST_FILESYSTEM_EXCEPTIONX_HPP
-#define BOOST_FILESYSTEM_EXCEPTIONX_HPP
+#include <boost/filesystem/config.hpp>
+#include <boost/filesystem/path.hpp>
 
-#include <boost/config.hpp>  // for <boost/config/user.hpp>, in case
-                             //  BOOST_FILESYSTEM_VERSION defined there
+#include <string>
+#include <boost/system/error_code.hpp>
+#include <boost/system/system_error.hpp>
+#include <boost/smart_ptr/intrusive_ptr.hpp>
+#include <boost/smart_ptr/intrusive_ref_counter.hpp>
 
-# if defined(BOOST_FILESYSTEM_VERSION) \
-  && BOOST_FILESYSTEM_VERSION != 2  && BOOST_FILESYSTEM_VERSION != 3
-#   error BOOST_FILESYSTEM_VERSION defined, but not as 2 or 3
-# endif
+#include <boost/filesystem/detail/header.hpp> // must be the last #include
 
-# if !defined(BOOST_FILESYSTEM_VERSION)
-#   define BOOST_FILESYSTEM_VERSION 3
-# endif
+namespace boost {
+namespace filesystem {
 
-#if BOOST_FILESYSTEM_VERSION == 2
-#  include <boost/filesystem/v2/exception.hpp>
+//--------------------------------------------------------------------------------------//
+//                                                                                      //
+//                            class filesystem_error                                    //
+//                                                                                      //
+//--------------------------------------------------------------------------------------//
 
-# else
-#  include <boost/filesystem/v3/exception.hpp>
+class BOOST_SYMBOL_VISIBLE filesystem_error :
+    public system::system_error
+{
+    // see http://www.boost.org/more/error_handling.html for design rationale
 
-# endif
+public:
+    BOOST_FILESYSTEM_DECL filesystem_error(const char* what_arg, system::error_code ec);
+    BOOST_FILESYSTEM_DECL filesystem_error(std::string const& what_arg, system::error_code ec);
+    BOOST_FILESYSTEM_DECL filesystem_error(const char* what_arg, path const& path1_arg, system::error_code ec);
+    BOOST_FILESYSTEM_DECL filesystem_error(std::string const& what_arg, path const& path1_arg, system::error_code ec);
+    BOOST_FILESYSTEM_DECL filesystem_error(const char* what_arg, path const& path1_arg, path const& path2_arg, system::error_code ec);
+    BOOST_FILESYSTEM_DECL filesystem_error(std::string const& what_arg, path const& path1_arg, path const& path2_arg, system::error_code ec);
 
-#endif  // BOOST_FILESYSTEM_EXCEPTIONX_HPP 
+    BOOST_FILESYSTEM_DECL filesystem_error(filesystem_error const& that);
+    BOOST_FILESYSTEM_DECL filesystem_error& operator=(filesystem_error const& that);
+
+    BOOST_FILESYSTEM_DECL ~filesystem_error() noexcept;
+
+    path const& path1() const noexcept
+    {
+        return m_imp_ptr.get() ? m_imp_ptr->m_path1 : get_empty_path();
+    }
+    path const& path2() const noexcept
+    {
+        return m_imp_ptr.get() ? m_imp_ptr->m_path2 : get_empty_path();
+    }
+
+    BOOST_FILESYSTEM_DECL const char* what() const noexcept override;
+
+private:
+    BOOST_FILESYSTEM_DECL static path const& get_empty_path() noexcept;
+
+private:
+    struct impl :
+        public boost::intrusive_ref_counter< impl >
+    {
+        path m_path1;       // may be empty()
+        path m_path2;       // may be empty()
+        std::string m_what; // not built until needed
+
+        impl() = default;
+        explicit impl(path const& path1) :
+            m_path1(path1)
+        {
+        }
+        impl(path const& path1, path const& path2) :
+            m_path1(path1), m_path2(path2)
+        {
+        }
+    };
+    boost::intrusive_ptr< impl > m_imp_ptr;
+};
+
+} // namespace filesystem
+} // namespace boost
+
+#include <boost/filesystem/detail/footer.hpp>
+
+#endif // BOOST_FILESYSTEM_EXCEPTION_HPP

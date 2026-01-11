@@ -11,11 +11,11 @@
 #define BOOST_XPRESSIVE_STATIC_HPP_EAN_10_04_2005
 
 // MS compatible compilers support #pragma once
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+#if defined(_MSC_VER)
 # pragma once
 #endif
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
 // inline aggressively
 # pragma inline_recursion(on) // turn on inline recursion
 # pragma inline_depth(255)    // max inline depth

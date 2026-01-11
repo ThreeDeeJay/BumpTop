@@ -52,7 +52,7 @@ namespace impl
         template<typename Args>
         void 
 #if BOOST_ACCUMULATORS_GCC_VERSION > 40305
-        __attribute__((optimize("no-associative-math")))
+        __attribute__((__optimize__("no-associative-math")))
 #endif
         operator ()(Args const &args)
         {
@@ -66,6 +66,14 @@ namespace impl
         result_type result(dont_care) const
         {
             return this->weighted_sum_;
+        }
+
+        // make this accumulator serializeable
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int file_version)
+        {
+            ar & weighted_sum_;
+            ar & compensation;
         }
 
     private:

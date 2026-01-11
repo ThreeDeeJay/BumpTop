@@ -1,6 +1,6 @@
 //  Copyright (c) 2001-2011 Hartmut Kaiser
-// 
-//  Distributed under the Boost Software License, Version 1.0. (See accompanying 
+//
+//  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #if !defined(BOOST_SPIRIT_KARMA_SYMBOLS_NOV_23_2009_1251PM)
@@ -21,6 +21,8 @@
 #include <boost/spirit/home/karma/detail/get_casetag.hpp>
 #include <boost/spirit/home/karma/detail/string_generate.hpp>
 #include <boost/config.hpp>
+#include <boost/proto/extends.hpp>
+#include <boost/proto/traits.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/mpl/if.hpp>
 #include <map>
@@ -37,11 +39,11 @@ namespace boost { namespace spirit { namespace traits
     template <typename T, typename Attribute, typename Enable>
     struct symbols_lookup
     {
-        typedef 
+        typedef
             mpl::eval_if<fusion::traits::is_sequence<T>
               , traits::detail::value_at_c<T, 0>
               , detail::add_const_ref<T> > sequence_type;
-        typedef typename 
+        typedef typename
             mpl::eval_if<traits::is_container<T>
               , traits::container_value<T>
               , sequence_type>::type type;
@@ -90,11 +92,11 @@ namespace boost { namespace spirit { namespace traits
     template <typename Attribute, typename T, typename Enable>
     struct symbols_value
     {
-        typedef 
+        typedef
             mpl::eval_if<fusion::traits::is_sequence<T>
               , traits::detail::value_at_c<T, 1>
               , mpl::identity<unused_type> > sequence_type;
-        typedef typename 
+        typedef typename
             mpl::eval_if<traits::is_container<T>
               , traits::container_value<T>
               , sequence_type>::type type;
@@ -150,7 +152,7 @@ namespace boost { namespace spirit { namespace karma
       : mpl::if_<
             traits::not_is_unused<T>
           , std::map<Attribute, T>
-          , std::set<Attribute> 
+          , std::set<Attribute>
         >
     {};
 
@@ -161,7 +163,7 @@ namespace boost { namespace spirit { namespace karma
         template <typename CharEncoding, typename Tag>
         struct generate_encoded
         {
-            typedef typename 
+            typedef typename
                 proto::terminal<tag::char_code<Tag, CharEncoding> >::type
             encoding_type;
 
@@ -298,6 +300,7 @@ namespace boost { namespace spirit { namespace karma
             return sym.remove(attr);
         }
 
+#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
         // non-const version needed to suppress proto's += kicking in
         template <typename Attr, typename T_>
         friend adder const&
@@ -313,7 +316,23 @@ namespace boost { namespace spirit { namespace karma
         {
             return sym.remove(attr);
         }
+#else
+        // for rvalue references
+        template <typename Attr, typename T_>
+        friend adder const&
+        operator+= (symbols& sym, std::pair<Attr, T_>&& p)
+        {
+            return sym.add(p.first, p.second);
+        }
 
+        // for rvalue references
+        template <typename Attr>
+        friend remover const&
+        operator-= (symbols& sym, Attr&& attr)
+        {
+            return sym.remove(attr);
+        }
+#endif
         template <typename F>
         void for_each(F f) const
         {
@@ -346,7 +365,7 @@ namespace boost { namespace spirit { namespace karma
 
             return karma::detail::generate_encoded<CharEncoding, Tag>::call(
                         sink, (*it).second
-                      , traits::symbols_value<Attribute, Attr>::call(attr)) && 
+                      , traits::symbols_value<Attribute, Attr>::call(attr)) &&
                    karma::delimit_out(sink, d);
         }
 
@@ -366,6 +385,10 @@ namespace boost { namespace spirit { namespace karma
         }
 
         ///////////////////////////////////////////////////////////////////////
+#ifdef _MSC_VER
+#  pragma warning(push)
+#  pragma warning(disable: 4512) // assignment operator could not be generated.
+#endif
         struct adder
         {
             template <typename, typename = unused_type>
@@ -393,10 +416,6 @@ namespace boost { namespace spirit { namespace karma
             }
 
             symbols& sym;
-
-        private:
-            // silence MSVC warning C4512: assignment operator could not be generated
-            adder& operator= (adder const&);
         };
 
         struct remover
@@ -426,11 +445,10 @@ namespace boost { namespace spirit { namespace karma
             }
 
             symbols& sym;
-
-        private:
-            // silence MSVC warning C4512: assignment operator could not be generated
-            remover& operator= (remover const&);
         };
+#ifdef _MSC_VER
+#  pragma warning(pop)
+#endif
 
         adder add;
         remover remove;
@@ -586,7 +604,7 @@ namespace boost { namespace spirit { namespace karma
         value_type at(Attr const& attr)
         {
             typename Lookup::iterator it = lookup->find(attr);
-            if (it == lookup->end()) 
+            if (it == lookup->end())
                 add(attr);
             return unused;
         }
@@ -605,7 +623,7 @@ namespace boost { namespace spirit { namespace karma
             return karma::detail::generate_encoded<CharEncoding, Tag>::
                       call(sink
                         , traits::symbols_lookup<Attr, Attribute>::call(attr)
-                        , unused) && 
+                        , unused) &&
                    karma::delimit_out(sink, d);
         }
 
@@ -625,6 +643,10 @@ namespace boost { namespace spirit { namespace karma
         }
 
         ///////////////////////////////////////////////////////////////////////
+#ifdef _MSC_VER
+#  pragma warning(push)
+#  pragma warning(disable: 4512) // assignment operator could not be generated.
+#endif
         struct adder
         {
             template <typename, typename = unused_type>
@@ -652,10 +674,6 @@ namespace boost { namespace spirit { namespace karma
             }
 
             symbols& sym;
-
-        private:
-            // silence MSVC warning C4512: assignment operator could not be generated
-            adder& operator= (adder const&);
         };
 
         struct remover
@@ -685,11 +703,10 @@ namespace boost { namespace spirit { namespace karma
             }
 
             symbols& sym;
-
-        private:
-            // silence MSVC warning C4512: assignment operator could not be generated
-            remover& operator= (remover const&);
         };
+#ifdef _MSC_VER
+#  pragma warning(pop)
+#endif
 
         adder add;
         remover remove;
@@ -706,13 +723,13 @@ namespace boost { namespace spirit { namespace karma
         reference<symbols<Attribute, T, Lookup, CharEnconding, Tag> >
       , Modifiers>
     {
-        static bool const lower = 
+        static bool const lower =
             has_modifier<Modifiers, tag::char_code_base<tag::lower> >::value;
-        static bool const upper = 
+        static bool const upper =
             has_modifier<Modifiers, tag::char_code_base<tag::upper> >::value;
 
         typedef reference<
-            symbols<Attribute, T, Lookup, CharEnconding, Tag> 
+            symbols<Attribute, T, Lookup, CharEnconding, Tag>
         > reference_;
 
         typedef typename mpl::if_c<
@@ -740,7 +757,7 @@ namespace boost { namespace spirit { namespace traits
       , typename Attr, typename Context, typename Iterator>
     struct handles_container<karma::symbols<Attribute, T, Lookup, CharEncoding, Tag>
             , Attr, Context, Iterator>
-      : traits::is_container<Attr> {}; 
+      : traits::is_container<Attr> {};
 }}}
 
 #if defined(BOOST_MSVC)

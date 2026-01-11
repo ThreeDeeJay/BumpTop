@@ -51,7 +51,7 @@ struct sum_kahan_impl
     template<typename Args>
     void 
 #if BOOST_ACCUMULATORS_GCC_VERSION > 40305
-    __attribute__((optimize("no-associative-math")))
+    __attribute__((__optimize__("no-associative-math")))
 #endif
     operator ()(Args const & args)
     {
@@ -64,6 +64,14 @@ struct sum_kahan_impl
     result_type result(dont_care) const
     {
       return this->sum;
+    }
+
+    // make this accumulator serializeable
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int file_version)
+    { 
+        ar & sum;
+        ar & compensation;
     }
 
 private:

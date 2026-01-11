@@ -12,7 +12,7 @@
 #ifndef BOOST_BIMAP_RELATION_DETAIL_METADATA_ACCESS_BUILDER_HPP
 #define BOOST_BIMAP_RELATION_DETAIL_METADATA_ACCESS_BUILDER_HPP
 
-#if defined(_MSC_VER) && (_MSC_VER>=1200)
+#if defined(_MSC_VER)
 #pragma once
 #endif
 
@@ -20,7 +20,7 @@
 
 #include <boost/bimap/relation/support/is_tag_of_member_at.hpp>
 #include <boost/bimap/detail/debug/static_error.hpp>
-#include <boost/utility/enable_if.hpp>
+#include <boost/core/enable_if.hpp>
 #include <boost/preprocessor/cat.hpp>
 
 

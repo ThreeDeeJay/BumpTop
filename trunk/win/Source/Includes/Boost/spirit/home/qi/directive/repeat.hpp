@@ -5,8 +5,8 @@
     Distributed under the Boost Software License, Version 1.0. (See accompanying
     file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 =============================================================================*/
-#if !defined(SPIRIT_REPEAT_NOVEMBER_14_2008_1148AM)
-#define SPIRIT_REPEAT_NOVEMBER_14_2008_1148AM
+#ifndef BOOST_SPIRIT_QI_DIRECTIVE_REPEAT_HPP
+#define BOOST_SPIRIT_QI_DIRECTIVE_REPEAT_HPP
 
 #if defined(_MSC_VER)
 #pragma once
@@ -78,11 +78,15 @@ namespace boost { namespace spirit { namespace qi
     using spirit::repeat_type;
     using spirit::inf_type;
 
+#ifdef _MSC_VER
+#  pragma warning(push)
+#  pragma warning(disable: 4512) // assignment operator could not be generated.
+#endif
     template <typename T>
     struct exact_iterator // handles repeat(exact)[p]
     {
-        exact_iterator(T const exact)
-          : exact(exact) {}
+        exact_iterator(T const exact_)
+          : exact(exact_) {}
 
         typedef T type;
         T start() const { return 0; }
@@ -90,18 +94,14 @@ namespace boost { namespace spirit { namespace qi
         bool got_min(T i) const { return i >= exact; }
 
         T const exact;
-
-    private:
-        // silence MSVC warning C4512: assignment operator could not be generated
-        exact_iterator& operator= (exact_iterator const&);
     };
 
     template <typename T>
     struct finite_iterator // handles repeat(min, max)[p]
     {
-        finite_iterator(T const min, T const max)
-          : min BOOST_PREVENT_MACRO_SUBSTITUTION (min)
-          , max BOOST_PREVENT_MACRO_SUBSTITUTION (max) {}
+        finite_iterator(T const min_, T const max_)
+          : min BOOST_PREVENT_MACRO_SUBSTITUTION (min_)
+          , max BOOST_PREVENT_MACRO_SUBSTITUTION (max_) {}
 
         typedef T type;
         T start() const { return 0; }
@@ -110,17 +110,13 @@ namespace boost { namespace spirit { namespace qi
 
         T const min;
         T const max;
-
-    private:
-        // silence MSVC warning C4512: assignment operator could not be generated
-        finite_iterator& operator= (finite_iterator const&);
     };
 
     template <typename T>
     struct infinite_iterator // handles repeat(min, inf)[p]
     {
-        infinite_iterator(T const min)
-          : min BOOST_PREVENT_MACRO_SUBSTITUTION (min) {}
+        infinite_iterator(T const min_)
+          : min BOOST_PREVENT_MACRO_SUBSTITUTION (min_) {}
 
         typedef T type;
         T start() const { return 0; }
@@ -128,11 +124,10 @@ namespace boost { namespace spirit { namespace qi
         bool got_min(T i) const { return i >= min; }
 
         T const min;
-
-    private:
-        // silence MSVC warning C4512: assignment operator could not be generated
-        infinite_iterator& operator= (infinite_iterator const&);
     };
+#ifdef _MSC_VER
+#  pragma warning(pop)
+#endif
 
     template <typename Subject, typename LoopIter>
     struct repeat_parser : unary_parser<repeat_parser<Subject, LoopIter> >
@@ -153,8 +148,8 @@ namespace boost { namespace spirit { namespace qi
             type;
         };
 
-        repeat_parser(Subject const& subject, LoopIter const& iter)
-          : subject(subject), iter(iter) {}
+        repeat_parser(Subject const& subject_, LoopIter const& iter_)
+          : subject(subject_), iter(iter_) {}
 
         template <typename F>
         bool parse_container(F f) const
@@ -183,17 +178,17 @@ namespace boost { namespace spirit { namespace qi
           , typename Skipper, typename Attribute>
         bool parse(Iterator& first, Iterator const& last
           , Context& context, Skipper const& skipper
-          , Attribute& attr) const
+          , Attribute& attr_) const
         {
             typedef detail::fail_function<Iterator, Context, Skipper>
                 fail_function;
 
             // ensure the attribute is actually a container type
-            traits::make_container(attr);
+            traits::make_container(attr_);
 
-            Iterator iter = first;
-            fail_function f(iter, last, context, skipper);
-            if (!parse_container(detail::make_pass_container(f, attr)))
+            Iterator iter_local = first;
+            fail_function f(iter_local, last, context, skipper);
+            if (!parse_container(detail::make_pass_container(f, attr_)))
                 return false;
 
             first = f.first;
@@ -208,10 +203,6 @@ namespace boost { namespace spirit { namespace qi
 
         Subject subject;
         LoopIter iter;
-
-    private:
-        // silence MSVC warning C4512: assignment operator could not be generated
-        repeat_parser& operator= (repeat_parser const&);
     };
 
     ///////////////////////////////////////////////////////////////////////////

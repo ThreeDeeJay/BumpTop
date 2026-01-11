@@ -1,6 +1,6 @@
 /* Flyweight class. 
  *
- * Copyright 2006-2009 Joaquin M Lopez Munoz.
+ * Copyright 2006-2024 Joaquin M Lopez Munoz.
  * Distributed under the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at
  * http://www.boost.org/LICENSE_1_0.txt)
@@ -11,15 +11,18 @@
 #ifndef BOOST_FLYWEIGHT_FLYWEIGHT_HPP
 #define BOOST_FLYWEIGHT_FLYWEIGHT_HPP
 
-#if defined(_MSC_VER)&&(_MSC_VER>=1200)
+#if defined(_MSC_VER)
 #pragma once
 #endif
 
 #include <boost/config.hpp> /* keep it first to prevent nasty warns in MSVC */
 #include <algorithm>
-#include <boost/detail/workaround.hpp>
+#include <boost/config/workaround.hpp>
+#include <boost/core/addressof.hpp>
+#include <boost/core/invoke_swap.hpp>
 #include <boost/flyweight/detail/default_value_policy.hpp>
 #include <boost/flyweight/detail/flyweight_core.hpp>
+#include <boost/flyweight/detail/perfect_fwd.hpp>
 #include <boost/flyweight/factory_tag.hpp>
 #include <boost/flyweight/flyweight_fwd.hpp>
 #include <boost/flyweight/locking_tag.hpp>
@@ -35,12 +38,17 @@
 #include <boost/mpl/not.hpp>
 #include <boost/mpl/or.hpp>
 #include <boost/parameter/binding.hpp>
-#include <boost/preprocessor/repetition/enum_params.hpp>
 #include <boost/type_traits/is_same.hpp>
-#include <boost/utility/swap.hpp>
+
+#if !defined(BOOST_NO_SFINAE)&&!defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+#include <boost/core/enable_if.hpp>
+#include <boost/type_traits/is_convertible.hpp>
+#include <initializer_list>
+#endif
 
 #if BOOST_WORKAROUND(BOOST_MSVC,BOOST_TESTED_AT(1400))
 #pragma warning(push)
+#pragma warning(disable:4520)  /* multiple default ctors */
 #pragma warning(disable:4521)  /* multiple copy ctors */
 #endif
 
@@ -181,37 +189,93 @@ public:
   };
 
   /* construct/copy/destroy */
+
+  flyweight():h(core::insert()){}
   
-  flyweight():h(core::insert(key_type())){}
-  flyweight(const flyweight& x):h(x.h){}
-  flyweight(flyweight& x):h(x.h){}
+#define BOOST_FLYWEIGHT_PERFECT_FWD_CTR_BODY(args) \
+  :h(core::insert(BOOST_FLYWEIGHT_FORWARD(args))){}
 
-  /* template ctors */
+  BOOST_FLYWEIGHT_PERFECT_FWD_WITH_ARGS(
+    explicit flyweight,
+    BOOST_FLYWEIGHT_PERFECT_FWD_CTR_BODY)
 
-#define BOOST_FLYWEIGHT_PERFECT_FWD_NAME explicit flyweight
-#define BOOST_FLYWEIGHT_PERFECT_FWD_BODY(n)    \
-  :h(core::insert(BOOST_PP_ENUM_PARAMS(n,t))){}
-#include <boost/flyweight/detail/perfect_fwd.hpp>
+#undef BOOST_FLYWEIGHT_PERFECT_FWD_CTR_BODY
 
-  flyweight& operator=(const flyweight& x){h=x.h;return *this;}
+#if !defined(BOOST_NO_SFINAE)&&!defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+  template<typename V>
+  flyweight(
+    std::initializer_list<V> list,
+    typename boost::enable_if<
+      boost::is_convertible<std::initializer_list<V>,key_type> >::type* =0):
+    h(core::insert(list)){} 
+#endif
+
+  flyweight(const flyweight& x)BOOST_NOEXCEPT:h(x.h){}
+  flyweight(flyweight& x)BOOST_NOEXCEPT:h(x.h){}
+
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+  flyweight(const flyweight&& x)BOOST_NOEXCEPT:h(x.h){}
+  flyweight(flyweight&& x)BOOST_NOEXCEPT:h(x.h){}
+#endif
+
+#if !defined(BOOST_NO_SFINAE)&&!defined(BOOST_NO_CXX11_HDR_INITIALIZER_LIST)
+  template<typename V>
+  typename boost::enable_if<
+    boost::is_convertible<std::initializer_list<V>,key_type>,flyweight&>::type
+  operator=(std::initializer_list<V> list)
+  {
+    return operator=(flyweight(list));
+  }
+#endif
+
+  flyweight& operator=(const flyweight& x)BOOST_NOEXCEPT{h=x.h;return *this;}
   flyweight& operator=(const value_type& x){return operator=(flyweight(x));}
+
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+  flyweight& operator=(value_type&& x)
+  {
+    return operator=(flyweight(std::move(x)));
+  }
+#endif
 
   /* convertibility to underlying type */
   
-  const key_type&   get_key()const{return core::key(h);}
-  const value_type& get()const{return core::value(h);}
-  operator const    value_type&()const{return get();}
+  const key_type& get_key()const
+  BOOST_NOEXCEPT_IF(noexcept(core::key(boost::declval<const handle_type&>())))
+  {
+    return core::key(h);
+  }
+
+  const value_type& get()const BOOST_NOEXCEPT{return core::value(h);}
+  const value_type& operator*()const BOOST_NOEXCEPT{return get();}
+  operator const    value_type&()const BOOST_NOEXCEPT{return get();}
+  const value_type* operator->()const BOOST_NOEXCEPT
+    {return boost::addressof(get());}
   
   /* exact type equality  */
     
-  friend bool operator==(const flyweight& x,const flyweight& y)
+  friend bool operator==(const flyweight& x,const flyweight& y)BOOST_NOEXCEPT
   {
-    return &x.get()==&y.get();
+#if BOOST_WORKAROUND(BOOST_MSVC,<1930)
+    /* msvc 14.0 has spurious codegen bugs seemingly related to flyweight::get
+     * being noexcept.
+     */
+
+    return 
+      boost::addressof(core::value(x.h))==boost::addressof(core::value(y.h));
+#else
+    return boost::addressof(x.get())==boost::addressof(y.get());
+#endif
+  }
+
+  friend bool operator!=(const flyweight& x,const flyweight& y)BOOST_NOEXCEPT
+  {
+    return !(x==y);
   }
 
   /* modifiers */
 
-  void swap(flyweight& x){boost::swap(h,x.h);}
+  void swap(flyweight& x)BOOST_NOEXCEPT{boost::core::invoke_swap(h,x.h);}
   
 private:
   handle_type h;
@@ -355,7 +419,7 @@ BOOST_FLYWEIGHT_COMPLETE_COMP_OPS(
 template<typename T,BOOST_FLYWEIGHT_TYPENAME_TEMPL_ARGS(_)>
 void swap(
   flyweight<T,BOOST_FLYWEIGHT_TEMPL_ARGS(_)>& x,
-  flyweight<T,BOOST_FLYWEIGHT_TEMPL_ARGS(_)>& y)
+  flyweight<T,BOOST_FLYWEIGHT_TEMPL_ARGS(_)>& y)BOOST_NOEXCEPT
 {
   x.swap(y);
 }
@@ -395,6 +459,57 @@ BOOST_TEMPLATED_STREAM(istream,ElemType,Traits)& operator>>(
 } /* namespace flyweights */
 
 } /* namespace boost */
+
+#if !defined(BOOST_FLYWEIGHT_DISABLE_HASH_SUPPORT)
+
+/* hash support */
+
+#if !defined(BOOST_NO_CXX11_HDR_FUNCTIONAL)
+namespace std{
+
+template<typename T,BOOST_FLYWEIGHT_TYPENAME_TEMPL_ARGS(_)>
+BOOST_FLYWEIGHT_STD_HASH_STRUCT_KEYWORD
+hash<boost::flyweight<T,BOOST_FLYWEIGHT_TEMPL_ARGS(_)> >
+{
+public:
+  typedef std::size_t                result_type;
+  typedef boost::flyweight<
+    T,BOOST_FLYWEIGHT_TEMPL_ARGS(_)> argument_type;
+
+  result_type operator()(const argument_type& x)const BOOST_NOEXCEPT
+  {
+    typedef typename argument_type::value_type value_type;
+
+    std::hash<const value_type*> h;
+    return h(boost::addressof(x.get()));
+  }
+};
+
+} /* namespace std */
+#endif /* !defined(BOOST_NO_CXX11_HDR_FUNCTIONAL) */
+
+namespace boost{
+#if !defined(BOOST_NO_ARGUMENT_DEPENDENT_LOOKUP)
+namespace flyweights{
+#endif
+
+template<typename T,BOOST_FLYWEIGHT_TYPENAME_TEMPL_ARGS(_)>
+std::size_t
+hash_value(const flyweight<T,BOOST_FLYWEIGHT_TEMPL_ARGS(_)>& x)BOOST_NOEXCEPT
+{
+  typedef typename flyweight<
+    T,BOOST_FLYWEIGHT_TEMPL_ARGS(_)
+  >::value_type                     value_type;
+
+  boost::hash<const value_type*> h;
+  return h(boost::addressof(x.get()));
+}
+
+#if !defined(BOOST_NO_ARGUMENT_DEPENDENT_LOOKUP)
+} /* namespace flyweights */
+#endif
+} /* namespace boost */
+#endif /* !defined(BOOST_FLYWEIGHT_DISABLE_HASH_SUPPORT) */
 
 #undef BOOST_FLYWEIGHT_COMPLETE_COMP_OPS
 #undef BOOST_FLYWEIGHT_TEMPL_ARGS

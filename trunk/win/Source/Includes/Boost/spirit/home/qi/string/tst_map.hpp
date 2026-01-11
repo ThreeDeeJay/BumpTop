@@ -11,14 +11,13 @@
 #pragma once
 #endif
 
+#include <boost/spirit/home/qi/string/tst.hpp>
 #include <boost/spirit/home/qi/string/detail/tst.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/pool/object_pool.hpp>
 
 namespace boost { namespace spirit { namespace qi
 {
-    struct tst_pass_through; // declared in tst.hpp
-
     template <typename Char, typename T>
     struct tst_map
     {
@@ -54,16 +53,20 @@ namespace boost { namespace spirit { namespace qi
                 Iterator save = first;
                 typename map_type::const_iterator
                     i = map.find(filter(*first++));
-                if (i == map.end())
+
+                if (i != map.end())
                 {
-                    first = save;
-                    return 0;
+                    if (T* p = node::find(i->second.root, first, last, filter))
+                    {
+                        return p;
+                    }
+                   
+                    if (i->second.data)
+                    {
+                        return i->second.data;
+                    }
                 }
-                if (T* p = node::find(i->second.root, first, last, filter))
-                {
-                    return p;
-                }
-                return i->second.data;
+                first = save;
             }
             return 0;
         }
@@ -129,11 +132,12 @@ namespace boost { namespace spirit { namespace qi
 
         void clear()
         {
-            BOOST_FOREACH(typename map_type::value_type& x, map)
+            typedef typename map_type::iterator iter_t;
+            for (iter_t it = map.begin(), end = map.end(); it != end; ++it)
             {
-                node::destruct_node(x.second.root, this);
-                if (x.second.data)
-                    this->delete_data(x.second.data);
+                node::destruct_node(it->second.root, this);
+                if (it->second.data)
+                    this->delete_data(it->second.data);
             }
             map.clear();
         }
@@ -141,12 +145,13 @@ namespace boost { namespace spirit { namespace qi
         template <typename F>
         void for_each(F f) const
         {
-            BOOST_FOREACH(typename map_type::value_type const& x, map)
+            typedef typename map_type::const_iterator iter_t;
+            for (iter_t it = map.begin(), end = map.end(); it != end; ++it)
             {
-                std::basic_string<Char> s(1, x.first);
-                node::for_each(x.second.root, s, f);
-                if (x.second.data)
-                    f(s, *x.second.data);
+                std::basic_string<Char> s(1, it->first);
+                node::for_each(it->second.root, s, f);
+                if (it->second.data)
+                    f(s, *it->second.data);
             }
         }
 
@@ -164,12 +169,13 @@ namespace boost { namespace spirit { namespace qi
 
         void copy(tst_map const& rhs)
         {
-            BOOST_FOREACH(typename map_type::value_type const& x, rhs.map)
+            typedef typename map_type::const_iterator iter_t;
+            for (iter_t it = rhs.map.begin(), end = rhs.map.end(); it != end; ++it)
             {
-                map_data xx = {node::clone_node(x.second.root, this), 0};
-                if (x.second.data)
-                    xx.data = data_pool.construct(*x.second.data);
-                map[x.first] = xx;
+                map_data xx = {node::clone_node(it->second.root, this), 0};
+                if (it->second.data)
+                    xx.data = data_pool.construct(*it->second.data);
+                map[it->first] = xx;
             }
         }
 
@@ -177,9 +183,10 @@ namespace boost { namespace spirit { namespace qi
         {
             if (this != &rhs)
             {
-                BOOST_FOREACH(typename map_type::value_type& x, map)
+                typedef typename map_type::const_iterator iter_t;
+                for (iter_t it = map.begin(), end = map.end(); it != end; ++it)
                 {
-                    node::destruct_node(x.second.root, this);
+                    node::destruct_node(it->second.root, this);
                 }
                 map.clear();
                 copy(rhs);

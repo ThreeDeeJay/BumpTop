@@ -1,8 +1,9 @@
 #ifndef BOOST_MATH_NONFINITE_NUM_FACETS_HPP
 #define BOOST_MATH_NONFINITE_NUM_FACETS_HPP
 
-// Copyright (c) 2006 Johan Rade
-// Copyright 2011 Paul A. Bristow (comments)
+// Copyright 2006 Johan Rade
+// Copyright 2012 K R Walker
+// Copyright 2011, 2012 Paul A. Bristow 
 
 // Distributed under the Boost Software License, Version 1.0.
 // (See accompanying file LICENSE_1_0.txt
@@ -21,17 +22,14 @@
 #include <ios>
 #include <limits>
 #include <locale>
-
-#include <boost/version.hpp>
-
+#include <boost/math/tools/throw_exception.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
 #include <boost/math/special_functions/sign.hpp>
 
 #ifdef _MSC_VER
-#   pragma warning(push)
-#   pragma warning(disable : 4127) // conditional expression is constant.
-#   pragma warning(disable : 4706) // assignment within conditional expression.
-#   pragma warning(disable : 4224) // formal parameter 'version' was previously defined as a type.
+#  pragma warning(push)
+#  pragma warning(disable : 4127) // conditional expression is constant.
+#  pragma warning(disable : 4706) // assignment within conditional expression.
 #endif
 
 namespace boost {
@@ -65,16 +63,14 @@ namespace boost {
 
     protected:
       virtual OutputIterator do_put(
-        OutputIterator it, std::ios_base& iosb,
-        CharType fill, double val) const
+        OutputIterator it, std::ios_base& iosb, CharType fill, double val) const
       {
         put_and_reset_width(it, iosb, fill, val);
         return it;
       }
 
       virtual OutputIterator do_put(
-        OutputIterator it, std::ios_base& iosb,
-        CharType fill, long double val) const
+        OutputIterator it, std::ios_base& iosb,  CharType fill, long double val) const
       {
         put_and_reset_width(it, iosb, fill, val);
         return it;
@@ -93,91 +89,140 @@ namespace boost {
         OutputIterator& it, std::ios_base& iosb,
         CharType fill, ValType val) const
       {
-        switch((boost::math::fpclassify)(val)) {
+        static const CharType prefix_plus[2] = { '+', '\0' };
+        static const CharType prefix_minus[2] = { '-', '\0' };
+        static const CharType body_inf[4] = { 'i', 'n', 'f', '\0' };
+        static const CharType body_nan[4] = { 'n', 'a', 'n', '\0' };
+        static const CharType* null_string = 0;
+
+        switch((boost::math::fpclassify)(val))
+        {
 
         case FP_INFINITE:
           if(flags_ & trap_infinity)
-            throw std::ios_base::failure("Infinity");
+          {
+            BOOST_MATH_THROW_EXCEPTION(std::ios_base::failure("Infinity"));
+          }
           else if((boost::math::signbit)(val))
-            put_num_and_fill(it, iosb, "-", "inf", fill);
+          { // negative infinity.
+            put_num_and_fill(it, iosb, prefix_minus, body_inf, fill, val);
+          }
           else if(iosb.flags() & std::ios_base::showpos)
-            put_num_and_fill(it, iosb, "+", "inf", fill);
+          { // Explicit "+inf" wanted.
+            put_num_and_fill(it, iosb, prefix_plus, body_inf, fill, val);
+          }
           else
-            put_num_and_fill(it, iosb, "", "inf", fill);
+          { // just "inf" wanted.
+            put_num_and_fill(it, iosb, null_string, body_inf, fill, val);
+          }
           break;
 
         case FP_NAN:
           if(flags_ & trap_nan)
-            throw std::ios_base::failure("NaN");
+          {
+            BOOST_MATH_THROW_EXCEPTION(std::ios_base::failure("NaN"));
+          }
           else if((boost::math::signbit)(val))
-            put_num_and_fill(it, iosb, "-", "nan", fill);
+          { // negative so "-nan".
+            put_num_and_fill(it, iosb, prefix_minus, body_nan, fill, val);
+          }
           else if(iosb.flags() & std::ios_base::showpos)
-            put_num_and_fill(it, iosb, "+", "nan", fill);
+          { // explicit "+nan" wanted.
+            put_num_and_fill(it, iosb, prefix_plus, body_nan, fill, val);
+          }
           else
-            put_num_and_fill(it, iosb, "", "nan", fill);
+          { // Just "nan".
+            put_num_and_fill(it, iosb, null_string, body_nan, fill, val);
+          }
           break;
 
         case FP_ZERO:
-          if(flags_ & signed_zero) {
-            if((boost::math::signbit)(val))
-              put_num_and_fill(it, iosb, "-", "0", fill);
-            else if(iosb.flags() & std::ios_base::showpos)
-              put_num_and_fill(it, iosb, "+", "0", fill);
-            else
-              put_num_and_fill(it, iosb, "", "0", fill);
+          if((flags_ & signed_zero) && ((boost::math::signbit)(val)))
+          { // Flag set to distinguish between positive and negative zero.
+            // But string "0" should have stuff after decimal point if setprecision and/or exp format. 
+
+            std::basic_ostringstream<CharType> zeros; // Needs to be CharType version.
+
+            // Copy flags, fill, width and precision.
+            zeros.flags(iosb.flags());
+            zeros.unsetf(std::ios::showpos); // Ignore showpos because must be negative.
+            zeros.precision(iosb.precision());
+            //zeros.width is set by put_num_and_fill
+            zeros.fill(static_cast<char>(fill));
+            zeros << ValType(0);
+            put_num_and_fill(it, iosb, prefix_minus, zeros.str().c_str(), fill, val);
           }
           else
-            put_num_and_fill(it, iosb, "", "0", fill);
+          { // Output the platform default for positive and negative zero.
+            put_num_and_fill(it, iosb, null_string, null_string, fill, val);
+          }
           break;
 
-        default:
-          it = std::num_put<CharType, OutputIterator>::do_put(
-            it, iosb, fill, val);
+        default:  // Normal non-zero finite value.
+          it = std::num_put<CharType, OutputIterator>::do_put(it, iosb, fill, val);
           break;
         }
       }
 
+      template<class ValType>
       void put_num_and_fill(
-        OutputIterator& it, std::ios_base& iosb, const char* prefix,
-        const char* body, CharType fill) const
+        OutputIterator& it, std::ios_base& iosb, const CharType* prefix,
+          const CharType* body, CharType fill, ValType val) const
       {
-        int width = (int)strlen(prefix) + (int)strlen(body);
-        std::ios_base::fmtflags adjust
-          = iosb.flags() & std::ios_base::adjustfield;
+        int prefix_length = prefix ? (int)std::char_traits<CharType>::length(prefix) : 0;
+        int body_length = body ? (int)std::char_traits<CharType>::length(body) : 0;
+        int width = prefix_length + body_length;
+        std::ios_base::fmtflags adjust = iosb.flags() & std::ios_base::adjustfield;
         const std::ctype<CharType>& ct
           = std::use_facet<std::ctype<CharType> >(iosb.getloc());
 
-        if(adjust != std::ios_base::internal && adjust != std::ios_base::left)
-          put_fill(it, iosb, fill, width);
-
-        while(*prefix)
-          *it = ct.widen(*(prefix++));
-
-        if(adjust == std::ios_base::internal)
-          put_fill(it, iosb, fill, width);
-
-        if(iosb.flags() & std::ios_base::uppercase) {
-          while(*body)
-            *it = ct.toupper(ct.widen(*(body++)));
-        }
-        else {
-          while(*body)
-            *it = ct.widen(*(body++));
+        if(body || prefix)
+        { // adjust == std::ios_base::right, so leading fill needed.
+          if(adjust != std::ios_base::internal && adjust != std::ios_base::left)
+            put_fill(it, iosb, fill, width);
         }
 
-        if(adjust == std::ios_base::left)
-          put_fill(it, iosb, fill, width);
+        if(prefix)
+        { // Adjust width for prefix.
+          while(*prefix)
+            *it = *(prefix++);
+          iosb.width( iosb.width() - prefix_length );
+          width -= prefix_length;
+        }
+
+        if(body)
+        { // 
+          if(adjust == std::ios_base::internal)
+          { // Put fill between sign and digits.
+            put_fill(it, iosb, fill, width);
+          }
+          if(iosb.flags() & std::ios_base::uppercase)
+          {
+              while(*body)
+                *it = ct.toupper(*(body++));
+          }
+          else
+          {
+            while(*body)
+              *it = *(body++);
+          }
+
+          if(adjust == std::ios_base::left)
+            put_fill(it, iosb, fill, width);
+        }
+        else
+        {
+          it = std::num_put<CharType, OutputIterator>::do_put(it, iosb, fill, val);
+        }
       }
 
       void put_fill(
-        OutputIterator& it, std::ios_base& iosb,
-        CharType fill, int width) const
-      {
+        OutputIterator& it, std::ios_base& iosb, CharType fill, int width) const
+      { // Insert fill chars.
         for(std::streamsize i = iosb.width() - static_cast<std::streamsize>(width); i > 0; --i)
           *it = fill;
       }
 
-    private:
       const int flags_;
     };
 
@@ -368,7 +413,7 @@ namespace boost {
         switch(peek_char(it, end, ct)) {
         case 'q':
         case 's':
-          if(flags_ && legacy)
+          if(flags_ & legacy)
             ++it;
           break;  // "nanq", "nans"
 
@@ -448,10 +493,10 @@ namespace boost {
               return;
             }
           }
-          break;
+          break;  // LCOV_EXCL_LINE  simple fallthrough not registered as covered.
 
         default:
-          break;
+          break;  // LCOV_EXCL_LINE  simple fallthrough not registered as covered.
         }
 
         state |= std::ios_base::failbit;
@@ -478,7 +523,7 @@ namespace boost {
                 val = std::numeric_limits<ValType>::infinity();
                 return;
             }
-            break;
+            break;  // LCOV_EXCL_LINE  simple fallthrough not registered as covered.
 
           case 'd':   // 1.#IND"
             if(std::numeric_limits<ValType>::has_quiet_NaN
@@ -488,10 +533,10 @@ namespace boost {
                 val = positive_nan<ValType>();
                 return;
             }
-            break;
+            break;  // LCOV_EXCL_LINE  simple fallthrough not registered as covered.
 
-          default:
-            break;
+          default:  // LCOV_EXCL_LINE  simple fallthrough not registered as covered.
+            break;  // LCOV_EXCL_LINE  simple fallthrough not registered as covered.
           }
         }
 
@@ -527,7 +572,6 @@ namespace boost {
         return !*s;
       } // bool match_string
 
-    private:
       const int flags_;
     }; //
 
@@ -540,4 +584,5 @@ namespace boost {
 #   pragma warning(pop)
 #endif
 
-#endif
+#endif // BOOST_MATH_NONFINITE_NUM_FACETS_HPP
+
