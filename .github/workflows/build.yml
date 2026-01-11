@@ -236,9 +236,15 @@ jobs:
 
 #    - name: Install VS2010
 #      run: |
-#        curl -L https://web.archive.org/web/20130811055544/http://download.microsoft.com/download/1/E/5/1E5F1C0A-0D5B-426A-A603-1798B951DDAE/VS2010Express1.iso -o "VS2010Express1.iso"
-#        Mount-DiskImage -ImagePath "${{github.workspace}}\VS2010Express1.iso"
+#        curl -L https://web.archive.org/web/20130811055544/http://download.microsoft.com/download/1/E/5/1E5F1C0A-0D5B-426A-A603-1798B951DDAE/VS2010Express1.iso -o "VisualStudio.iso"
+#        Mount-DiskImage -ImagePath "${{github.workspace}}\VS.iso"
 #        Start-Process -Wait "E:\VCExpress\setup.exe" -ArgumentList "/q", "/norestart"
+
+    - name: Install TortoiseSVN
+      run: |
+        curl -L https://cfhcable.dl.sourceforge.net/project/tortoisesvn/1.14.9/Application/TortoiseSVN-1.14.9.29743-x64-svn-1.14.5.msi?viasf=1 -o "TortoiseSVN.msi"
+        Mount-DiskImage -ImagePath "${{github.workspace}}\TortoiseSVN.msi"
+        Start-Process -Wait "msiexec" -ArgumentList "/package", "TortoiseSVN.msi", "/quiet"
 
 #    - name: List files
 #      run: |
