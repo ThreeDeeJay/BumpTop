@@ -58,7 +58,8 @@ jobs:
     - name: Download dependencies
       run: |
         curl http://download.qt-project.org/archive/qt/4.6/qt-everywhere-opensource-src-4.6.1.tar.gz -o "trunk/mac/Dependencies/qt-everywhere-opensource-src-4.6.1.tar.gz"
-        copy "trunk/win/Source/BT_SVNRevision.txt" "trunk/win/Source/BT_SVNRevision.h"
+        
+#        copy "trunk/win/Source/BT_SVNRevision.txt" "trunk/win/Source/BT_SVNRevision.h"
         
 #        curl https://raw.githubusercontent.com/TortoiseGit/tortoisesvn/refs/heads/master/src/SVN/SVNRev.h -o "trunk/win/Source/BT_SVNRevision.h"
 #        New-Item -ItemType File -Path 'trunk\win\Source\mod_authz_svn.h'
