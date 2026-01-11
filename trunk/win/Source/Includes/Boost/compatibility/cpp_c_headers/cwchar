@@ -143,7 +143,7 @@ namespace std {
 #endif
 #if !(defined(__linux) && defined(__DECCXX_VER) && __DECCXX_VER <= 60390005)
 #if !(defined(__sgi) && defined(_COMPILER_VERSION) && _COMPILER_VERSION <= 740)
-  using ::swscanf;
+  using ::swscanf_s_l;
 #endif
 #endif
   using ::wcscoll;
