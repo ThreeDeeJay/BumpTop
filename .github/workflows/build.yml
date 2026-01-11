@@ -60,12 +60,11 @@ jobs:
 #        echo "C:\Python26;" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Prepend
 
 
-    - name: Check Python 2.6
-      run: python --version
-
     - name: Download dependencies
       run: |
         curl http://download.qt-project.org/archive/qt/4.6/qt-everywhere-opensource-src-4.6.1.tar.gz -o "trunk/mac/Dependencies/qt-everywhere-opensource-src-4.6.1.tar.gz"
+        curl https://raw.githubusercontent.com/avih/msvcrt-vs2008-src/refs/heads/master/src/crtassem.h -o "trunk/win/Source/crtassem.h"
+        
         
 #        copy "trunk/win/Source/BT_SVNRevision.txt" "trunk/win/Source/BT_SVNRevision.h"
         
@@ -268,6 +267,7 @@ jobs:
 
     - name: Build
       run: |
+        python --version
         echo "C:\Python26;$env:GITHUB_PATH" >> $env:GITHUB_PATH
         msbuild /m "${{env.Solution}}" /p:Configuration="${{env.Configuration}}" /p:PlatformToolset="v142" /p:ContinueOnError="WarnAndContinue" #/p:AdditionalDependencies="legacy_stdio_definitions.lib" /p:Platform="${{env.Platform}}" /p:IncludePath="C:\Path\to\Include" /p:LibPath="C:\Path\to\Lib" /p:AdditionalIncludePaths="C:\Path\to\external\include" /p:AdditionalLibraryDirectories="C:\Path\to\external\lib" /p:LanguageStandard="stdcpp17"
 
