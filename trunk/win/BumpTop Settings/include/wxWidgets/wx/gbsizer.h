@@ -1,12 +1,11 @@
 /////////////////////////////////////////////////////////////////////////////
-// Name:        gbsizer.h
+// Name:        wx/gbsizer.h
 // Purpose:     wxGridBagSizer:  A sizer that can lay out items in a grid,
 //              with items at specified cells, and with the option of row
 //              and/or column spanning
 //
 // Author:      Robin Dunn
 // Created:     03-Nov-2003
-// RCS-ID:      $Id: gbsizer.h 53135 2008-04-12 02:31:04Z VZ $
 // Copyright:   (c) Robin Dunn
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -28,7 +27,7 @@
 // is used for this and also for wxGridCellCoords.
 //---------------------------------------------------------------------------
 
-class WXDLLEXPORT wxGBPosition
+class WXDLLIMPEXP_CORE wxGBPosition
 {
 public:
     wxGBPosition() : m_row(0), m_col(0) {}
@@ -50,29 +49,70 @@ private:
 };
 
 
-class WXDLLEXPORT wxGBSpan
+class WXDLLIMPEXP_CORE wxGBSpan
 {
 public:
-    wxGBSpan() : m_rowspan(1), m_colspan(1) {}
-    wxGBSpan(int rowspan, int colspan) : m_rowspan(rowspan), m_colspan(colspan) {}
+    wxGBSpan() { Init(); }
+    wxGBSpan(int rowspan, int colspan)
+    {
+        // Initialize the members to valid values as not doing it may result in
+        // infinite loop in wxGBSizer code if the user passed 0 for any of
+        // them, see #12934.
+        Init();
+
+        SetRowspan(rowspan);
+        SetColspan(colspan);
+    }
 
     // default copy ctor and assignment operator are okay.
 
+    // Factor constructor creating an invalid wxGBSpan: this is mostly supposed
+    // to be used as return value for functions returning wxGBSpan in case of
+    // errors.
+    static wxGBSpan Invalid()
+    {
+        return wxGBSpan(nullptr);
+    }
+
     int GetRowspan() const { return m_rowspan; }
     int GetColspan() const { return m_colspan; }
-    void SetRowspan(int rowspan) { m_rowspan = rowspan; }
-    void SetColspan(int colspan) { m_colspan = colspan; }
+    void SetRowspan(int rowspan)
+    {
+        wxCHECK_RET( rowspan > 0, "Row span should be strictly positive" );
+
+        m_rowspan = rowspan;
+    }
+
+    void SetColspan(int colspan)
+    {
+        wxCHECK_RET( colspan > 0, "Column span should be strictly positive" );
+
+        m_colspan = colspan;
+    }
 
     bool operator==(const wxGBSpan& o) const { return m_rowspan == o.m_rowspan && m_colspan == o.m_colspan; }
     bool operator!=(const wxGBSpan& o) const { return !(*this == o); }
 
 private:
+    // This private ctor is used by Invalid() only.
+    wxGBSpan(struct InvalidCtorTag*)
+    {
+        m_rowspan =
+        m_colspan = -1;
+    }
+
+    void Init()
+    {
+        m_rowspan =
+        m_colspan = 1;
+    }
+
     int m_rowspan;
     int m_colspan;
 };
 
 
-extern WXDLLEXPORT_DATA(const wxGBSpan) wxDefaultSpan;
+extern WXDLLIMPEXP_DATA_CORE(const wxGBSpan) wxDefaultSpan;
 
 
 //---------------------------------------------------------------------------
@@ -82,33 +122,33 @@ extern WXDLLEXPORT_DATA(const wxGBSpan) wxDefaultSpan;
 class WXDLLIMPEXP_FWD_CORE wxGridBagSizer;
 
 
-class WXDLLEXPORT wxGBSizerItem : public wxSizerItem
+class WXDLLIMPEXP_CORE wxGBSizerItem : public wxSizerItem
 {
 public:
     // spacer
     wxGBSizerItem( int width,
                    int height,
                    const wxGBPosition& pos,
-                   const wxGBSpan& span,
-                   int flag,
-                   int border,
-                   wxObject* userData);
+                   const wxGBSpan& span=wxDefaultSpan,
+                   int flag=0,
+                   int border=0,
+                   wxObject* userData=nullptr);
 
     // window
     wxGBSizerItem( wxWindow *window,
                    const wxGBPosition& pos,
-                   const wxGBSpan& span,
-                   int flag,
-                   int border,
-                   wxObject* userData );
+                   const wxGBSpan& span=wxDefaultSpan,
+                   int flag=0,
+                   int border=0,
+                   wxObject* userData=nullptr );
 
     // subsizer
     wxGBSizerItem( wxSizer *sizer,
                    const wxGBPosition& pos,
-                   const wxGBSpan& span,
-                   int flag,
-                   int border,
-                   wxObject* userData );
+                   const wxGBSpan& span=wxDefaultSpan,
+                   int flag=0,
+                   int border=0,
+                   wxObject* userData=nullptr );
 
     // default ctor
     wxGBSizerItem();
@@ -134,7 +174,7 @@ public:
     // is successful and after the next Layout the item will be resized.
     bool SetSpan( const wxGBSpan& span );
 
-    // Returns true if this item and the other item instersect
+    // Returns true if this item and the other item intersect
     bool Intersects(const wxGBSizerItem& other);
 
     // Returns true if the given pos/span would intersect with this item.
@@ -155,8 +195,8 @@ protected:
 
 
 private:
-    DECLARE_DYNAMIC_CLASS(wxGBSizerItem)
-    DECLARE_NO_COPY_CLASS(wxGBSizerItem)
+    wxDECLARE_DYNAMIC_CLASS(wxGBSizerItem);
+    wxDECLARE_NO_COPY_CLASS(wxGBSizerItem);
 };
 
 
@@ -165,7 +205,7 @@ private:
 //---------------------------------------------------------------------------
 
 
-class WXDLLEXPORT wxGridBagSizer : public wxFlexGridSizer
+class WXDLLIMPEXP_CORE wxGridBagSizer : public wxFlexGridSizer
 {
 public:
     wxGridBagSizer(int vgap = 0, int hgap = 0 );
@@ -177,20 +217,20 @@ public:
                       const wxGBSpan& span = wxDefaultSpan,
                       int flag = 0,
                       int border = 0,
-                      wxObject* userData = NULL );
+                      wxObject* userData = nullptr );
     wxSizerItem* Add( wxSizer *sizer,
                       const wxGBPosition& pos,
                       const wxGBSpan& span = wxDefaultSpan,
                       int flag = 0,
                       int border = 0,
-                      wxObject* userData = NULL );
+                      wxObject* userData = nullptr );
     wxSizerItem* Add( int width,
                       int height,
                       const wxGBPosition& pos,
                       const wxGBSpan& span = wxDefaultSpan,
                       int flag = 0,
                       int border = 0,
-                      wxObject* userData = NULL );
+                      wxObject* userData = nullptr );
     wxSizerItem* Add( wxGBSizerItem *item );
 
 
@@ -227,18 +267,18 @@ public:
     bool SetItemSpan(size_t index, const wxGBSpan& span);
 
 
-    // Find the sizer item for the given window or subsizer, returns NULL if
+    // Find the sizer item for the given window or subsizer, returns nullptr if
     // not found. (non-recursive)
     wxGBSizerItem* FindItem(wxWindow* window);
     wxGBSizerItem* FindItem(wxSizer* sizer);
 
 
-    // Return the sizer item for the given grid cell, or NULL if there is no
+    // Return the sizer item for the given grid cell, or nullptr if there is no
     // item at that position. (non-recursive)
     wxGBSizerItem* FindItemAtPosition(const wxGBPosition& pos);
 
 
-    // Return the sizer item located at the point given in pt, or NULL if
+    // Return the sizer item located at the point given in pt, or nullptr if
     // there is no item at that point. The (x,y) coordinates in pt correspond
     // to the client coordinates of the window using the sizer for
     // layout. (non-recursive)
@@ -246,57 +286,55 @@ public:
 
 
     // Return the sizer item that has a matching user data (it only compares
-    // pointer values) or NULL if not found. (non-recursive)
+    // pointer values) or nullptr if not found. (non-recursive)
     wxGBSizerItem* FindItemWithData(const wxObject* userData);
 
 
     // These are what make the sizer do size calculations and layout
-    virtual void RecalcSizes();
-    virtual wxSize CalcMin();
+    virtual wxSize CalcMin() override;
+    virtual void RepositionChildren(const wxSize& minSize) override;
 
 
     // Look at all items and see if any intersect (or would overlap) the given
     // item.  Returns true if so, false if there would be no overlap.  If an
     // excludeItem is given then it will not be checked for intersection, for
     // example it may be the item we are checking the position of.
-    bool CheckForIntersection(wxGBSizerItem* item, wxGBSizerItem* excludeItem = NULL);
-    bool CheckForIntersection(const wxGBPosition& pos, const wxGBSpan& span, wxGBSizerItem* excludeItem = NULL);
+    bool CheckForIntersection(wxGBSizerItem* item, wxGBSizerItem* excludeItem = nullptr);
+    bool CheckForIntersection(const wxGBPosition& pos, const wxGBSpan& span, wxGBSizerItem* excludeItem = nullptr);
 
 
     // The Add base class virtuals should not be used with this class, but
     // we'll try to make them automatically select a location for the item
     // anyway.
-    virtual wxSizerItem* Add( wxWindow *window, int proportion = 0, int flag = 0, int border = 0, wxObject* userData = NULL );
-    virtual wxSizerItem* Add( wxSizer *sizer, int proportion = 0, int flag = 0, int border = 0, wxObject* userData = NULL );
-    virtual wxSizerItem* Add( int width, int height, int proportion = 0, int flag = 0, int border = 0, wxObject* userData = NULL );
+    virtual wxSizerItem* Add( wxWindow *window, int proportion = 0, int flag = 0, int border = 0, wxObject* userData = nullptr );
+    virtual wxSizerItem* Add( wxSizer *sizer, int proportion = 0, int flag = 0, int border = 0, wxObject* userData = nullptr );
+    virtual wxSizerItem* Add( int width, int height, int proportion = 0, int flag = 0, int border = 0, wxObject* userData = nullptr );
 
     // The Insert and Prepend base class virtuals that are not appropriate for
     // this class and should not be used.  Their implementation in this class
     // simply fails.
     virtual wxSizerItem* Add( wxSizerItem *item );
-    virtual wxSizerItem* Insert( size_t index, wxWindow *window, int proportion = 0, int flag = 0, int border = 0, wxObject* userData = NULL );
-    virtual wxSizerItem* Insert( size_t index, wxSizer *sizer, int proportion = 0, int flag = 0, int border = 0, wxObject* userData = NULL );
-    virtual wxSizerItem* Insert( size_t index, int width, int height, int proportion = 0, int flag = 0, int border = 0, wxObject* userData = NULL );
-    virtual wxSizerItem* Insert( size_t index, wxSizerItem *item );
-    virtual wxSizerItem* Prepend( wxWindow *window, int proportion = 0, int flag = 0, int border = 0, wxObject* userData = NULL );
-    virtual wxSizerItem* Prepend( wxSizer *sizer, int proportion = 0, int flag = 0, int border = 0, wxObject* userData = NULL );
-    virtual wxSizerItem* Prepend( int width,  int height,  int proportion = 0,  int flag = 0,  int border = 0,  wxObject* userData = NULL );
+    virtual wxSizerItem* Insert( size_t index, wxWindow *window, int proportion = 0, int flag = 0, int border = 0, wxObject* userData = nullptr );
+    virtual wxSizerItem* Insert( size_t index, wxSizer *sizer, int proportion = 0, int flag = 0, int border = 0, wxObject* userData = nullptr );
+    virtual wxSizerItem* Insert( size_t index, int width, int height, int proportion = 0, int flag = 0, int border = 0, wxObject* userData = nullptr );
+    virtual wxSizerItem* Insert( size_t index, wxSizerItem *item ) override;
+    virtual wxSizerItem* Prepend( wxWindow *window, int proportion = 0, int flag = 0, int border = 0, wxObject* userData = nullptr );
+    virtual wxSizerItem* Prepend( wxSizer *sizer, int proportion = 0, int flag = 0, int border = 0, wxObject* userData = nullptr );
+    virtual wxSizerItem* Prepend( int width,  int height,  int proportion = 0,  int flag = 0,  int border = 0,  wxObject* userData = nullptr );
     virtual wxSizerItem* Prepend( wxSizerItem *item );
 
 
 protected:
     wxGBPosition FindEmptyCell();
-#if wxABI_VERSION >= 20808
     void AdjustForOverflow();
-#endif
 
     wxSize m_emptyCellSize;
 
 
 private:
 
-    DECLARE_CLASS(wxGridBagSizer)
-    DECLARE_NO_COPY_CLASS(wxGridBagSizer)
+    wxDECLARE_CLASS(wxGridBagSizer);
+    wxDECLARE_NO_COPY_CLASS(wxGridBagSizer);
 };
 
 //---------------------------------------------------------------------------

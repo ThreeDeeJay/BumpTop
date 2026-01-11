@@ -2,9 +2,7 @@
 // Name:        wx/x11/print.h
 // Purpose:     wxPrinter, wxPrintPreview classes
 // Author:      Julian Smart
-// Modified by:
 // Created:     17/09/98
-// RCS-ID:      $Id: print.h 42077 2006-10-17 14:44:52Z ABX $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -18,12 +16,12 @@
 * Represents the printer: manages printing a wxPrintout object
 */
 
-class WXDLLEXPORT wxPrinter: public wxPrinterBase
+class WXDLLIMPEXP_CORE wxPrinter: public wxPrinterBase
 {
-    DECLARE_DYNAMIC_CLASS(wxPrinter)
+    wxDECLARE_DYNAMIC_CLASS(wxPrinter);
 
 public:
-    wxPrinter(wxPrintData *data = NULL);
+    wxPrinter(wxPrintData *data = nullptr);
     virtual ~wxPrinter();
 
     virtual bool Print(wxWindow *parent, wxPrintout *printout, bool prompt = TRUE);
@@ -36,12 +34,12 @@ public:
 * Programmer creates an object of this class to preview a wxPrintout.
 */
 
-class WXDLLEXPORT wxPrintPreview: public wxPrintPreviewBase
+class WXDLLIMPEXP_CORE wxPrintPreview: public wxPrintPreviewBase
 {
-    DECLARE_CLASS(wxPrintPreview)
+    wxDECLARE_CLASS(wxPrintPreview);
 
 public:
-    wxPrintPreview(wxPrintout *printout, wxPrintout *printoutForPrinting = NULL, wxPrintData *data = NULL);
+    wxPrintPreview(wxPrintout *printout, wxPrintout *printoutForPrinting = nullptr, wxPrintData *data = nullptr);
     virtual ~wxPrintPreview();
 
     virtual bool Print(bool interactive);

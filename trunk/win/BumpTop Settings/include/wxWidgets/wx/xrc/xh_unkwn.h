@@ -1,9 +1,8 @@
 /////////////////////////////////////////////////////////////////////////////
 // Name:        wx/xrc/xh_unkwn.h
-// Purpose:     XML resource handler for unkown widget
+// Purpose:     XML resource handler for unknown widget
 // Author:      Vaclav Slavik
 // Created:     2000/03/05
-// RCS-ID:      $Id: xh_unkwn.h 41590 2006-10-03 14:53:40Z VZ $
 // Copyright:   (c) 2000 Vaclav Slavik
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -17,12 +16,12 @@
 
 class WXDLLIMPEXP_XRC wxUnknownWidgetXmlHandler : public wxXmlResourceHandler
 {
-    DECLARE_DYNAMIC_CLASS(wxUnknownWidgetXmlHandler)
+    wxDECLARE_DYNAMIC_CLASS(wxUnknownWidgetXmlHandler);
 
 public:
     wxUnknownWidgetXmlHandler();
-    virtual wxObject *DoCreateResource();
-    virtual bool CanHandle(wxXmlNode *node);
+    virtual wxObject *DoCreateResource() override;
+    virtual bool CanHandle(wxXmlNode *node) override;
 };
 
 #endif // wxUSE_XRC

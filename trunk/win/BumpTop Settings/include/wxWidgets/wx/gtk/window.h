@@ -2,7 +2,6 @@
 // Name:        wx/gtk/window.h
 // Purpose:
 // Author:      Robert Roebling
-// Id:          $Id: window.h 41810 2006-10-09 16:39:34Z VZ $
 // Copyright:   (c) 1998 Robert Roebling
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -12,18 +11,28 @@
 
 #include "wx/dynarray.h"
 
-// helper structure that holds class that holds GtkIMContext object and
-// some additional data needed for key events processing
-struct wxGtkIMData;
+#ifdef __WXGTK3__
+    typedef struct _cairo cairo_t;
+    typedef struct _GtkStyleProvider GtkStyleProvider;
+    typedef struct _GtkCssProvider GtkCssProvider;
+    #define WXUNUSED_IN_GTK2(x) x
+    #define WXUNUSED_IN_GTK3(x)
+#else
+    #define WXUNUSED_IN_GTK2(x)
+    #define WXUNUSED_IN_GTK3(x) x
+#endif
+
+typedef struct _GdkEventKey GdkEventKey;
+typedef struct _GtkIMContext GtkIMContext;
 
 WX_DEFINE_EXPORTED_ARRAY_PTR(GdkWindow *, wxArrayGdkWindows);
 
-//-----------------------------------------------------------------------------
-// callback definition for inserting a window (internal)
-//-----------------------------------------------------------------------------
+extern "C"
+{
 
-class WXDLLIMPEXP_CORE wxWindowGTK;
-typedef void (*wxInsertChildFunction)( wxWindowGTK*, wxWindowGTK* );
+typedef void (*wxGTKCallback)();
+
+}
 
 //-----------------------------------------------------------------------------
 // wxWindowGTK
@@ -40,127 +49,122 @@ public:
                 const wxPoint& pos = wxDefaultPosition,
                 const wxSize& size = wxDefaultSize,
                 long style = 0,
-                const wxString& name = wxPanelNameStr);
+                const wxString& name = wxASCII_STR(wxPanelNameStr));
     bool Create(wxWindow *parent,
                 wxWindowID id,
                 const wxPoint& pos = wxDefaultPosition,
                 const wxSize& size = wxDefaultSize,
                 long style = 0,
-                const wxString& name = wxPanelNameStr);
+                const wxString& name = wxASCII_STR(wxPanelNameStr));
     virtual ~wxWindowGTK();
 
     // implement base class (pure) virtual methods
     // -------------------------------------------
 
-    virtual void SetLabel(const wxString& WXUNUSED(label)) { }
-    virtual wxString GetLabel() const { return wxEmptyString; }
+    virtual void Raise() override;
+    virtual void Lower() override;
 
-    virtual bool Destroy();
+    virtual bool Show( bool show = true ) override;
+    virtual bool IsShown() const override;
 
-    virtual void Raise();
-    virtual void Lower();
+    virtual bool IsRetained() const override;
 
-    virtual bool Show( bool show = true );
-    virtual bool Enable( bool enable = true );
+    virtual void SetFocus() override;
 
-    virtual void SetWindowStyleFlag( long style );
+    // hint from wx to native GTK+ tab traversal code
+    virtual void SetCanFocus(bool canFocus) override;
 
-    virtual bool IsRetained() const;
+    virtual bool Reparent( wxWindowBase *newParent ) override;
 
-    virtual void SetFocus();
-    virtual bool AcceptsFocus() const;
+    virtual wxSize GetWindowBorderSize() const override;
 
-    virtual bool Reparent( wxWindowBase *newParent );
-
-    virtual void WarpPointer(int x, int y);
+    virtual void WarpPointer(int x, int y) override;
+#ifdef __WXGTK3__
+    virtual bool EnableTouchEvents(int eventsMask) override;
+#endif // __WXGTK3__
 
     virtual void Refresh( bool eraseBackground = true,
-                          const wxRect *rect = (const wxRect *) NULL );
-    virtual void Update();
-    virtual void ClearBackground();
+                          const wxRect *rect = (const wxRect *) nullptr ) override;
+    virtual void Update() override;
+    virtual void ClearBackground() override;
 
-    virtual bool SetBackgroundColour( const wxColour &colour );
-    virtual bool SetForegroundColour( const wxColour &colour );
-    virtual bool SetCursor( const wxCursor &cursor );
-    virtual bool SetFont( const wxFont &font );
+    virtual bool SetBackgroundColour( const wxColour &colour ) override;
+    virtual bool SetForegroundColour( const wxColour &colour ) override;
+    virtual bool SetFont( const wxFont &font ) override;
 
-    virtual bool SetBackgroundStyle(wxBackgroundStyle style) ;
+    virtual bool SetBackgroundStyle(wxBackgroundStyle style) override ;
+    virtual bool IsTransparentBackgroundSupported(wxString* reason = nullptr) const override;
 
-    virtual int GetCharHeight() const;
-    virtual int GetCharWidth() const;
-    virtual void GetTextExtent(const wxString& string,
-                               int *x, int *y,
-                               int *descent = (int *) NULL,
-                               int *externalLeading = (int *) NULL,
-                               const wxFont *theFont = (const wxFont *) NULL)
-                               const;
+    virtual int GetCharHeight() const override;
+    virtual int GetCharWidth() const override;
+    virtual double GetContentScaleFactor() const override;
+    virtual double GetDPIScaleFactor() const override;
 
     virtual void SetScrollbar( int orient, int pos, int thumbVisible,
-                               int range, bool refresh = true );
-    virtual void SetScrollPos( int orient, int pos, bool refresh = true );
-    virtual int GetScrollPos( int orient ) const;
-    virtual int GetScrollThumb( int orient ) const;
-    virtual int GetScrollRange( int orient ) const;
+                               int range, bool refresh = true ) override;
+    virtual void SetScrollPos( int orient, int pos, bool refresh = true ) override;
+    virtual int GetScrollPos( int orient ) const override;
+    virtual int GetScrollThumb( int orient ) const override;
+    virtual int GetScrollRange( int orient ) const override;
     virtual void ScrollWindow( int dx, int dy,
-                               const wxRect* rect = (wxRect *) NULL );
-    virtual bool ScrollLines(int lines);
-    virtual bool ScrollPages(int pages);
+                               const wxRect* rect = nullptr ) override;
+    virtual bool ScrollLines(int lines) override;
+    virtual bool ScrollPages(int pages) override;
 
 #if wxUSE_DRAG_AND_DROP
-    virtual void SetDropTarget( wxDropTarget *dropTarget );
+    virtual void SetDropTarget( wxDropTarget *dropTarget ) override;
 #endif // wxUSE_DRAG_AND_DROP
 
-    virtual void AddChild( wxWindowBase *child );
-    virtual void RemoveChild( wxWindowBase *child );
+    virtual void AddChild( wxWindowBase *child ) override;
+    virtual void RemoveChild( wxWindowBase *child ) override;
 
-    virtual void SetLayoutDirection(wxLayoutDirection dir);
-    virtual wxLayoutDirection GetLayoutDirection() const;
+    virtual void SetLayoutDirection(wxLayoutDirection dir) override;
+    virtual wxLayoutDirection GetLayoutDirection() const override;
     virtual wxCoord AdjustForLayoutDirection(wxCoord x,
                                              wxCoord width,
-                                             wxCoord widthTotal) const;
+                                             wxCoord widthTotal) const override;
 
-    virtual bool DoIsExposed( int x, int y ) const;
-    virtual bool DoIsExposed( int x, int y, int w, int h ) const;
+    virtual bool DoIsExposed( int x, int y ) const override;
+    virtual bool DoIsExposed( int x, int y, int w, int h ) const override;
 
-    // currently wxGTK2-only
-    void SetDoubleBuffered(bool on);
-    virtual bool IsDoubleBuffered() const;
+    virtual void SetDoubleBuffered(bool on) override;
+    virtual bool IsDoubleBuffered() const override;
+
+    // SetLabel(), which does nothing in wxWindow
+    virtual void SetLabel(const wxString& label) override { m_gtkLabel = label; }
+    virtual wxString GetLabel() const override            { return m_gtkLabel; }
 
     // implementation
     // --------------
 
-    virtual WXWidget GetHandle() const { return m_widget; }
+    virtual WXWidget GetHandle() const override { return m_widget; }
+
+#ifdef __WINDOWS__
+    // If on Windows, cut through the GtkWidget abstraction to get HWND.
+    WXHWND GTKGetWin32Handle() const;
+#endif
 
     // many important things are done here, this function must be called
     // regularly
-    virtual void OnInternalIdle();
-
-    // Internal represention of Update()
-    void GtkUpdate();
+    virtual void OnInternalIdle() override;
 
     // For compatibility across platforms (not in event table)
     void OnIdle(wxIdleEvent& WXUNUSED(event)) {}
-
-    // wxGTK-specific: called recursively by Enable,
-    // to give widgets an opportunity to correct their colours after they
-    // have been changed by Enable
-    virtual void OnParentEnable( bool WXUNUSED(enable) ) {}
 
     // Used by all window classes in the widget creation process.
     bool PreCreation( wxWindowGTK *parent, const wxPoint &pos, const wxSize &size );
     void PostCreation();
 
-    // Internal addition of child windows. differs from class
-    // to class not by using virtual functions but by using
-    // the m_insertCallback.
+    // Internal addition of child windows
     void DoAddChild(wxWindowGTK *child);
 
-    // This methods sends wxPaintEvents to the window. It reads the
-    // update region, breaks it up into rects and sends an event
-    // for each rect. It is also responsible for background erase
-    // events and NC paint events. It is called from "draw" and
-    // "expose" handlers as well as from ::Update()
-    void GtkSendPaintEvents();
+    // This method sends wxPaintEvents to the window.
+    // It is also responsible for background erase events.
+#ifdef __WXGTK3__
+    void GTKSendPaintEvents(cairo_t* cr);
+#else
+    void GTKSendPaintEvents(const GdkRegion* region);
+#endif
 
     // The methods below are required because many native widgets
     // are composed of several subwidgets and setting a style for
@@ -168,27 +172,59 @@ public:
     // also, it is not clear which native widget is the top
     // widget where (most of) the input goes. even tooltips have
     // to be applied to all subwidgets.
-    virtual GtkWidget* GetConnectWidget();
+    virtual GtkWidget* GetConnectWidget() const;
     void ConnectWidget( GtkWidget *widget );
 
-    // Called from several event handlers, if it returns true or false, the
-    // same value should be immediately returned by the handler without doing
-    // anything else. If it returns -1, the handler should continue as usual
-    int GTKCallbackCommonPrologue(struct _GdkEventAny *event) const;
 
-    // override this if some events should never be consumed by wxWidgets but
+    // Returns true if GTK callbacks are blocked due to a drag event being in
+    // progress.
+    bool GTKShouldIgnoreEvent() const;
+
+
+    // override this if some events should never be consumed by wxWidgets
     // but have to be left for the native control
     //
-    // base version just does GetEventHandler()->ProcessEvent()
+    // base version just calls HandleWindowEvent()
     virtual bool GTKProcessEvent(wxEvent& event) const;
 
     // Map GTK widget direction of the given widget to/from wxLayoutDirection
     static wxLayoutDirection GTKGetLayout(GtkWidget *widget);
     static void GTKSetLayout(GtkWidget *widget, wxLayoutDirection dir);
 
+    // This is called when capture is taken from the window. It will
+    // fire off capture lost events.
+    void GTKReleaseMouseAndNotify();
+    static void GTKHandleCaptureLost();
+
+    GdkWindow* GTKGetDrawingWindow() const;
+
+    bool GTKHandleFocusIn();
+    virtual bool GTKHandleFocusOut();
+    void GTKHandleFocusOutNoDeferring();
+    void GTKHandleDeferredFocusOut();
+
+    // Called when m_widget becomes realized. Derived classes must call the
+    // base class method if they override it.
+    virtual void GTKHandleRealized();
+    void GTKHandleUnrealize();
+
+    // Apply the widget style to the given window. Should normally only be
+    // called from the overridden DoApplyWidgetStyle() implementation in
+    // another window and exists solely to provide access to protected
+    // DoApplyWidgetStyle() when it's really needed.
+    static void GTKDoApplyWidgetStyle(wxWindowGTK* win, GtkRcStyle *style)
+    {
+        win->DoApplyWidgetStyle(style);
+    }
+
 protected:
+    // for controls composed of multiple GTK widgets, return true to eliminate
+    // spurious focus events if the focus changes between GTK+ children within
+    // the same wxWindow
+    virtual bool GTKNeedsToFilterSameWindowFocus() const { return false; }
+
     // Override GTKWidgetNeedsMnemonic and return true if your
-    // needs to set its mnemonic widget, such as for a 
+    // needs to set its mnemonic widget, such as for a
     // GtkLabel for wxStaticText, then do the actual
     // setting of the widget inside GTKWidgetDoSetMnemonic
     virtual bool GTKWidgetNeedsMnemonic() const;
@@ -197,7 +233,7 @@ protected:
     // Get the GdkWindows making part of this window: usually there will be
     // only one of them in which case it should be returned directly by this
     // function. If there is more than one GdkWindow (can be the case for
-    // composite widgets), return NULL and fill in the provided array
+    // composite widgets), return nullptr and fill in the provided array
     //
     // This is not pure virtual for backwards compatibility but almost
     // certainly must be overridden in any wxControl-derived class!
@@ -206,64 +242,100 @@ protected:
     // Check if the given window makes part of this widget
     bool GTKIsOwnWindow(GdkWindow *window) const;
 
-    // Set the focus to this window if its setting was delayed because the
-    // widget hadn't been realized when SetFocus() was called
+    // Return the GdkWindow associated with either m_wxwindow or m_widget.
     //
-    // Return true if focus was set to us, false if nothing was done
-    bool GTKSetDelayedFocusIfNeeded();
+    // This may be different from GTKGetConnectWindow() for the native widgets
+    // using a different "connect widget".
+    //
+    // Unlike GTKGetDrawingWindow(), this function always returns something
+    // non-null for a mapped window.
+    GdkWindow* GTKGetMainWindow() const;
+
+    // Return the GdkWindow associated with GetConnectWidget().
+    GdkWindow* GTKGetConnectWindow() const;
 
 public:
     // Returns the default context which usually is anti-aliased
-    PangoContext   *GtkGetPangoDefaultContext();
+    PangoContext   *GTKGetPangoDefaultContext();
 
 #if wxUSE_TOOLTIPS
-    virtual void ApplyToolTip( GtkTooltips *tips, const wxChar *tip );
+    // applies tooltip to the widget (tip must be UTF-8 encoded)
+    virtual void GTKApplyToolTip(const char* tip);
 #endif // wxUSE_TOOLTIPS
 
-    // Called from GTK signal handlers. it indicates that
-    // the layouting functions have to be called later on
-    // (i.e. in idle time, implemented in OnInternalIdle() ).
-    void GtkUpdateSize() { m_sizeSet = false; }
-    
-    
     // Called when a window should delay showing itself
-    // until idle time. This partly mimmicks defered
-    // sizing under MSW.
-    void GtkShowOnIdle() { m_showOnIdle = true; }
-    
-    // This is called from the various OnInternalIdle methods
-    bool GtkShowFromOnIdle();
+    // until idle time used in Reparent().
+    void GTKShowOnIdle() { m_showOnIdle = true; }
 
-    // fix up the mouse event coords, used by wxListBox only so far
-    virtual void FixUpMouseEvent(GtkWidget * WXUNUSED(widget),
-                                 wxCoord& WXUNUSED(x),
-                                 wxCoord& WXUNUSED(y)) { }
+    // This is called from the various OnInternalIdle methods
+    bool GTKShowFromOnIdle();
 
     // is this window transparent for the mouse events (as wxStaticBox is)?
-    virtual bool IsTransparentForMouse() const { return false; }
-
-    // is this a radiobutton (used by radiobutton code itself only)?
-    virtual bool IsRadioButton() const { return false; }
+    virtual bool GTKIsTransparentForMouse() const { return false; }
 
     // Common scroll event handling code for wxWindow and wxScrollBar
-    wxEventType GetScrollEventType(GtkRange* range);
-
-    void BlockScrollEvent();
-    void UnblockScrollEvent();
+    wxEventType GTKGetScrollEventType(GtkRange* range);
 
     // position and size of the window
     int                  m_x, m_y;
     int                  m_width, m_height;
-    int                  m_oldClientWidth,m_oldClientHeight;
+    int m_clientWidth, m_clientHeight;
+    // Whether the client size variables above are known to be correct
+    // (because they have been validated by a size-allocate) and should
+    // be used to report client size
+    bool m_useCachedClientSize;
+    // Whether the GtkAllocation and GdkWindow positions are known to be correct
+    bool m_isGtkPositionValid;
 
     // see the docs in src/gtk/window.cpp
     GtkWidget           *m_widget;          // mostly the widget seen by the rest of GTK
     GtkWidget           *m_wxwindow;        // mostly the client area as per wxWidgets
 
+    // label for use with GetLabelSetLabel
+    wxString             m_gtkLabel;
+
+    // return true if the window is of a standard (i.e. not wxWidgets') class
+    bool IsOfStandardClass() const { return m_wxwindow == nullptr; }
+
     // this widget will be queried for GTK's focus events
     GtkWidget           *m_focusWidget;
 
-    wxGtkIMData         *m_imData;
+    void GTKDisableFocusOutEvent();
+    void GTKEnableFocusOutEvent();
+
+
+    // Input method support
+
+    // The IM context used for generic, i.e. non-native, windows.
+    //
+    // It might be a good idea to avoid allocating it unless key events from
+    // this window are really needed but currently we do it unconditionally.
+    //
+    // For native widgets (i.e. those for which IsOfStandardClass() returns
+    // true) it is null.
+    GtkIMContext* m_imContext;
+
+    // Pointer to the event being currently processed by the IME or nullptr if not
+    // inside key handling.
+    GdkEventKey* m_imKeyEvent;
+
+    // This method generalizes gtk_im_context_filter_keypress(): for the
+    // generic windows it does just that but it's overridden by the classes
+    // wrapping native widgets that use IM themselves and so provide specific
+    // methods for accessing it such gtk_entry_im_context_filter_keypress().
+    virtual int GTKIMFilterKeypress(GdkEventKey* event) const;
+
+    // This method must be called from the derived classes "insert-text" signal
+    // handlers to check if the text is not being inserted by the IM and, if
+    // this is the case, generate appropriate wxEVT_CHAR events for it.
+    //
+    // Returns true if we did generate and process events corresponding to this
+    // text or false if we didn't handle it.
+    bool GTKOnInsertText(const char* text);
+
+    // This is just a helper of GTKOnInsertText() which is also used by GTK+
+    // "commit" signal handler.
+    bool GTKDoInsertTextFromIM(const char* text);
 
 
     // indices for the arrays below
@@ -274,10 +346,6 @@ public:
 
     // horizontal/vertical scroll position
     double m_scrollPos[ScrollDir_Max];
-
-    // if true, don't notify about adjustment change (without resetting the
-    // flag, so this has to be done manually)
-    bool m_blockValueChanged[ScrollDir_Max];
 
     // return the scroll direction index corresponding to the given orientation
     // (which is wxVERTICAL or wxHORIZONTAL)
@@ -295,90 +363,142 @@ public:
     // find the direction of the given scrollbar (must be one of ours)
     ScrollDir ScrollDirFromRange(GtkRange *range) const;
 
+    // Set the given cursor for the window.
+    void GTKSetCursor(const wxCursor& cursor);
+
+    // Apply the current cursor: called initially, after realizing the window,
+    // but may also called later after temporarily changing the cursor.
+    void GTKApplyCursor();
+
+    // Update the cursor for the window, taking into account the currently set
+    // global cursor, if any.
+    void GTKUpdateCursor();
+
+    // This overload can be used if we already know whether there is a globally
+    // set cursor overriding the normal one, it's just an optimization allowing
+    // to avoid checking for such cursor existence inside GTKUpdateCursor()
+    // itself.
+    void GTKUpdateCursor(GdkCursor* overrideCursor);
+
+    // Override the base class function to call GTKUpdateCursor() too.
+    virtual void WXUpdateCursor() override;
 
     // extra (wxGTK-specific) flags
-    bool                 m_needParent:1;        // ! wxFrame, wxDialog, wxNotebookPage ?
     bool                 m_noExpose:1;          // wxGLCanvas has its own redrawing
     bool                 m_nativeSizeEvent:1;   // wxGLCanvas sends wxSizeEvent upon "alloc_size"
-    bool                 m_hasScrolling:1;
-    bool                 m_hasVMT:1;
-    bool                 m_sizeSet:1;
-    bool                 m_resizing:1;
-    bool                 m_acceptsFocus:1;      // true if not static
-    bool                 m_hasFocus:1;          // true if == FindFocus()
     bool                 m_isScrolling:1;       // dragging scrollbar thumb?
     bool                 m_clipPaintRegion:1;   // true after ScrollWindow()
-    wxRegion             m_nativeUpdateRegion;  // not transformed for RTL
     bool                 m_dirtyTabOrder:1;     // tab order changed, GTK focus
                                                 // chain needs update
-    bool                 m_needsStyleChange:1;  // May not be able to change
-                                                // background style until OnIdle
     bool                 m_mouseButtonDown:1;
-    bool                 m_blockScrollEvent:1;
-    
     bool                 m_showOnIdle:1;        // postpone showing the window until idle
+    bool                 m_needCursorReset:1;   // true if cursor set by wxEVT_SET_CURSOR
 
-    // C++ has no virtual methods in the constrcutor of any class but we need
-    // different methods of inserting a child window into a wxFrame,
-    // wxMDIFrame, wxNotebook etc. this is the callback that will get used.
-    wxInsertChildFunction  m_insertCallback;
+    wxRegion             m_nativeUpdateRegion;  // not transformed for RTL
 
 protected:
     // implement the base class pure virtuals
-    virtual void DoClientToScreen( int *x, int *y ) const;
-    virtual void DoScreenToClient( int *x, int *y ) const;
-    virtual void DoGetPosition( int *x, int *y ) const;
-    virtual void DoGetSize( int *width, int *height ) const;
-    virtual void DoGetClientSize( int *width, int *height ) const;
+    virtual void DoGetTextExtent(const wxString& string,
+                                 int *x, int *y,
+                                 int *descent = nullptr,
+                                 int *externalLeading = nullptr,
+                                 const wxFont *font = nullptr) const override;
+    virtual void DoClientToScreen( int *x, int *y ) const override;
+    virtual void DoScreenToClient( int *x, int *y ) const override;
+    virtual void DoGetPosition( int *x, int *y ) const override;
+    virtual void DoGetSize( int *width, int *height ) const override;
+    virtual void DoGetClientSize( int *width, int *height ) const override;
     virtual void DoSetSize(int x, int y,
                            int width, int height,
-                           int sizeFlags = wxSIZE_AUTO);
-    virtual void DoSetClientSize(int width, int height);
-    virtual void DoMoveWindow(int x, int y, int width, int height);
+                           int sizeFlags = wxSIZE_AUTO) override;
+    virtual void DoSetClientSize(int width, int height) override;
+    virtual void DoMoveWindow(int x, int y, int width, int height) override;
+    virtual void DoEnable(bool enable) override;
 
 #if wxUSE_MENUS_NATIVE
-    virtual bool DoPopupMenu( wxMenu *menu, int x, int y );
+    virtual bool DoPopupMenu( wxMenu *menu, int x, int y ) override;
 #endif // wxUSE_MENUS_NATIVE
 
-    virtual void DoCaptureMouse();
-    virtual void DoReleaseMouse();
+    virtual void DoCaptureMouse() override;
+    virtual void DoReleaseMouse() override;
+
+    virtual void DoFreeze() override;
+    virtual void DoThaw() override;
+
+    void GTKConnectFreezeWidget(GtkWidget* widget);
+    void GTKFreezeWidget(GtkWidget *w);
+    void GTKThawWidget(GtkWidget *w);
+    void GTKDisconnect(void* instance);
 
 #if wxUSE_TOOLTIPS
-    virtual void DoSetToolTip( wxToolTip *tip );
+    virtual void DoSetToolTip( wxToolTip *tip ) override;
 #endif // wxUSE_TOOLTIPS
 
-    // common part of all ctors (not virtual because called from ctor)
-    void Init();
+    // Create a GtkScrolledWindow containing the given widget (usually
+    // m_wxwindow but not necessarily) and assigns it to m_widget. Also shows
+    // the widget passed to it.
+    //
+    // Can be only called if we have either wxHSCROLL or wxVSCROLL in our
+    // style.
+    void GTKCreateScrolledWindowWith(GtkWidget* view);
 
-    virtual void DoMoveInTabOrder(wxWindow *win, MoveKind move);
+    virtual void DoMoveInTabOrder(wxWindow *win, WindowOrder move) override;
+    virtual bool DoNavigateIn(int flags) override;
+
 
     // Copies m_children tab order to GTK focus chain:
     void RealizeTabOrder();
 
+#ifdef __WXGTK3__
+    // Use the given CSS string for styling the widget. The provider must be
+    // allocated, and remains owned, by the caller.
+    void GTKApplyCssStyle(GtkCssProvider* provider, const char* style);
+    void GTKApplyCssStyle(const char* style);
+#else // GTK+ < 3
     // Called by ApplyWidgetStyle (which is called by SetFont() and
     // SetXXXColour etc to apply style changed to native widgets) to create
-    // modified GTK style with non-standard attributes. If forceStyle=true,
-    // creates empty GtkRcStyle if there are no modifications, otherwise
-    // returns NULL in such case.
-    GtkRcStyle *CreateWidgetStyle(bool forceStyle = false);
+    // modified GTK style with non-standard attributes.
+    GtkRcStyle* GTKCreateWidgetStyle();
+#endif
 
-    // Overridden in many GTK widgets who have to handle subwidgets
-    virtual void ApplyWidgetStyle(bool forceStyle = false);
+    void GTKApplyWidgetStyle(bool forceStyle = false);
 
-    // helper function to ease native widgets wrapping, called by
-    // ApplyWidgetStyle -- override this, not ApplyWidgetStyle
+    // Helper function to ease native widgets wrapping, called by
+    // GTKApplyWidgetStyle() and supposed to be overridden, not called.
+    //
+    // And if you actually need to call it, e.g. to propagate style change to a
+    // composite control, use public static GTKDoApplyWidgetStyle().
     virtual void DoApplyWidgetStyle(GtkRcStyle *style);
 
-    // sets the border of a given GtkScrolledWindow from a wx style
-    static void GtkScrolledWindowSetBorder(GtkWidget* w, int style);
+    void GTKApplyStyle(GtkWidget* widget, GtkRcStyle* style);
 
-    // set the current cursor for all GdkWindows making part of this widget
-    // (see GTKGetWindow)
+    // sets the border of a given GtkScrolledWindow from a wx style
+    static void GTKScrolledWindowSetBorder(GtkWidget* w, int style);
+
+    // Connect the given function to the specified signal on m_widget.
     //
-    // should be called from OnInternalIdle() if it's overridden
-    void GTKUpdateCursor();
+    // This is just a wrapper for g_signal_connect() and returns the handler id
+    // just as it does.
+    unsigned long GTKConnectWidget(const char *signal, wxGTKCallback callback);
+
+    void ConstrainSize();
+
+#ifdef __WXGTK3__
+    static GdkWindow* GTKFindWindow(GtkWidget* widget);
+    static void GTKFindWindow(GtkWidget* widget, wxArrayGdkWindows& windows);
+
+    bool m_needSizeEvent;
+#endif
 
 private:
+    void Init();
+    virtual void GTKRemoveBorder();
+
+    // return true if this window must have a non-null parent, false if it can
+    // be created without parent (normally only top level windows but in wxGTK
+    // there is also the exception of wxMenuBar)
+    virtual bool GTKNeedsParent() const { return !IsTopLevel(); }
+
     enum ScrollUnit { ScrollUnit_Line, ScrollUnit_Page, ScrollUnit_Max };
 
     // common part of ScrollLines() and ScrollPages() and could be used, in the
@@ -387,12 +507,30 @@ private:
     // return true if we scrolled, false otherwise (on error or simply if we
     // are already at the end)
     bool DoScrollByUnits(ScrollDir dir, ScrollUnit unit, int units);
+    virtual void AddChildGTK(wxWindowGTK* child);
 
+    // Set the given (possibly null) cursor for all GdkWindows of this window.
+    //
+    // Return all windows for which we changed the cursor (may be empty).
+    wxArrayGdkWindows GTKSetCursorForAllWindows(GdkCursor* cursor);
 
-    DECLARE_DYNAMIC_CLASS(wxWindowGTK)
-    DECLARE_NO_COPY_CLASS(wxWindowGTK)
+#ifdef __WXGTK3__
+    // paint context is stashed here so wxPaintDC can use it
+    cairo_t* m_paintContext;
+    // style provider for "background-image"
+    GtkStyleProvider* m_styleProvider;
+
+public:
+    cairo_t* GTKPaintContext() const
+    {
+        return m_paintContext;
+    }
+    void GTKSizeRevalidate();
+    void GTKSendSizeEventIfNeeded();
+#endif
+
+    wxDECLARE_DYNAMIC_CLASS(wxWindowGTK);
+    wxDECLARE_NO_COPY_CLASS(wxWindowGTK);
 };
-
-extern WXDLLIMPEXP_CORE wxWindow *wxFindFocusedChild(wxWindowGTK *win);
 
 #endif // _WX_GTK_WINDOW_H_

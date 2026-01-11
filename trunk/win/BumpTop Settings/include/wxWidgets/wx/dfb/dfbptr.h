@@ -3,7 +3,6 @@
 // Purpose:     wxDfbPtr<T> for holding objects declared in wrapdfb.h
 // Author:      Vaclav Slavik
 // Created:     2006-08-09
-// RCS-ID:      $Id: dfbptr.h 41029 2006-09-06 09:40:31Z VS $
 // Copyright:   (c) 2006 REA Elektronik GmbH
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -24,7 +23,7 @@
  */
 #define wxDFB_DECLARE_INTERFACE(name)            \
     class wx##name;                              \
-    typedef wxDfbPtr<wx##name> wx##name##Ptr;
+    typedef wxDfbPtr<wx##name> wx##name##Ptr
 
 
 //-----------------------------------------------------------------------------
@@ -33,7 +32,7 @@
 
 class wxDfbWrapperBase;
 
-class wxDfbPtrBase
+class WXDLLIMPEXP_CORE wxDfbPtrBase
 {
 protected:
     static void DoAddRef(wxDfbWrapperBase *ptr);
@@ -55,7 +54,7 @@ public:
 
         Takes ownership of @a ptr, i.e. AddRef() is @em not called on it.
      */
-    wxDfbPtr(T *ptr = NULL) : m_ptr(ptr) {}
+    wxDfbPtr(T *ptr = nullptr) : m_ptr(ptr) {}
 
     /// Copy ctor
     wxDfbPtr(const wxDfbPtr& ptr) { InitFrom(ptr); }
@@ -63,13 +62,13 @@ public:
     /// Dtor. Releases the interface
     ~wxDfbPtr() { Reset(); }
 
-    /// Resets the pointer to NULL, decreasing reference count of the interface.
+    /// Resets the pointer to nullptr, decreasing reference count of the interface.
     void Reset()
     {
         if ( m_ptr )
         {
             this->DoRelease((wxDfbWrapperBase*)m_ptr);
-            m_ptr = NULL;
+            m_ptr = nullptr;
         }
     }
 

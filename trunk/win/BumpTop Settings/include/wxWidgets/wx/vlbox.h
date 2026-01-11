@@ -2,9 +2,7 @@
 // Name:        wx/vlbox.h
 // Purpose:     wxVListBox is a virtual listbox with lines of variable height
 // Author:      Vadim Zeitlin
-// Modified by:
 // Created:     31.05.03
-// RCS-ID:      $Id: vlbox.h 53135 2008-04-12 02:31:04Z VZ $
 // Copyright:   (c) 2003 Vadim Zeitlin <vadim@wxwidgets.org>
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -17,7 +15,7 @@
 
 class WXDLLIMPEXP_FWD_CORE wxSelectionStore;
 
-#define wxVListBoxNameStr _T("wxVListBox")
+extern WXDLLIMPEXP_DATA_CORE(const char) wxVListBoxNameStr[];
 
 // ----------------------------------------------------------------------------
 // wxVListBox
@@ -32,7 +30,7 @@ class WXDLLIMPEXP_FWD_CORE wxSelectionStore;
     It emits the same events as wxListBox and the same event macros may be used
     with it.
  */
-class WXDLLEXPORT wxVListBox : public wxVScrolledWindow
+class WXDLLIMPEXP_CORE wxVListBox : public wxVScrolledCanvas
 {
 public:
     // constructors and such
@@ -47,7 +45,7 @@ public:
                const wxPoint& pos = wxDefaultPosition,
                const wxSize& size = wxDefaultSize,
                long style = 0,
-               const wxString& name = wxVListBoxNameStr)
+               const wxString& name = wxASCII_STR(wxVListBoxNameStr))
     {
         Init();
 
@@ -65,7 +63,7 @@ public:
                 const wxPoint& pos = wxDefaultPosition,
                 const wxSize& size = wxDefaultSize,
                 long style = 0,
-                const wxString& name = wxVListBoxNameStr);
+                const wxString& name = wxASCII_STR(wxVListBoxNameStr));
 
     // dtor does some internal cleanup (deletes m_selStore if any)
     virtual ~wxVListBox();
@@ -75,10 +73,10 @@ public:
     // ---------
 
     // get the number of items in the control
-    size_t GetItemCount() const { return GetLineCount(); }
+    size_t GetItemCount() const { return GetRowCount(); }
 
     // does this control use multiple selection?
-    bool HasMultipleSelection() const { return m_selStore != NULL; }
+    bool HasMultipleSelection() const { return m_selStore != nullptr; }
 
     // get the currently selected item or wxNOT_FOUND if there is no selection
     //
@@ -86,7 +84,7 @@ public:
     int GetSelection() const
     {
         wxASSERT_MSG( !HasMultipleSelection(),
-                        _T("GetSelection() can't be used with wxLB_MULTIPLE") );
+                        wxT("GetSelection() can't be used with wxLB_MULTIPLE") );
 
         return m_current;
     }
@@ -94,8 +92,14 @@ public:
     // is this item the current one?
     bool IsCurrent(size_t item) const { return item == (size_t)m_current; }
     #ifdef __WXUNIVERSAL__
-    bool IsCurrent() const { return wxVScrolledWindow::IsCurrent(); }
+    bool IsCurrent() const { return wxVScrolledCanvas::IsCurrent(); }
     #endif
+
+    // get current item
+    int GetCurrent() const { return m_current; }
+
+    // set current item
+    void SetCurrent(int current) { DoSetCurrent(current); }
 
     // is this item selected?
     bool IsSelected(size_t item) const;
@@ -127,13 +131,15 @@ public:
     // get the background colour of selected cells
     const wxColour& GetSelectionBackground() const { return m_colBgSel; }
 
+    // get the item rect, returns empty rect if the item is not visible
+    wxRect GetItemRect(size_t n) const;
 
     // operations
     // ----------
 
     // set the number of items to be shown in the control
     //
-    // this is just a synonym for wxVScrolledWindow::SetLineCount()
+    // this is just a synonym for wxVScrolledCanvas::SetRowCount()
     virtual void SetItemCount(size_t count);
 
     // delete all items from the control
@@ -189,8 +195,11 @@ public:
     // change the background colour of the selected cells
     void SetSelectionBackground(const wxColour& col);
 
+    // refreshes only the selected items
+    void RefreshSelected();
 
-    virtual wxVisualAttributes GetDefaultAttributes() const
+
+    virtual wxVisualAttributes GetDefaultAttributes() const override
     {
         return GetClassDefaultAttributes(GetWindowVariant());
     }
@@ -199,6 +208,8 @@ public:
     GetClassDefaultAttributes(wxWindowVariant variant = wxWINDOW_VARIANT_NORMAL);
 
 protected:
+    virtual wxBorder GetDefaultBorder() const override { return wxBORDER_THEME; }
+
     // the derived class must implement this function to actually draw the item
     // with the given index on the provided DC
     virtual void OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const = 0;
@@ -223,11 +234,11 @@ protected:
     // current
     virtual void OnDrawBackground(wxDC& dc, const wxRect& rect, size_t n) const;
 
-    // we implement OnGetLineHeight() in terms of OnMeasureItem() because this
+    // we implement OnGetRowHeight() in terms of OnMeasureItem() because this
     // allows us to add borders to the items easily
     //
     // this function is not supposed to be overridden by the derived classes
-    virtual wxCoord OnGetLineHeight(size_t line) const;
+    virtual wxCoord OnGetRowHeight(size_t line) const override;
 
 
     // event handlers
@@ -235,13 +246,15 @@ protected:
     void OnKeyDown(wxKeyEvent& event);
     void OnLeftDown(wxMouseEvent& event);
     void OnLeftDClick(wxMouseEvent& event);
-
+    void OnSetOrKillFocus(wxFocusEvent& event);
+    void OnSize(wxSizeEvent& event);
 
     // common part of all ctors
     void Init();
 
-    // send the wxEVT_COMMAND_LISTBOX_SELECTED event
+    // send the wxEVT_LISTBOX event
     void SendSelectedEvent();
+    virtual void InitEvent(wxCommandEvent& event, int n);
 
     // common implementation of SelectAll() and DeselectAll()
     bool DoSelectAll(bool select);
@@ -264,10 +277,18 @@ protected:
     // common part of keyboard and mouse handling processing code
     void DoHandleItemClick(int item, int flags);
 
+    // paint the background of the given item using the provided colour if it's
+    // valid, otherwise just return false and do nothing (this is used by
+    // OnDrawBackground())
+    bool DoDrawSolidBackground(const wxColour& col,
+                               wxDC& dc,
+                               const wxRect& rect,
+                               size_t n) const;
+
 private:
     // the current item or wxNOT_FOUND
     //
-    // if m_selStore == NULL this is also the selected item, otherwise the
+    // if m_selStore == nullptr this is also the selected item, otherwise the
     // selections are managed by m_selStore
     int m_current;
 
@@ -278,7 +299,7 @@ private:
     // always wxNOT_FOUND for single selection listboxes
     int m_anchor;
 
-    // the object managing our selected items if not NULL
+    // the object managing our selected items if not nullptr
     wxSelectionStore *m_selStore;
 
     // margins
@@ -287,9 +308,73 @@ private:
     // the selection bg colour
     wxColour m_colBgSel;
 
-    DECLARE_EVENT_TABLE()
-    DECLARE_NO_COPY_CLASS(wxVListBox)
-    DECLARE_ABSTRACT_CLASS(wxVListBox)
+    wxDECLARE_EVENT_TABLE();
+    wxDECLARE_NO_COPY_CLASS(wxVListBox);
+    wxDECLARE_ABSTRACT_CLASS(wxVListBox);
+};
+
+extern WXDLLIMPEXP_DATA_CORE(const char) wxXRCPreviewVListBoxNameStr[];
+
+// ----------------------------------------------------------------------------
+// wxXRCPreviewVListBox
+// ----------------------------------------------------------------------------
+
+/*
+    GUI editors, e.g., wxFormBuilder, typically allow users to lay out
+    instances of controls.  However, wxVListBox is an abstract class, so a GUI
+    editor can only create instances of a subclass of wxVListBox.  Rather than
+    require every GUI editor to repeat the work of subclassing wxVListBox for
+    GUI editing, and because the user's intended subclass will not exist in GUI
+    editors, provide a class that GUI editors can use.  Also, the
+    wxVListBoxXmlHandler can create instances of this class when in
+    wxXRC_NO_SUBCLASSING mode;
+ */
+class WXDLLIMPEXP_CORE wxXRCPreviewVListBox : public wxVListBox
+{
+public:
+    // default constructor, you must call Create() later
+    wxXRCPreviewVListBox() = default;
+
+    // normal constructor which calls Create() internally
+    wxXRCPreviewVListBox(wxWindow *parent,
+                            wxWindowID id = wxID_ANY,
+                            const wxPoint& pos = wxDefaultPosition,
+                            const wxSize& size = wxDefaultSize,
+                            long style = 0,
+                            const wxString& name = wxASCII_STR(wxXRCPreviewVListBoxNameStr))
+    {
+        (void)Create(parent, id, pos, size, style, name);
+    }
+
+    // really creates the control and sets the initial number of items in it
+    // (which may be changed later with SetItemCount())
+    //
+    // the only special style which may be specified here is wxLB_MULTIPLE
+    //
+    // returns true on success or false if the control couldn't be created
+    bool Create(wxWindow *parent,
+                wxWindowID id = wxID_ANY,
+                const wxPoint& pos = wxDefaultPosition,
+                const wxSize& size = wxDefaultSize,
+                long style = 0,
+                const wxString& name = wxASCII_STR(wxXRCPreviewVListBoxNameStr));
+
+protected:
+    // avoid defaulting to tiny window
+    wxSize DoGetBestClientSize() const override;
+
+    // the derived class must implement this function to actually draw the item
+    // with the given index on the provided DC
+    void OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const override;
+
+    // the derived class must implement this method to return the height of the
+    // specified item
+    wxCoord OnMeasureItem(size_t n) const override;
+
+private:
+    wxDECLARE_DYNAMIC_CLASS_NO_COPY(wxXRCPreviewVListBox);
+
+    wxString GetItem(size_t n) const;
 };
 
 #endif // _WX_VLBOX_H_

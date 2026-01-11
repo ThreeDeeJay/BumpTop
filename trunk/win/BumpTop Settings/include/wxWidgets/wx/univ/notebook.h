@@ -2,9 +2,7 @@
 // Name:        wx/univ/notebook.h
 // Purpose:     universal version of wxNotebook
 // Author:      Vadim Zeitlin
-// Modified by:
 // Created:     01.02.01
-// RCS-ID:      $Id: notebook.h 41738 2006-10-08 17:37:23Z VZ $
 // Copyright:   (c) 2001 SciTech Software, Inc. (www.scitechsoft.com)
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -14,22 +12,22 @@
 
 #include "wx/arrstr.h"
 
-class WXDLLEXPORT wxSpinButton;
+class WXDLLIMPEXP_FWD_CORE wxSpinButton;
 
 // ----------------------------------------------------------------------------
 // the actions supported by this control
 // ----------------------------------------------------------------------------
 
 // change the page: to the next/previous/given one
-#define wxACTION_NOTEBOOK_NEXT      _T("nexttab")
-#define wxACTION_NOTEBOOK_PREV      _T("prevtab")
-#define wxACTION_NOTEBOOK_GOTO      _T("gototab")
+#define wxACTION_NOTEBOOK_NEXT      wxT("nexttab")
+#define wxACTION_NOTEBOOK_PREV      wxT("prevtab")
+#define wxACTION_NOTEBOOK_GOTO      wxT("gototab")
 
 // ----------------------------------------------------------------------------
 // wxNotebook
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxNotebook : public wxNotebookBase
+class WXDLLIMPEXP_CORE wxNotebook : public wxNotebookBase
 {
 public:
     // ctors and such
@@ -42,7 +40,7 @@ public:
                const wxPoint& pos = wxDefaultPosition,
                const wxSize& size = wxDefaultSize,
                long style = 0,
-               const wxString& name = wxNotebookNameStr)
+               const wxString& name = wxASCII_STR(wxNotebookNameStr))
     {
         Init();
 
@@ -55,7 +53,7 @@ public:
                 const wxPoint& pos = wxDefaultPosition,
                 const wxSize& size = wxDefaultSize,
                 long style = 0,
-                const wxString& name = wxNotebookNameStr);
+                const wxString& name = wxASCII_STR(wxNotebookNameStr));
 
     // dtor
     virtual ~wxNotebook();
@@ -63,40 +61,36 @@ public:
     // implement wxNotebookBase pure virtuals
     // --------------------------------------
 
-    virtual int SetSelection(size_t nPage) { return DoSetSelection(nPage, SetSelection_SendEvent); }
-    virtual int GetSelection() const { return (int) m_sel; }
+    virtual int SetSelection(size_t nPage) override { return DoSetSelection(nPage, SetSelection_SendEvent); }
 
     // changes selected page without sending events
-    int ChangeSelection(size_t nPage) { return DoSetSelection(nPage); }
+    int ChangeSelection(size_t nPage) override { return DoSetSelection(nPage); }
 
-    virtual bool SetPageText(size_t nPage, const wxString& strText);
-    virtual wxString GetPageText(size_t nPage) const;
+    virtual bool SetPageText(size_t nPage, const wxString& strText) override;
+    virtual wxString GetPageText(size_t nPage) const override;
 
-    virtual int GetPageImage(size_t nPage) const;
-    virtual bool SetPageImage(size_t nPage, int nImage);
+    virtual int GetPageImage(size_t nPage) const override;
+    virtual bool SetPageImage(size_t nPage, int nImage) override;
 
-    virtual void SetPageSize(const wxSize& size);
-    virtual void SetPadding(const wxSize& padding);
-    virtual void SetTabSize(const wxSize& sz);
+    virtual void SetPageSize(const wxSize& size) override;
+    virtual void SetPadding(const wxSize& padding) override;
+    virtual void SetTabSize(const wxSize& sz) override;
 
-    virtual wxSize CalcSizeFromPage(const wxSize& sizePage) const;
+    virtual wxSize CalcSizeFromPage(const wxSize& sizePage) const override;
 
-    virtual bool DeleteAllPages();
+    virtual bool DeleteAllPages() override;
 
     virtual bool InsertPage(size_t nPage,
                             wxNotebookPage *pPage,
                             const wxString& strText,
                             bool bSelect = false,
-                            int imageId = -1);
+                            int imageId = NO_IMAGE) override;
 
     // style tests
     // -----------
 
     // return true if all tabs have the same width
     bool FixedSizeTabs() const { return HasFlag(wxNB_FIXEDWIDTH); }
-
-    // return wxTOP/wxBOTTOM/wxRIGHT/wxLEFT
-    wxDirection GetTabOrientation() const;
 
     // return true if the notebook has tabs at the sidesand not at the top (or
     // bottom) as usual
@@ -105,17 +99,17 @@ public:
     // hit testing
     // -----------
 
-    virtual int HitTest(const wxPoint& pt, long *flags = NULL) const;
+    virtual int HitTest(const wxPoint& pt, long *flags = nullptr) const override;
 
     // input handling
     // --------------
 
     virtual bool PerformAction(const wxControlAction& action,
                                long numArg = 0l,
-                               const wxString& strArg = wxEmptyString);
+                               const wxString& strArg = wxEmptyString) override;
 
     static wxInputHandler *GetStdInputHandler(wxInputHandler *handlerDef);
-    virtual wxInputHandler *DoGetStdInputHandler(wxInputHandler *handlerDef)
+    virtual wxInputHandler *DoGetStdInputHandler(wxInputHandler *handlerDef) override
     {
         return GetStdInputHandler(handlerDef);
     }
@@ -123,21 +117,23 @@ public:
     // refresh the currently selected tab
     void RefreshCurrent();
 
+    // get the tab rect
+    wxRect GetTabRect(size_t page) const override;
+
 protected:
-    virtual wxNotebookPage *DoRemovePage(size_t nPage);
+    virtual wxNotebookPage *DoRemovePage(size_t nPage) override;
 
     // drawing
-    virtual void DoDraw(wxControlRenderer *renderer);
+    virtual void DoDraw(wxControlRenderer *renderer) override;
     void DoDrawTab(wxDC& dc, const wxRect& rect, size_t n);
 
     // resizing
-    virtual wxSize DoGetBestClientSize() const;
-    virtual void DoMoveWindow(int x, int y, int width, int height);
+    virtual void DoMoveWindow(int x, int y, int width, int height) override;
     virtual void DoSetSize(int x, int y,
                            int width, int height,
-                           int sizeFlags = wxSIZE_AUTO);
+                           int sizeFlags = wxSIZE_AUTO) override;
 
-    int DoSetSelection(size_t nPage, int flags = 0);
+    int DoSetSelection(size_t nPage, int flags = 0) override;
 
     // common part of all ctors
     void Init();
@@ -167,9 +163,6 @@ protected:
     // refresh all tabs
     void RefreshAllTabs();
 
-    // get the tab rect (inefficient, don't use this in a loop)
-    wxRect GetTabRect(int page) const;
-
     // get the rectangle containing all tabs
     wxRect GetAllTabsRect() const;
 
@@ -189,29 +182,26 @@ protected:
 
     // return true if the tab has an associated image
     bool HasImage(int page) const
-        { return m_imageList && m_images[page] != -1; }
+        { return HasImageList() && m_images[page] != -1; }
 
     // get the part of the notebook reserved for the pages (slightly larger
     // than GetPageRect() as we draw a border and leave marginin between)
     wxRect GetPagePart() const;
 
     // get the page rect in our client coords
-    wxRect GetPageRect() const;
+    wxRect GetPageRect() const override;
 
     // get our client size from the page size
     wxSize GetSizeForPage(const wxSize& size) const;
 
     // scroll the tabs so that the first page shown becomes the given one
-    void ScrollTo(int page);
+    void ScrollTo(size_t page);
 
     // scroll the tabs so that the first page shown becomes the given one
-    void ScrollLastTo(int page);
+    void ScrollLastTo(size_t page);
 
     // the pages titles
     wxArrayString m_titles;
-
-    // the current selection
-    size_t m_sel;
 
     // the spin button to change the pages
     wxSpinButton *m_spinbtn;
@@ -250,7 +240,7 @@ protected:
     // the padding
     wxSize m_sizePad;
 
-    DECLARE_DYNAMIC_CLASS(wxNotebook)
+    wxDECLARE_DYNAMIC_CLASS(wxNotebook);
 };
 
 #endif // _WX_UNIV_NOTEBOOK_H_

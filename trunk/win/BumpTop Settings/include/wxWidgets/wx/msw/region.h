@@ -2,9 +2,7 @@
 // Name:        wx/msw/region.h
 // Purpose:     wxRegion class
 // Author:      Julian Smart
-// Modified by:
 // Created:     01/02/97
-// RCS-ID:      $Id: region.h 53135 2008-04-12 02:31:04Z VZ $
 // Copyright:   (c) 1997-2002 wxWidgets team
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -12,7 +10,7 @@
 #ifndef _WX_MSW_REGION_H_
 #define _WX_MSW_REGION_H_
 
-class WXDLLEXPORT wxRegion : public wxRegionWithCombine
+class WXDLLIMPEXP_CORE wxRegion : public wxRegionWithCombine
 {
 public:
     wxRegion();
@@ -20,7 +18,8 @@ public:
     wxRegion(const wxPoint& topLeft, const wxPoint& bottomRight);
     wxRegion(const wxRect& rect);
     wxRegion(WXHRGN hRegion); // Hangs on to this region
-    wxRegion(size_t n, const wxPoint *points, int fillStyle = wxODDEVEN_RULE );
+    wxRegion(size_t n, const wxPoint *points, wxPolygonFillMode fillStyle = wxODDEVEN_RULE );
+#if wxUSE_IMAGE
     wxRegion( const wxBitmap& bmp)
     {
         Union(bmp);
@@ -30,34 +29,35 @@ public:
     {
         Union(bmp, transColour, tolerance);
     }
+#endif // wxUSE_IMAGE
 
     virtual ~wxRegion();
 
     // wxRegionBase methods
-    virtual void Clear();
-    virtual bool IsEmpty() const;
+    virtual void Clear() override;
+    virtual bool IsEmpty() const override;
 
     // Get internal region handle
     WXHRGN GetHRGN() const;
 
 protected:
-    virtual wxObjectRefData *CreateRefData() const;
-    virtual wxObjectRefData *CloneRefData(const wxObjectRefData *data) const;
+    virtual wxGDIRefData *CreateGDIRefData() const override;
+    wxNODISCARD virtual wxGDIRefData *CloneGDIRefData(const wxGDIRefData *data) const override;
 
-    virtual bool DoIsEqual(const wxRegion& region) const;
-    virtual bool DoGetBox(wxCoord& x, wxCoord& y, wxCoord& w, wxCoord& h) const;
-    virtual wxRegionContain DoContainsPoint(wxCoord x, wxCoord y) const;
-    virtual wxRegionContain DoContainsRect(const wxRect& rect) const;
+    virtual bool DoIsEqual(const wxRegion& region) const override;
+    virtual bool DoGetBox(wxCoord& x, wxCoord& y, wxCoord& w, wxCoord& h) const override;
+    virtual wxRegionContain DoContainsPoint(wxCoord x, wxCoord y) const override;
+    virtual wxRegionContain DoContainsRect(const wxRect& rect) const override;
 
-    virtual bool DoOffset(wxCoord x, wxCoord y);
-    virtual bool DoCombine(const wxRegion& region, wxRegionOp op);
+    virtual bool DoOffset(wxCoord x, wxCoord y) override;
+    virtual bool DoCombine(const wxRegion& region, wxRegionOp op) override;
 
     friend class WXDLLIMPEXP_FWD_CORE wxRegionIterator;
 
-    DECLARE_DYNAMIC_CLASS(wxRegion)
+    wxDECLARE_DYNAMIC_CLASS(wxRegion);
 };
 
-class WXDLLEXPORT wxRegionIterator : public wxObject
+class WXDLLIMPEXP_CORE wxRegionIterator : public wxObject
 {
 public:
     wxRegionIterator() { Init(); }
@@ -96,7 +96,7 @@ private:
     wxRegion m_region;
     wxRect*  m_rects;
 
-    DECLARE_DYNAMIC_CLASS(wxRegionIterator)
+    wxDECLARE_DYNAMIC_CLASS(wxRegionIterator);
 };
 
 #endif // _WX_MSW_REGION_H_

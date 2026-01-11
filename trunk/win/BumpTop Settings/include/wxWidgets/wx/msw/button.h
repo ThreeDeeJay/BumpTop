@@ -2,24 +2,22 @@
 // Name:        wx/msw/button.h
 // Purpose:     wxButton class
 // Author:      Julian Smart
-// Modified by:
 // Created:     01/02/97
-// RCS-ID:      $Id: button.h 37393 2006-02-08 21:47:09Z VZ $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
-#ifndef _WX_BUTTON_H_
-#define _WX_BUTTON_H_
+#ifndef _WX_MSW_BUTTON_H_
+#define _WX_MSW_BUTTON_H_
 
 // ----------------------------------------------------------------------------
 // Pushbutton
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxButton : public wxButtonBase
+class WXDLLIMPEXP_CORE wxButton : public wxButtonBase
 {
 public:
-    wxButton() { }
+    wxButton() { Init(); }
     wxButton(wxWindow *parent,
              wxWindowID id,
              const wxString& label = wxEmptyString,
@@ -27,8 +25,10 @@ public:
              const wxSize& size = wxDefaultSize,
              long style = 0,
              const wxValidator& validator = wxDefaultValidator,
-             const wxString& name = wxButtonNameStr)
+             const wxString& name = wxASCII_STR(wxButtonNameStr))
     {
+        Init();
+
         Create(parent, id, label, pos, size, style, validator, name);
     }
 
@@ -39,26 +39,18 @@ public:
                 const wxSize& size = wxDefaultSize,
                 long style = 0,
                 const wxValidator& validator = wxDefaultValidator,
-                const wxString& name = wxButtonNameStr);
+                const wxString& name = wxASCII_STR(wxButtonNameStr));
 
     virtual ~wxButton();
 
-    virtual void SetDefault();
+    virtual wxWindow *SetDefault() override;
 
     // implementation from now on
-    virtual void Command(wxCommandEvent& event);
-    virtual WXLRESULT MSWWindowProc(WXUINT nMsg, WXWPARAM wParam, WXLPARAM lParam);
-    virtual bool MSWCommand(WXUINT param, WXWORD id);
+    virtual void Command(wxCommandEvent& event) override;
+    virtual WXLRESULT MSWWindowProc(WXUINT nMsg, WXWPARAM wParam, WXLPARAM lParam) override;
+    virtual bool MSWCommand(WXUINT param, WXWORD id) override;
 
-    // coloured buttons support
-    virtual bool SetBackgroundColour(const wxColour &colour);
-    virtual bool SetForegroundColour(const wxColour &colour);
-
-    virtual bool MSWOnDraw(WXDRAWITEMSTRUCT *item);
-    virtual WXDWORD MSWGetStyle(long style, WXDWORD *exstyle) const;
-
-private:
-    void MakeOwnerDrawn();
+    virtual WXDWORD MSWGetStyle(long style, WXDWORD *exstyle) const override;
 
 protected:
     // send a notification event, return true if processed
@@ -71,12 +63,22 @@ protected:
     // set or unset BS_DEFPUSHBUTTON style
     static void SetDefaultStyle(wxButton *btn, bool on);
 
-    // usually overridden base class virtuals
-    virtual wxSize DoGetBestSize() const;
+    virtual bool DoGetAuthNeeded() const override;
+    virtual void DoSetAuthNeeded(bool show) override;
+
+    // true if the UAC symbol is shown
+    bool m_authNeeded;
 
 private:
-    DECLARE_DYNAMIC_CLASS_NO_COPY(wxButton)
+    void Init()
+    {
+        m_authNeeded = false;
+    }
+
+    void OnCharHook(wxKeyEvent& event);
+
+    wxDECLARE_EVENT_TABLE();
+    wxDECLARE_DYNAMIC_CLASS_NO_COPY(wxButton);
 };
 
-#endif
-    // _WX_BUTTON_H_
+#endif // _WX_MSW_BUTTON_H_

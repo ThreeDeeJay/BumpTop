@@ -2,7 +2,6 @@
 // Name:        wx/anidecod.h
 // Purpose:     wxANIDecoder, ANI reader for wxImage and wxAnimation
 // Author:      Francesco Montorsi
-// CVS-ID:      $Id: anidecod.h 45563 2007-04-21 18:17:50Z VZ $
 // Copyright:   (c) 2006 Francesco Montorsi
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -12,7 +11,7 @@
 
 #include "wx/defs.h"
 
-#if wxUSE_STREAMS && wxUSE_ICO_CUR
+#if wxUSE_STREAMS && (wxUSE_ICO_CUR || wxUSE_GIF)
 
 #include "wx/stream.h"
 #include "wx/image.h"
@@ -20,16 +19,20 @@
 #include "wx/dynarray.h"
 
 
-class /*WXDLLEXPORT*/ wxANIFrameInfo;
+class /*WXDLLIMPEXP_CORE*/ wxANIFrameInfo;      // private implementation detail
 
-WX_DECLARE_EXPORTED_OBJARRAY(wxANIFrameInfo, wxANIFrameInfoArray);
-WX_DECLARE_EXPORTED_OBJARRAY(wxImage, wxImageArray);
+// For compatibility purposes, provide wxImageArray class mimicking the legacy
+// dynamic array which used to be required by wxGIFHandler::SaveAnimation():
+// now we just take a vector of images there, but we want to keep the existing
+// code using wxImageArray working (and keep it declared here because this is
+// where it used to be, even if this doesn't make much sense).
+using wxImageArray = wxBaseArray<wxImage>;
 
 // --------------------------------------------------------------------------
 // wxANIDecoder class
 // --------------------------------------------------------------------------
 
-class WXDLLEXPORT wxANIDecoder : public wxAnimationDecoder
+class WXDLLIMPEXP_CORE wxANIDecoder : public wxAnimationDecoder
 {
 public:
     // constructor, destructor, etc.
@@ -37,41 +40,46 @@ public:
     ~wxANIDecoder();
 
 
-    virtual wxSize GetFrameSize(unsigned int frame) const;
-    virtual wxPoint GetFramePosition(unsigned int frame) const;
-    virtual wxAnimationDisposal GetDisposalMethod(unsigned int frame) const;
-    virtual long GetDelay(unsigned int frame) const;
-    virtual wxColour GetTransparentColour(unsigned int frame) const;
+    virtual wxSize GetFrameSize(unsigned int frame) const override;
+    virtual wxPoint GetFramePosition(unsigned int frame) const override;
+    virtual wxAnimationDisposal GetDisposalMethod(unsigned int frame) const override;
+    virtual long GetDelay(unsigned int frame) const override;
+    virtual wxColour GetTransparentColour(unsigned int frame) const override;
 
     // implementation of wxAnimationDecoder's pure virtuals
-    virtual bool CanRead( wxInputStream& stream ) const;
-    virtual bool Load( wxInputStream& stream );
 
-    bool ConvertToImage(unsigned int frame, wxImage *image) const;
+    virtual bool Load( wxInputStream& stream ) override;
 
-    wxAnimationDecoder *Clone() const
+    bool ConvertToImage(unsigned int frame, wxImage *image) const override;
+
+    wxNODISCARD wxAnimationDecoder *Clone() const override
         { return new wxANIDecoder; }
-    wxAnimationType GetType() const
+    wxAnimationType GetType() const override
         { return wxANIMATION_TYPE_ANI; }
+
+protected:
+    // wxAnimationDecoder pure virtual:
+    virtual bool DoCanRead( wxInputStream& stream ) const override;
+            // modifies current stream position (see wxAnimationDecoder::CanRead)
 
 private:
     // frames stored as wxImage(s): ANI files are meant to be used mostly for animated
     // cursors and thus they do not use any optimization to encode differences between
     // two frames: they are just a list of images to display sequentially.
-    wxImageArray m_images;
+    std::vector<wxImage> m_images;
 
     // the info about each image stored in m_images.
     // NB: m_info.GetCount() may differ from m_images.GetCount()!
-    wxANIFrameInfoArray m_info;
+    std::vector<wxANIFrameInfo> m_info;
 
     // this is the wxCURHandler used to load the ICON chunk of the ANI files
     static wxCURHandler sm_handler;
 
 
-    DECLARE_NO_COPY_CLASS(wxANIDecoder)
+    wxDECLARE_NO_COPY_CLASS(wxANIDecoder);
 };
 
 
-#endif  // wxUSE_STREAM && wxUSE_ICO_CUR
+#endif  // wxUSE_STREAMS && (wxUSE_ICO_CUR || wxUSE_GIF)
 
 #endif  // _WX_ANIDECOD_H

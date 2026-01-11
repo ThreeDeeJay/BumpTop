@@ -2,9 +2,7 @@
 // Name:        wx/layout.h
 // Purpose:     OBSOLETE layout constraint classes, use sizers instead
 // Author:      Julian Smart
-// Modified by:
 // Created:     29/01/98
-// RCS-ID:      $Id: layout.h 49563 2007-10-31 20:46:21Z VZ $
 // Copyright:   (c) 1998 Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -29,7 +27,7 @@
 #if wxUSE_CONSTRAINTS
 
 // ----------------------------------------------------------------------------
-// forward declrations
+// forward declarations
 // ----------------------------------------------------------------------------
 
 class WXDLLIMPEXP_FWD_CORE wxWindowBase;
@@ -64,14 +62,14 @@ enum wxRelationship
 // wxIndividualLayoutConstraint: a constraint on window position
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxIndividualLayoutConstraint : public wxObject
+class WXDLLIMPEXP_CORE wxIndividualLayoutConstraint : public wxObject
 {
 public:
     wxIndividualLayoutConstraint();
 
     // note that default copy ctor and assignment operators are ok
 
-    virtual ~wxIndividualLayoutConstraint(){}
+    virtual ~wxIndividualLayoutConstraint() = default;
 
     void Set(wxRelationship rel, wxWindowBase *otherW, wxEdge otherE, int val = 0, int marg = wxLAYOUT_DEFAULT_MARGIN);
 
@@ -113,14 +111,14 @@ public:
     wxEdge GetMyEdge() const { return myEdge; }
     void SetEdge(wxEdge which) { myEdge = which; }
     void SetValue(int v) { value = v; }
-    int GetMargin() { return margin; }
+    int GetMargin() const { return margin; }
     void SetMargin(int m) { margin = m; }
     int GetValue() const { return value; }
     int GetPercent() const { return percent; }
     int GetOtherEdge() const { return otherEdge; }
     bool GetDone() const { return done; }
     void SetDone(bool d) { done = d; }
-    wxRelationship GetRelationship() { return relationship; }
+    wxRelationship GetRelationship() const { return relationship; }
     void SetRelationship(wxRelationship r) { relationship = r; }
 
     // Reset constraint if it mentions otherWin
@@ -148,14 +146,14 @@ protected:
     wxEdge otherEdge;
     bool done;
 
-    DECLARE_DYNAMIC_CLASS(wxIndividualLayoutConstraint)
+    wxDECLARE_DYNAMIC_CLASS(wxIndividualLayoutConstraint);
 };
 
 // ----------------------------------------------------------------------------
 // wxLayoutConstraints: the complete set of constraints for a window
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxLayoutConstraints : public wxObject
+class WXDLLIMPEXP_CORE wxLayoutConstraints : public wxObject
 {
 public:
     // Edge constraints
@@ -174,7 +172,7 @@ public:
 
     // note that default copy ctor and assignment operators are ok
 
-    virtual ~wxLayoutConstraints(){}
+    virtual ~wxLayoutConstraints() = default;
 
     bool SatisfyConstraints(wxWindowBase *win, int *noChanges);
     bool AreSatisfied() const
@@ -183,7 +181,7 @@ public:
                width.GetDone() && height.GetDone();
     }
 
-    DECLARE_DYNAMIC_CLASS(wxLayoutConstraints)
+    wxDECLARE_DYNAMIC_CLASS(wxLayoutConstraints);
 };
 
 #endif // wxUSE_CONSTRAINTS

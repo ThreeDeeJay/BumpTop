@@ -2,24 +2,12 @@
 // Name:        wx/gtk/frame.h
 // Purpose:
 // Author:      Robert Roebling
-// Id:          $Id: frame.h 41045 2006-09-07 16:06:47Z PC $
 // Copyright:   (c) 1998 Robert Roebling, Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
 #ifndef _WX_GTK_FRAME_H_
 #define _WX_GTK_FRAME_H_
-
-//-----------------------------------------------------------------------------
-// classes
-//-----------------------------------------------------------------------------
-
-class WXDLLIMPEXP_CORE wxMDIChildFrame;
-class WXDLLIMPEXP_CORE wxMDIClientWindow;
-class WXDLLIMPEXP_CORE wxMenu;
-class WXDLLIMPEXP_CORE wxMenuBar;
-class WXDLLIMPEXP_CORE wxToolBar;
-class WXDLLIMPEXP_CORE wxStatusBar;
 
 //-----------------------------------------------------------------------------
 // wxFrame
@@ -36,7 +24,7 @@ public:
                const wxPoint& pos = wxDefaultPosition,
                const wxSize& size = wxDefaultSize,
                long style = wxDEFAULT_FRAME_STYLE,
-               const wxString& name = wxFrameNameStr)
+               const wxString& name = wxASCII_STR(wxFrameNameStr))
     {
         Init();
 
@@ -49,63 +37,39 @@ public:
                 const wxPoint& pos = wxDefaultPosition,
                 const wxSize& size = wxDefaultSize,
                 long style = wxDEFAULT_FRAME_STYLE,
-                const wxString& name = wxFrameNameStr);
-
-    virtual ~wxFrame();
+                const wxString& name = wxASCII_STR(wxFrameNameStr));
 
 #if wxUSE_STATUSBAR
-    virtual wxStatusBar* CreateStatusBar(int number = 1,
-                                         long style = wxST_SIZEGRIP|wxFULL_REPAINT_ON_RESIZE,
-                                         wxWindowID id = 0,
-                                         const wxString& name = wxStatusLineNameStr);
-                                         
-    void SetStatusBar(wxStatusBar *statbar);
+    void SetStatusBar(wxStatusBar *statbar) override;
 #endif // wxUSE_STATUSBAR
 
 #if wxUSE_TOOLBAR
-    virtual wxToolBar* CreateToolBar(long style = -1,
-                                     wxWindowID id = -1,
-                                     const wxString& name = wxToolBarNameStr);
-    void SetToolBar(wxToolBar *toolbar);
+    void SetToolBar(wxToolBar *toolbar) override;
 #endif // wxUSE_TOOLBAR
-    
-    wxPoint GetClientAreaOrigin() const { return wxPoint(0, 0); }
+
+    virtual bool ShowFullScreen(bool show, long style = wxFULLSCREEN_ALL) override;
+    wxPoint GetClientAreaOrigin() const override { return wxPoint(0, 0); }
 
     // implementation from now on
     // --------------------------
 
-    // GTK callbacks
-    virtual void GtkOnSize();
-    virtual void OnInternalIdle();
-
-    bool          m_menuBarDetached;
-    int           m_menuBarHeight;
-    bool          m_toolBarDetached;
+    virtual bool SendIdleEvents(wxIdleEvent& event) override;
 
 protected:
-    // common part of all ctors
-    void Init();
-
-#if wxUSE_STATUSBAR
-    virtual void PositionStatusBar();
-#endif // wxUSE_STATUSBAR
-
     // override wxWindow methods to take into account tool/menu/statusbars
-    virtual void DoSetClientSize(int width, int height);
-    virtual void DoGetClientSize( int *width, int *height ) const;
+    virtual void DoGetClientSize( int *width, int *height ) const override;
 
 #if wxUSE_MENUS_NATIVE
-
-    virtual void DetachMenuBar();
-    virtual void AttachMenuBar(wxMenuBar *menubar);
-
-public:
-    // Menu size is dynamic now, call this whenever it might change.
-    void UpdateMenuBarSize();
-
+    virtual void DetachMenuBar() override;
+    virtual void AttachMenuBar(wxMenuBar *menubar) override;
 #endif // wxUSE_MENUS_NATIVE
 
-    DECLARE_DYNAMIC_CLASS(wxFrame)
+private:
+    void Init();
+
+    long m_fsSaveFlag;
+
+    wxDECLARE_DYNAMIC_CLASS(wxFrame);
 };
 
 #endif // _WX_GTK_FRAME_H_

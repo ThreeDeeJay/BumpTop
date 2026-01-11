@@ -2,9 +2,7 @@
 // Name:        wx/msw/helpbest.h
 // Purpose:     Tries to load MS HTML Help, falls back to wxHTML upon failure
 // Author:      Mattia Barbon
-// Modified by:
 // Created:     02/04/2001
-// RCS-ID:      $Id: helpbest.h 39440 2006-05-29 14:51:42Z VZ $
 // Copyright:   (c) Mattia Barbon
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -21,11 +19,11 @@
 class WXDLLIMPEXP_HTML wxBestHelpController: public wxHelpControllerBase
 {
 public:
-    wxBestHelpController(wxWindow* parentWindow = NULL,
+    wxBestHelpController(wxWindow* parentWindow = nullptr,
                          int style = wxHF_DEFAULT_STYLE)
         : wxHelpControllerBase(parentWindow),
           m_helpControllerType(wxUseNone),
-          m_helpController(NULL),
+          m_helpController(nullptr),
           m_style(style)
     {
     }
@@ -33,52 +31,52 @@ public:
     virtual ~wxBestHelpController() { delete m_helpController; }
 
     // Must call this to set the filename
-    virtual bool Initialize(const wxString& file);
-    virtual bool Initialize(const wxString& file, int WXUNUSED(server) ) { return Initialize( file ); }
+    virtual bool Initialize(const wxString& file) override;
+    virtual bool Initialize(const wxString& file, int WXUNUSED(server) ) override { return Initialize( file ); }
 
     // If file is "", reloads file given in Initialize
-    virtual bool LoadFile(const wxString& file = wxEmptyString)
+    virtual bool LoadFile(const wxString& file = wxEmptyString) override
     {
         return m_helpController->LoadFile( GetValidFilename( file ) );
     }
 
-    virtual bool DisplayContents()
+    virtual bool DisplayContents() override
     {
         return m_helpController->DisplayContents();
     }
 
-    virtual bool DisplaySection(int sectionNo)
+    virtual bool DisplaySection(int sectionNo) override
     {
         return m_helpController->DisplaySection( sectionNo );
     }
 
-    virtual bool DisplaySection(const wxString& section)
+    virtual bool DisplaySection(const wxString& section) override
     {
         return m_helpController->DisplaySection( section );
     }
 
-    virtual bool DisplayBlock(long blockNo)
+    virtual bool DisplayBlock(long blockNo) override
     {
         return m_helpController->DisplayBlock( blockNo );
     }
 
-    virtual bool DisplayContextPopup(int contextId)
+    virtual bool DisplayContextPopup(int contextId) override
     {
         return m_helpController->DisplayContextPopup( contextId );
     }
 
-    virtual bool DisplayTextPopup(const wxString& text, const wxPoint& pos)
+    virtual bool DisplayTextPopup(const wxString& text, const wxPoint& pos) override
     {
         return m_helpController->DisplayTextPopup( text, pos );
     }
 
     virtual bool KeywordSearch(const wxString& k,
-                               wxHelpSearchMode mode = wxHELP_SEARCH_ALL)
+                               wxHelpSearchMode mode = wxHELP_SEARCH_ALL) override
     {
         return m_helpController->KeywordSearch( k, mode );
     }
 
-    virtual bool Quit()
+    virtual bool Quit() override
     {
         return m_helpController->Quit();
     }
@@ -87,26 +85,26 @@ public:
     virtual void SetFrameParameters(const wxString& title,
                                     const wxSize& size,
                                     const wxPoint& pos = wxDefaultPosition,
-                                    bool newFrameEachTime = false)
+                                    bool newFrameEachTime = false) override
     {
         m_helpController->SetFrameParameters( title, size, pos,
                                               newFrameEachTime );
     }
 
     // Obtains the latest settings used by the help frame and the help frame.
-    virtual wxFrame *GetFrameParameters(wxSize *size = NULL,
-                                        wxPoint *pos = NULL,
-                                        bool *newFrameEachTime = NULL)
+    virtual wxFrame *GetFrameParameters(wxSize *size = nullptr,
+                                        wxPoint *pos = nullptr,
+                                        bool *newFrameEachTime = nullptr) override
     {
         return m_helpController->GetFrameParameters( size, pos,
                                                      newFrameEachTime );
     }
 
     /// Set the window that can optionally be used for the help window's parent.
-    virtual void SetParentWindow(wxWindow* win) { m_helpController->SetParentWindow(win); }
+    virtual void SetParentWindow(wxWindow* win) override { m_helpController->SetParentWindow(win); }
 
     /// Get the window that can optionally be used for the help window's parent.
-    virtual wxWindow* GetParentWindow() const { return m_helpController->GetParentWindow(); }
+    virtual wxWindow* GetParentWindow() const override { return m_helpController->GetParentWindow(); }
 
 protected:
     // Append/change extension if necessary.
@@ -119,8 +117,8 @@ protected:
     wxHelpControllerBase* m_helpController;
     int m_style;
 
-    DECLARE_DYNAMIC_CLASS(wxBestHelpController)
-    DECLARE_NO_COPY_CLASS(wxBestHelpController)
+    wxDECLARE_DYNAMIC_CLASS(wxBestHelpController);
+    wxDECLARE_NO_COPY_CLASS(wxBestHelpController);
 };
 
 #endif // wxUSE_HELP && wxUSE_MS_HTML_HELP && wxUSE_WXHTML_HELP

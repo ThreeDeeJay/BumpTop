@@ -3,7 +3,6 @@
 // Purpose:     declares wxEventLoop class
 // Author:      Vaclav Slavik
 // Created:     2006-08-16
-// RCS-ID:      $Id: evtloop.h 43999 2006-12-18 17:24:06Z VS $
 // Copyright:   (c) 2006 REA Elektronik GmbH
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -12,45 +11,36 @@
 #define _WX_DFB_EVTLOOP_H_
 
 #include "wx/dfb/dfbptr.h"
+#include "wx/unix/evtloop.h"
 
 wxDFB_DECLARE_INTERFACE(IDirectFBEventBuffer);
-struct wxDFBEvent;
 
 // ----------------------------------------------------------------------------
 // wxEventLoop
 // ----------------------------------------------------------------------------
 
-class WXDLLIMPEXP_CORE wxEventLoop : public wxEventLoopManual
+class WXDLLIMPEXP_CORE wxGUIEventLoop : public wxConsoleEventLoop
 {
 public:
-    wxEventLoop();
-
-    virtual bool Pending() const;
-    virtual bool Dispatch();
+    wxGUIEventLoop();
 
     // returns DirectFB event buffer used by wx
     static wxIDirectFBEventBufferPtr GetDirectFBEventBuffer();
 
-    // wxYield implementation: iterate the loop as long as there are any
-    // pending events
-    void Yield();
-
 protected:
-    virtual void WakeUp();
-    virtual void OnNextIteration();
-
-    virtual void HandleDFBEvent(const wxDFBEvent& event);
+    virtual void DoYieldFor(long eventsToProcess);
 
 private:
     static void InitBuffer();
     static void CleanUp();
 
-    friend class wxApp; // calls CleanUp() and WakeUp()
+    friend class wxApp; // calls CleanUp()
 
 private:
     static wxIDirectFBEventBufferPtr ms_buffer;
+    static int ms_bufferFd;
 
-    DECLARE_NO_COPY_CLASS(wxEventLoop)
+    wxDECLARE_NO_COPY_CLASS(wxGUIEventLoop);
 };
 
 #endif // _WX_DFB_EVTLOOP_H_

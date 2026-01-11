@@ -3,9 +3,7 @@
 // Purpose:     wxInputHandler class maps the keyboard and mouse events to the
 //              actions which then are performed by the control
 // Author:      Vadim Zeitlin
-// Modified by:
 // Created:     18.08.00
-// RCS-ID:      $Id: inphand.h 35650 2005-09-23 12:56:45Z MR $
 // Copyright:   (c) 2000 SciTech Software, Inc. (www.scitechsoft.com)
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,27 +18,27 @@
 // wxTheme::GetInputHandler()
 // ----------------------------------------------------------------------------
 
-#define wxINP_HANDLER_DEFAULT           _T("")
-#define wxINP_HANDLER_BUTTON            _T("button")
-#define wxINP_HANDLER_CHECKBOX          _T("checkbox")
-#define wxINP_HANDLER_CHECKLISTBOX      _T("checklistbox")
-#define wxINP_HANDLER_COMBOBOX          _T("combobox")
-#define wxINP_HANDLER_LISTBOX           _T("listbox")
-#define wxINP_HANDLER_NOTEBOOK          _T("notebook")
-#define wxINP_HANDLER_RADIOBTN          _T("radiobtn")
-#define wxINP_HANDLER_SCROLLBAR         _T("scrollbar")
-#define wxINP_HANDLER_SLIDER            _T("slider")
-#define wxINP_HANDLER_SPINBTN           _T("spinbtn")
-#define wxINP_HANDLER_STATUSBAR         _T("statusbar")
-#define wxINP_HANDLER_TEXTCTRL          _T("textctrl")
-#define wxINP_HANDLER_TOOLBAR           _T("toolbar")
-#define wxINP_HANDLER_TOPLEVEL          _T("toplevel")
+#define wxINP_HANDLER_DEFAULT           wxT("")
+#define wxINP_HANDLER_BUTTON            wxT("button")
+#define wxINP_HANDLER_CHECKBOX          wxT("checkbox")
+#define wxINP_HANDLER_CHECKLISTBOX      wxT("checklistbox")
+#define wxINP_HANDLER_COMBOBOX          wxT("combobox")
+#define wxINP_HANDLER_LISTBOX           wxT("listbox")
+#define wxINP_HANDLER_NOTEBOOK          wxT("notebook")
+#define wxINP_HANDLER_RADIOBTN          wxT("radiobtn")
+#define wxINP_HANDLER_SCROLLBAR         wxT("scrollbar")
+#define wxINP_HANDLER_SLIDER            wxT("slider")
+#define wxINP_HANDLER_SPINBTN           wxT("spinbtn")
+#define wxINP_HANDLER_STATUSBAR         wxT("statusbar")
+#define wxINP_HANDLER_TEXTCTRL          wxT("textctrl")
+#define wxINP_HANDLER_TOOLBAR           wxT("toolbar")
+#define wxINP_HANDLER_TOPLEVEL          wxT("toplevel")
 
 // ----------------------------------------------------------------------------
 // wxInputHandler: maps the events to the actions
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxInputHandler : public wxObject
+class WXDLLIMPEXP_CORE wxInputHandler : public wxObject
 {
 public:
     // map a keyboard event to one or more actions (pressed == true if the key
@@ -80,31 +78,31 @@ public:
 // and also provides the way to chain input handlers together
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxStdInputHandler : public wxInputHandler
+class WXDLLIMPEXP_CORE wxStdInputHandler : public wxInputHandler
 {
 public:
     wxStdInputHandler(wxInputHandler *handler) : m_handler(handler) { }
 
     virtual bool HandleKey(wxInputConsumer *consumer,
                            const wxKeyEvent& event,
-                           bool pressed)
+                           bool pressed) override
     {
         return m_handler ? m_handler->HandleKey(consumer, event, pressed)
                          : false;
     }
 
     virtual bool HandleMouse(wxInputConsumer *consumer,
-                             const wxMouseEvent& event)
+                             const wxMouseEvent& event) override
     {
         return m_handler ? m_handler->HandleMouse(consumer, event) : false;
     }
 
-    virtual bool HandleMouseMove(wxInputConsumer *consumer, const wxMouseEvent& event)
+    virtual bool HandleMouseMove(wxInputConsumer *consumer, const wxMouseEvent& event) override
     {
         return m_handler ? m_handler->HandleMouseMove(consumer, event) : false;
     }
 
-    virtual bool HandleFocus(wxInputConsumer *consumer, const wxFocusEvent& event)
+    virtual bool HandleFocus(wxInputConsumer *consumer, const wxFocusEvent& event) override
     {
         return m_handler ? m_handler->HandleFocus(consumer, event) : false;
     }

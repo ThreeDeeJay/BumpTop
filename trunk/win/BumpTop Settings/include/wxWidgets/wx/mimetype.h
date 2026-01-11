@@ -2,10 +2,8 @@
 // Name:        wx/mimetype.h
 // Purpose:     classes and functions to manage MIME types
 // Author:      Vadim Zeitlin
-// Modified by:
 //  Chris Elliott (biol75@york.ac.uk) 5 Dec 00: write support for Win32
 // Created:     23.09.98
-// RCS-ID:      $Id: mimetype.h 53135 2008-04-12 02:31:04Z VZ $
 // Copyright:   (c) 1998 Vadim Zeitlin <zeitlin@dptmaths.ens-cachan.fr>
 // Licence:     wxWindows licence (part of wxExtra library)
 /////////////////////////////////////////////////////////////////////////////
@@ -26,12 +24,14 @@
 #include "wx/dynarray.h"
 #include "wx/arrstr.h"
 
+#include <stdarg.h>
+
 // fwd decls
 class WXDLLIMPEXP_FWD_BASE wxIconLocation;
 class WXDLLIMPEXP_FWD_BASE wxFileTypeImpl;
 class WXDLLIMPEXP_FWD_BASE wxMimeTypesManagerImpl;
 
-// these constants define the MIME informations source under UNIX and are used
+// these constants define the MIME information source under UNIX and are used
 // by wxMimeTypesManager::Initialize()
 enum wxMailcapStyle
 {
@@ -51,12 +51,12 @@ class WXDLLIMPEXP_BASE wxMimeType : public wxString
 public:
     // all string ctors here
 
-    wxString GetType() const { return BeforeFirst(_T('/')); }
-    wxString GetSubType() const { return AfterFirst(_T('/')); }
+    wxString GetType() const { return BeforeFirst(wxT('/')); }
+    wxString GetSubType() const { return AfterFirst(wxT('/')); }
 
     void SetSubType(const wxString& subtype)
     {
-        *this = GetType() + _T('/') + subtype;
+        *this = GetType() + wxT('/') + subtype;
     }
 
     bool Matches(const wxMimeType& wildcard)
@@ -72,7 +72,7 @@ public:
 class WXDLLIMPEXP_BASE wxMimeTypeCommands
 {
 public:
-    wxMimeTypeCommands() {}
+    wxMimeTypeCommands() = default;
 
     wxMimeTypeCommands(const wxArrayString& verbs,
                        const wxArrayString& commands)
@@ -98,7 +98,7 @@ public:
         { return m_verbs.Index(verb) != wxNOT_FOUND; }
 
     // returns empty string and wxNOT_FOUND in idx if no such verb
-    wxString GetCommandForVerb(const wxString& verb, size_t *idx = NULL) const;
+    wxString GetCommandForVerb(const wxString& verb, size_t *idx = nullptr) const;
 
     // get a "verb=command" string
     wxString GetVerbCmd(size_t n) const;
@@ -116,16 +116,43 @@ private:
 
 class WXDLLIMPEXP_BASE wxFileTypeInfo
 {
+private:
+    // Helpers of variadic ctor.
+    void DoAddExts() { }
+    void DoAddExts(std::nullptr_t) { }
+
+    template <typename... Targs>
+    void DoAddExts(const wxString& ext, Targs... extensions)
+    {
+        AddExtension(ext);
+        DoAddExts(extensions...);
+    }
+
 public:
     // ctors
-        // a normal item
-    wxFileTypeInfo(const wxChar *mimeType,
-                   const wxChar *openCmd,
-                   const wxChar *printCmd,
-                   const wxChar *desc,
-                   // the other parameters form a NULL terminated list of
-                   // extensions
-                   ...);
+
+    // Ctor specifying just the MIME type (which is mandatory), the other
+    // fields can be set later if needed.
+    wxFileTypeInfo(const wxString& mimeType)
+        : m_mimeType(mimeType)
+    {
+    }
+
+    // Ctor allowing to specify the values of all fields at once and also
+    // allowing to specify the list of additional extensions for this file type
+    template <typename... Targs>
+    wxFileTypeInfo(const wxString& mimeType,
+                   const wxString& openCmd,
+                   const wxString& printCmd,
+                   const wxString& description,
+                   Targs... extensions)
+        : m_mimeType{mimeType},
+          m_openCmd{openCmd},
+          m_printCmd{printCmd},
+          m_desc{description}
+    {
+        DoAddExts(extensions...);
+    }
 
         // the array elements correspond to the parameters of the ctor above in
         // the same order
@@ -133,12 +160,22 @@ public:
 
         // invalid item - use this to terminate the array passed to
         // wxMimeTypesManager::AddFallbacks
-    wxFileTypeInfo() { }
+    wxFileTypeInfo() = default;
 
     // test if this object can be used
     bool IsValid() const { return !m_mimeType.empty(); }
 
     // setters
+        // set the open/print commands
+    void SetOpenCommand(const wxString& command) { m_openCmd = command; }
+    void SetPrintCommand(const wxString& command) { m_printCmd = command; }
+
+        // set the description
+    void SetDescription(const wxString& desc) { m_desc = desc; }
+
+        // add another extension corresponding to this file type
+    void AddExtension(const wxString& ext) { m_exts.push_back(ext); }
+
         // set the icon info
     void SetIcon(const wxString& iconFile, int iconIndex = 0)
     {
@@ -187,8 +224,9 @@ private:
 #endif // 0
 };
 
-WX_DECLARE_USER_EXPORTED_OBJARRAY(wxFileTypeInfo, wxArrayFileTypeInfo,
-                                  WXDLLIMPEXP_BASE);
+// This declaration is preserved solely for backwards compatibility, this type
+// is not used by wxWidgets itself.
+using wxArrayFileTypeInfo = wxBaseArray<wxFileTypeInfo>;
 
 // ----------------------------------------------------------------------------
 // wxFileType: gives access to all information about the files of given type.
@@ -214,7 +252,7 @@ public:
     {
     public:
         // ctors
-        MessageParameters() { }
+        MessageParameters() = default;
         MessageParameters(const wxString& filename,
                           const wxString& mimetype = wxEmptyString)
             : m_filename(filename), m_mimetype(mimetype) { }
@@ -230,7 +268,7 @@ public:
             { return wxEmptyString; }
 
         // virtual dtor as in any base class
-        virtual ~MessageParameters() { }
+        virtual ~MessageParameters() = default;
 
     protected:
         wxString m_filename, m_mimetype;
@@ -286,7 +324,7 @@ public:
 
     // operations
         // expand a string in the format of GetOpenCommand (which may contain
-        // '%s' and '%t' format specificators for the file name and mime type
+        // '%s' and '%t' format specifiers for the file name and mime type
         // and %{param} constructions).
     static wxString ExpandCommand(const wxString& command,
                                   const MessageParameters& params);
@@ -294,6 +332,9 @@ public:
     // dtor (not virtual, shouldn't be derived from)
     ~wxFileType();
 
+    wxString
+    GetExpandedCommand(const wxString& verb,
+                       const wxFileType::MessageParameters& params) const;
 private:
     // default ctor is private because the user code never creates us
     wxFileType();
@@ -302,7 +343,7 @@ private:
     wxFileType(const wxFileType&);
     wxFileType& operator=(const wxFileType&);
 
-    // the static container of wxFileType data: if it's not NULL, it means that
+    // the static container of wxFileType data: if it's not null, it means that
     // this object is used as fallback only
     const wxFileTypeInfo *m_info;
 
@@ -318,14 +359,14 @@ private:
 class WXDLLIMPEXP_BASE wxMimeTypesManagerFactory
 {
 public:
-    wxMimeTypesManagerFactory() {}
-    virtual ~wxMimeTypesManagerFactory() {}
+    wxMimeTypesManagerFactory() = default;
+    virtual ~wxMimeTypesManagerFactory() = default;
 
     virtual wxMimeTypesManagerImpl *CreateMimeTypesManagerImpl();
 
     static void Set( wxMimeTypesManagerFactory *factory );
     static wxMimeTypesManagerFactory *Get();
-    
+
 private:
     static wxMimeTypesManagerFactory *m_factory;
 };
@@ -369,29 +410,12 @@ public:
 
     // Database lookup: all functions return a pointer to wxFileType object
     // whose methods may be used to query it for the information you're
-    // interested in. If the return value is !NULL, caller is responsible for
+    // interested in. If the return value is not null, caller is responsible for
     // deleting it.
         // get file type from file extension
     wxFileType *GetFileTypeFromExtension(const wxString& ext);
         // get file type from MIME type (in format <category>/<format>)
     wxFileType *GetFileTypeFromMimeType(const wxString& mimeType);
-
-    // other operations: return true if there were no errors or false if there
-    // were some unrecognized entries (the good entries are always read anyhow)
-    //
-    // FIXME: These ought to be private ??
-
-        // read in additional file (the standard ones are read automatically)
-        // in mailcap format (see mimetype.cpp for description)
-        //
-        // 'fallback' parameter may be set to true to avoid overriding the
-        // settings from other, previously parsed, files by this one: normally,
-        // the files read most recently would override the older files, but with
-        // fallback == true this won't happen
-
-    bool ReadMailcap(const wxString& filename, bool fallback = false);
-        // read in additional file in mime.types format
-    bool ReadMimeTypes(const wxString& filename);
 
     // enumerate all known MIME types
     //
@@ -399,14 +423,12 @@ public:
     size_t EnumAllFileTypes(wxArrayString& mimetypes);
 
     // these functions can be used to provide default values for some of the
-    // MIME types inside the program itself (you may also use
-    // ReadMailcap(filenameWithDefaultTypes, true /* use as fallback */) to
-    // achieve the same goal, but this requires having this info in a file).
+    // MIME types inside the program itself
     //
-    // The filetypes array should be terminated by either NULL entry or an
+    // The filetypes array should be terminated by either null entry or an
     // invalid wxFileTypeInfo (i.e. the one created with default ctor)
     void AddFallbacks(const wxFileTypeInfo *filetypes);
-    void AddFallback(const wxFileTypeInfo& ft) { m_fallbacks.Add(ft); }
+    void AddFallback(const wxFileTypeInfo& ft) { m_fallbacks.push_back(ft); }
 
     // create or remove associations
 
@@ -428,12 +450,12 @@ private:
 
     // the fallback info which is used if the information is not found in the
     // real system database
-    wxArrayFileTypeInfo m_fallbacks;
+    std::vector<wxFileTypeInfo> m_fallbacks;
 
     // the object working with the system MIME database
     wxMimeTypesManagerImpl *m_impl;
 
-    // if m_impl is NULL, create one
+    // if m_impl is null, create one
     void EnsureImpl();
 
     friend class wxMimeTypeCmnModule;

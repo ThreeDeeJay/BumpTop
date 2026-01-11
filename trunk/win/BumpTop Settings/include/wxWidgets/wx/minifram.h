@@ -2,11 +2,9 @@
 // Name:        wx/minifram.h
 // Purpose:     wxMiniFrame base header
 // Author:      Julian Smart
-// Modified by:
 // Created:
 // Copyright:   (c) Julian Smart
-// RCS-ID:      $Id: minifram.h 49299 2007-10-21 18:07:29Z PC $
-// Licence:     wxWindows Licence
+// Copyright:   (c) 2014 wxWidgets dev team
 /////////////////////////////////////////////////////////////////////////////
 
 #ifndef _WX_MINIFRAM_H_BASE_
@@ -16,22 +14,16 @@
 
 #if wxUSE_MINIFRAME
 
-#if defined(__WXPALMOS__)
-#include "wx/palmos/minifram.h"
-#elif defined(__WXMSW__)
+#if defined(__WXMSW__)
 #include "wx/msw/minifram.h"
-#elif defined(__WXMOTIF__)
-#include "wx/motif/minifram.h"
-#elif defined(__WXGTK20__)
-#include "wx/gtk/minifram.h"
 #elif defined(__WXGTK__)
-#include "wx/gtk1/minifram.h"
+#include "wx/gtk/minifram.h"
 #elif defined(__WXX11__)
 #include "wx/x11/minifram.h"
 #elif defined(__WXMAC__)
-#include "wx/mac/minifram.h"
-#elif defined(__WXPM__)
-#include "wx/os2/minifram.h"
+#include "wx/osx/minifram.h"
+#elif defined(__WXQT__)
+#include "wx/qt/minifram.h"
 #else
 // TODO: it seems that wxMiniFrame could be just defined here generically
 //       instead of having all the above port-specific headers

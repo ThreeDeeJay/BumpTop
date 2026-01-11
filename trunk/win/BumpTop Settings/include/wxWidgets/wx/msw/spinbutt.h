@@ -1,10 +1,8 @@
 /////////////////////////////////////////////////////////////////////////////
-// Name:        wx/univ/spinbutt.h
+// Name:        wx/msw/spinbutt.h
 // Purpose:     wxSpinButton class
 // Author:      Julian Smart
-// Modified by:
 // Created:     01/02/97
-// RCS-ID:      $Id: spinbutt.h 41316 2006-09-20 14:15:14Z RR $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -17,11 +15,11 @@
 
 #if wxUSE_SPINBTN
 
-class WXDLLEXPORT wxSpinButton : public wxSpinButtonBase
+class WXDLLIMPEXP_CORE wxSpinButton : public wxSpinButtonBase
 {
 public:
     // construction
-    wxSpinButton() { }
+    wxSpinButton() = default;
 
     wxSpinButton(wxWindow *parent,
                  wxWindowID id = wxID_ANY,
@@ -44,27 +42,33 @@ public:
 
 
     // accessors
-    virtual int GetValue() const;
-    virtual void SetValue(int val);
-    virtual void SetRange(int minVal, int maxVal);
+    virtual int GetValue() const override;
+    virtual void SetValue(int val) override;
+    virtual void SetRange(int minVal, int maxVal) override;
 
     // implementation
-    virtual bool MSWCommand(WXUINT param, WXWORD id);
-    virtual bool MSWOnNotify(int idCtrl, WXLPARAM lParam, WXLPARAM *result);
+    virtual bool MSWOnNotify(int idCtrl, WXLPARAM lParam, WXLPARAM *result) override;
     virtual bool MSWOnScroll(int orientation, WXWORD wParam,
-                             WXWORD pos, WXHWND control);
+                             WXWORD pos, WXHWND control) override;
 
     // a wxSpinButton can't do anything useful with focus, only wxSpinCtrl can
-    virtual bool AcceptsFocus() const { return false; }
+    virtual bool AcceptsFocus() const override { return false; }
+
+    // returns true if the platform should explicitly apply a theme border
+    virtual bool CanApplyThemeBorder() const override { return false; }
+    virtual void SetIncrement(int value) override;
+    virtual int  GetIncrement() const override;
 
 protected:
-   virtual wxSize DoGetBestSize() const;
+   virtual wxSize DoGetBestSize() const override;
 
    // ensure that the control displays a value in the current range
    virtual void NormalizeValue();
 
 private:
-    DECLARE_DYNAMIC_CLASS_NO_COPY(wxSpinButton)
+    void OnPaint(wxPaintEvent& event);
+
+    wxDECLARE_DYNAMIC_CLASS_NO_COPY(wxSpinButton);
 };
 
 #endif // wxUSE_SPINBTN

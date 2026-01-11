@@ -2,10 +2,8 @@
 // Name:        wx/gtk/accel.h
 // Purpose:     wxAcceleratorTable redirection file
 // Author:      Julian Smart
-// Modified by:
 // Created:
 // Copyright:   (c) Julian Smart
-// RCS-ID:      $Id: accel.h 33948 2005-05-04 18:57:50Z JS $
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 

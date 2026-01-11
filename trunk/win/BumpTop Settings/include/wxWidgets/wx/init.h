@@ -2,9 +2,7 @@
 // Name:        wx/init.h
 // Purpose:     wxWidgets initialization and finalization functions
 // Author:      Vadim Zeitlin
-// Modified by:
 // Created:     29.06.2003
-// RCS-ID:      $Id: init.h 42109 2006-10-19 07:43:24Z MR $
 // Copyright:   (c) 2003 Vadim Zeitlin <vadim@wxwidgets.org>
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -13,7 +11,7 @@
 #define _WX_INIT_H_
 
 #include "wx/defs.h"
-#include "wx/wxchar.h"
+#include "wx/chartype.h"
 
 // ----------------------------------------------------------------------------
 // wxEntry helper functions which allow to have more fine grained control
@@ -22,7 +20,7 @@
 // do common initialization, return true if ok (in this case wxEntryCleanup
 // must be called later), otherwise the program can't use wxWidgets at all
 //
-// this function also creates wxTheApp as a side effect, if IMPLEMENT_APP
+// this function also creates wxTheApp as a side effect, if wxIMPLEMENT_APP
 // hadn't been used a dummy default application object is created
 //
 // note that the parameters may be modified, this is why we pass them by
@@ -46,22 +44,26 @@ extern void WXDLLIMPEXP_BASE wxEntryCleanup();
 extern int WXDLLIMPEXP_BASE wxEntry(int& argc, wxChar **argv);
 
 // we overload wxEntry[Start]() to take "char **" pointers too
-#if wxUSE_UNICODE
-
 extern bool WXDLLIMPEXP_BASE wxEntryStart(int& argc, char **argv);
 extern int WXDLLIMPEXP_BASE wxEntry(int& argc, char **argv);
 
-#endif// wxUSE_UNICODE
+// Under Windows we define additional wxEntry() overloads with signature
+// compatible with WinMain() and not the traditional main().
+#ifdef __WINDOWS__
+    #include "wx/msw/init.h"
+#endif
 
 // ----------------------------------------------------------------------------
 // Using the library without (explicit) application object: you may avoid using
-// DECLARE_APP and IMPLEMENT_APP macros and call the functions below instead at
+// wxDECLARE_APP and wxIMPLEMENT_APP macros and call the functions below instead at
 // the program startup and termination
 // ----------------------------------------------------------------------------
 
 // initialize the library (may be called as many times as needed, but each
 // call to wxInitialize() must be matched by wxUninitialize())
-extern bool WXDLLIMPEXP_BASE wxInitialize(int argc = 0, wxChar **argv = NULL);
+extern bool WXDLLIMPEXP_BASE wxInitialize();
+extern bool WXDLLIMPEXP_BASE wxInitialize(int& argc, wxChar **argv);
+extern bool WXDLLIMPEXP_BASE wxInitialize(int& argc, char **argv);
 
 // clean up -- the library can't be used any more after the last call to
 // wxUninitialize()
@@ -73,7 +75,17 @@ class WXDLLIMPEXP_BASE wxInitializer
 {
 public:
     // initialize the library
-    wxInitializer(int argc = 0, wxChar **argv = NULL)
+    wxInitializer()
+    {
+        m_ok = wxInitialize();
+    }
+
+    wxInitializer(int& argc, wxChar **argv)
+    {
+        m_ok = wxInitialize(argc, argv);
+    }
+
+    wxInitializer(int& argc, char **argv)
     {
         m_ok = wxInitialize(argc, argv);
     }

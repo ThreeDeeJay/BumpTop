@@ -1,10 +1,8 @@
 /////////////////////////////////////////////////////////////////////////////
-// Name:        generic/datectrl.h
+// Name:        wx/generic/datectrl.h
 // Purpose:     generic wxDatePickerCtrl implementation
 // Author:      Andreas Pflug
-// Modified by:
 // Created:     2005-01-19
-// RCS-ID:      $Id: datectrl.h 42539 2006-10-27 18:02:21Z RR $
 // Copyright:   (c) 2005 Andreas Pflug <pgadmin@pse-consulting.de>
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -12,13 +10,18 @@
 #ifndef _WX_GENERIC_DATECTRL_H_
 #define _WX_GENERIC_DATECTRL_H_
 
-class WXDLLIMPEXP_ADV wxCalendarDateAttr;
-class WXDLLIMPEXP_ADV wxCalendarCtrl;
-class WXDLLIMPEXP_ADV wxCalendarEvent;
-class WXDLLIMPEXP_ADV wxComboCtrl;
-class WXDLLIMPEXP_ADV wxCalendarComboPopup;
+#include "wx/compositewin.h"
+#include "wx/containr.h"
 
-class WXDLLIMPEXP_ADV wxDatePickerCtrlGeneric : public wxDatePickerCtrlBase
+class WXDLLIMPEXP_FWD_CORE wxComboCtrl;
+
+class WXDLLIMPEXP_FWD_CORE wxCalendarCtrl;
+class WXDLLIMPEXP_FWD_CORE wxCalendarComboPopup;
+
+typedef wxDatePickerCtrlCommonBase<wxDateTimePickerCtrlBase> wxDatePickerCtrlGenericBase;
+
+class WXDLLIMPEXP_CORE wxDatePickerCtrlGeneric
+    : public wxCompositeWindow< wxNavigationEnabled<wxDatePickerCtrlGenericBase> >
 {
 public:
     // creating the control
@@ -48,43 +51,42 @@ public:
                 const wxString& name = wxDatePickerCtrlNameStr);
 
     // wxDatePickerCtrl methods
-    void SetValue(const wxDateTime& date);
-    wxDateTime GetValue() const;
+    void SetValue(const wxDateTime& date) override;
+    wxDateTime GetValue() const override;
 
-    bool GetRange(wxDateTime *dt1, wxDateTime *dt2) const;
-    void SetRange(const wxDateTime &dt1, const wxDateTime &dt2);
+    bool GetRange(wxDateTime *dt1, wxDateTime *dt2) const override;
+    void SetRange(const wxDateTime &dt1, const wxDateTime &dt2) override;
 
     bool SetDateRange(const wxDateTime& lowerdate = wxDefaultDateTime,
                       const wxDateTime& upperdate = wxDefaultDateTime);
 
     // extra methods available only in this (generic) implementation
-    bool SetFormat(const wxChar *fmt);
-    wxCalendarCtrl *GetCalendar() const { return m_cal; }
+    wxCalendarCtrl *GetCalendar() const;
 
 
     // implementation only from now on
     // -------------------------------
 
     // overridden base class methods
-    virtual bool Destroy();
+    virtual bool Destroy() override;
 
 protected:
-    virtual wxSize DoGetBestSize() const;
+    virtual wxSize DoGetBestSize() const override;
 
 private:
     void Init();
 
+    // return the list of the windows composing this one
+    virtual wxWindowList GetCompositeWindowParts() const override;
+
     void OnText(wxCommandEvent &event);
     void OnSize(wxSizeEvent& event);
-    void OnFocus(wxFocusEvent& event);
 
-    wxCalendarCtrl *m_cal;
     wxComboCtrl* m_combo;
     wxCalendarComboPopup* m_popup;
 
-
-    DECLARE_EVENT_TABLE()
-    DECLARE_NO_COPY_CLASS(wxDatePickerCtrlGeneric)
+    wxDECLARE_EVENT_TABLE();
+    wxDECLARE_NO_COPY_CLASS(wxDatePickerCtrlGeneric);
 };
 
 #endif // _WX_GENERIC_DATECTRL_H_

@@ -3,7 +3,6 @@
 // Purpose:     wxBitmap class
 // Author:      Vaclav Slavik
 // Created:     2006-08-04
-// RCS-ID:      $Id: bitmap.h 42752 2006-10-30 19:26:48Z VZ $
 // Copyright:   (c) 2006 REA Elektronik GmbH
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -13,35 +12,38 @@
 
 #include "wx/dfb/dfbptr.h"
 
+class WXDLLIMPEXP_FWD_CORE wxPixelDataBase;
+
 wxDFB_DECLARE_INTERFACE(IDirectFBSurface);
 
 //-----------------------------------------------------------------------------
 // wxBitmap
 //-----------------------------------------------------------------------------
 
-class WXDLLIMPEXP_CORE wxBitmapHandler: public wxBitmapHandlerBase
-{
-    DECLARE_ABSTRACT_CLASS(wxBitmapHandler)
-};
-
-class WXDLLIMPEXP_CORE wxBitmap: public wxBitmapBase
+class WXDLLIMPEXP_CORE wxBitmap : public wxBitmapBase
 {
 public:
-    wxBitmap() {}
+    wxBitmap() = default;
     wxBitmap(const wxIDirectFBSurfacePtr& surface) { Create(surface); }
-    wxBitmap(int width, int height, int depth = -1);
+    wxBitmap(int width, int height, int depth = -1) { Create(width, height, depth); }
+    wxBitmap(const wxSize& sz, int depth = -1) { Create(sz, depth); }
+    wxBitmap(int width, int height, const wxDC& dc) { Create(width, height, dc); }
     wxBitmap(const char bits[], int width, int height, int depth = 1);
-    wxBitmap(const wxString &filename, wxBitmapType type = wxBITMAP_TYPE_RESOURCE);
+    wxBitmap(const wxString &filename, wxBitmapType type = wxBITMAP_DEFAULT_TYPE);
     wxBitmap(const char* const* bits);
 #if wxUSE_IMAGE
-    wxBitmap(const wxImage& image, int depth = -1);
+    wxBitmap(const wxImage& image, int depth = -1, double scale = 1.0)
+        { InitFromImage(image, depth, scale); }
+    wxBitmap(const wxImage& image, const wxDC& WXUNUSED(dc))
+        { InitFromImage(image, -1, 1.0); }
 #endif
 
-    bool Ok() const { return IsOk(); }
-    bool IsOk() const;
-
     bool Create(const wxIDirectFBSurfacePtr& surface);
-    bool Create(int width, int height, int depth = -1);
+    bool Create(int width, int height, int depth = wxBITMAP_SCREEN_DEPTH) final;
+    bool Create(const wxSize& sz, int depth = wxBITMAP_SCREEN_DEPTH) final
+        { return Create(sz.GetWidth(), sz.GetHeight(), depth); }
+    bool Create(int width, int height, const wxDC& WXUNUSED(dc))
+        { return Create(width,height); }
 
     virtual int GetHeight() const;
     virtual int GetWidth() const;
@@ -56,33 +58,42 @@ public:
 
     virtual wxBitmap GetSubBitmap(const wxRect& rect) const;
 
-    virtual bool SaveFile(const wxString &name, wxBitmapType type, const wxPalette *palette = (wxPalette *) NULL) const;
-    virtual bool LoadFile(const wxString &name, wxBitmapType type = wxBITMAP_TYPE_RESOURCE);
+    virtual bool SaveFile(const wxString &name, wxBitmapType type,
+                          const wxPalette *palette = nullptr) const;
+    virtual bool LoadFile(const wxString &name, wxBitmapType type = wxBITMAP_DEFAULT_TYPE);
 
 #if wxUSE_PALETTE
     virtual wxPalette *GetPalette() const;
     virtual void SetPalette(const wxPalette& palette);
 #endif
 
-    // copies the contents and mask of the given (colour) icon to the bitmap
-    virtual bool CopyFromIcon(const wxIcon& icon);
-
     static void InitStandardHandlers();
 
+    // raw bitmap access support functions
+    void *GetRawData(wxPixelDataBase& data, int bpp);
+    void UngetRawData(wxPixelDataBase& data);
+
+    bool HasAlpha() const;
+
     // implementation:
-    virtual void SetHeight(int height);
-    virtual void SetWidth(int width);
-    virtual void SetDepth(int depth);
+#if WXWIN_COMPATIBILITY_3_0
+    wxDEPRECATED(virtual void SetHeight(int height));
+    wxDEPRECATED(virtual void SetWidth(int width));
+    wxDEPRECATED(virtual void SetDepth(int depth));
+#endif
 
     // get underlying native representation:
     wxIDirectFBSurfacePtr GetDirectFBSurface() const;
 
 protected:
-    // ref counting code
-    virtual wxObjectRefData *CreateRefData() const;
-    virtual wxObjectRefData *CloneRefData(const wxObjectRefData *data) const;
+    virtual wxGDIRefData *CreateGDIRefData() const;
+    wxNODISCARD virtual wxGDIRefData *CloneGDIRefData(const wxGDIRefData *data) const;
 
-    DECLARE_DYNAMIC_CLASS(wxBitmap)
+    void InitFromImage(const wxImage& image, int depth, double scale);
+
+    bool CreateWithFormat(int width, int height, int dfbFormat);
+
+    wxDECLARE_DYNAMIC_CLASS(wxBitmap);
 };
 
 #endif // _WX_DFB_BITMAP_H_

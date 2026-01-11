@@ -2,9 +2,7 @@
 // Name:        wx/accel.h
 // Purpose:     wxAcceleratorEntry and wxAcceleratorTable classes
 // Author:      Julian Smart, Robert Roebling, Vadim Zeitlin
-// Modified by:
 // Created:     31.05.01 (extracted from other files)
-// RCS-ID:      $Id: accel.h 53135 2008-04-12 02:31:04Z VZ $
 // Copyright:   (c) wxWidgets team
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -17,6 +15,7 @@
 #if wxUSE_ACCEL
 
 #include "wx/object.h"
+#include "wx/string.h"
 
 class WXDLLIMPEXP_FWD_CORE wxAcceleratorTable;
 class WXDLLIMPEXP_FWD_CORE wxMenuItem;
@@ -27,52 +26,40 @@ class WXDLLIMPEXP_FWD_CORE wxKeyEvent;
 // ----------------------------------------------------------------------------
 
 // wxAcceleratorEntry flags
-enum
+enum wxAcceleratorEntryFlags
 {
     wxACCEL_NORMAL  = 0x0000,   // no modifiers
     wxACCEL_ALT     = 0x0001,   // hold Alt key down
     wxACCEL_CTRL    = 0x0002,   // hold Ctrl key down
     wxACCEL_SHIFT   = 0x0004,   // hold Shift key down
-#if defined(__WXMAC__) || defined(__WXCOCOA__)
-    wxACCEL_CMD      = 0x0008   // Command key on OS X
+#if defined(__WXMAC__)
+    wxACCEL_RAW_CTRL= 0x0008,   //
 #else
-    wxACCEL_CMD      = wxACCEL_CTRL
+    wxACCEL_RAW_CTRL= wxACCEL_CTRL,
 #endif
+    wxACCEL_CMD     = wxACCEL_CTRL
 };
 
 // ----------------------------------------------------------------------------
 // an entry in wxAcceleratorTable corresponds to one accelerator
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxAcceleratorEntry
+class WXDLLIMPEXP_CORE wxAcceleratorEntry
 {
 public:
     wxAcceleratorEntry(int flags = 0, int keyCode = 0, int cmd = 0,
-                       wxMenuItem *item = NULL)
+                       wxMenuItem *item = nullptr)
         : m_flags(flags)
         , m_keyCode(keyCode)
         , m_command(cmd)
         , m_item(item)
         { }
 
-    wxAcceleratorEntry(const wxAcceleratorEntry& entry)
-        : m_flags(entry.m_flags)
-        , m_keyCode(entry.m_keyCode)
-        , m_command(entry.m_command)
-        , m_item(entry.m_item)
-        { }
-
-    // create accelerator corresponding to the specified string, return NULL if
+    // create accelerator corresponding to the specified string, return nullptr if
     // string couldn't be parsed or a pointer to be deleted by the caller
     static wxAcceleratorEntry *Create(const wxString& str);
 
-    wxAcceleratorEntry& operator=(const wxAcceleratorEntry& entry)
-    {
-        Set(entry.m_flags, entry.m_keyCode, entry.m_command, entry.m_item);
-        return *this;
-    }
-
-    void Set(int flags, int keyCode, int cmd, wxMenuItem *item = NULL)
+    void Set(int flags, int keyCode, int cmd, wxMenuItem *item = nullptr)
     {
         m_flags = flags;
         m_keyCode = keyCode;
@@ -99,25 +86,24 @@ public:
     bool operator!=(const wxAcceleratorEntry& entry) const
         { return !(*this == entry); }
 
-#if defined(__WXMOTIF__)
-    // Implementation use only
-    bool MatchesEvent(const wxKeyEvent& event) const;
-#endif
-
     bool IsOk() const
     {
-        return m_flags != 0 &&
-               m_keyCode != 0;
+        return  m_keyCode != 0;
     }
 
 
     // string <-> wxAcceleratorEntry conversion
     // ----------------------------------------
 
-    // returns a wxString for the this accelerator.
+    // returns a wxString for this accelerator.
     // this function formats it using the <flags>-<keycode> format
-    // where <flags> maybe a hyphen-separed list of "shift|alt|ctrl"
-    wxString ToString() const;
+    // where <flags> maybe a hyphen-separated list of "shift|alt|ctrl"
+    wxString ToString() const { return AsPossiblyLocalizedString(true); }
+
+    // same as above but without translating, useful if the string is meant to
+    // be stored in a file or otherwise stored, instead of being shown to the
+    // user
+    wxString ToRawString() const { return AsPossiblyLocalizedString(false); }
 
     // returns true if the given string correctly initialized this object
     // (i.e. if IsOk() returns true after this call)
@@ -125,6 +111,8 @@ public:
 
 
 private:
+    wxString AsPossiblyLocalizedString(bool localized) const;
+
     // common part of Create() and FromString()
     static bool ParseAccel(const wxString& str, int *flags, int *keycode);
 
@@ -133,7 +121,7 @@ private:
     int m_keyCode;  // ASCII or virtual keycode
     int m_command;  // Command id to generate
 
-    // the menu item this entry corresponds to, may be NULL
+    // the menu item this entry corresponds to, may be null
     wxMenuItem *m_item;
 
     // for compatibility with old code, use accessors now!
@@ -149,21 +137,15 @@ private:
     #include "wx/generic/accel.h"
 #elif defined(__WXMSW__)
     #include "wx/msw/accel.h"
-#elif defined(__WXMOTIF__)
-    #include "wx/motif/accel.h"
-#elif defined(__WXGTK20__)
-    #include "wx/gtk/accel.h"
 #elif defined(__WXGTK__)
-    #include "wx/gtk1/accel.h"
+    #include "wx/gtk/accel.h"
 #elif defined(__WXMAC__)
-    #include "wx/mac/accel.h"
-#elif defined(__WXCOCOA__)
-    #include "wx/generic/accel.h"
-#elif defined(__WXPM__)
-    #include "wx/os2/accel.h"
+    #include "wx/osx/accel.h"
+#elif defined(__WXQT__)
+    #include "wx/qt/accel.h"
 #endif
 
-extern WXDLLEXPORT_DATA(wxAcceleratorTable) wxNullAcceleratorTable;
+extern WXDLLIMPEXP_DATA_CORE(wxAcceleratorTable) wxNullAcceleratorTable;
 
 #endif // wxUSE_ACCEL
 

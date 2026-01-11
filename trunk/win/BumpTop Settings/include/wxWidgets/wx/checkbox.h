@@ -2,9 +2,7 @@
 // Name:        wx/checkbox.h
 // Purpose:     wxCheckBox class interface
 // Author:      Vadim Zeitlin
-// Modified by:
 // Created:     07.09.00
-// RCS-ID:      $Id: checkbox.h 39901 2006-06-30 10:51:44Z VS $
 // Copyright:   (c) wxWidgets team
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -25,8 +23,12 @@
  * Determine whether to use a 3-state or 2-state
  * checkbox. 3-state enables to differentiate
  * between 'unchecked', 'checked' and 'undetermined'.
+ *
+ * In addition to the styles here it is also possible to specify just 0 which
+ * is treated the same as wxCHK_2STATE for compatibility (but using explicit
+ * flag is preferred).
  */
-#define wxCHK_2STATE           0x0000
+#define wxCHK_2STATE           0x4000
 #define wxCHK_3STATE           0x1000
 
 /*
@@ -37,28 +39,16 @@
  */
 #define wxCHK_ALLOW_3RD_STATE_FOR_USER 0x2000
 
-/*
- * The possible states of a 3-state checkbox (Compatible
- * with the 2-state checkbox).
- */
-enum wxCheckBoxState
-{
-    wxCHK_UNCHECKED,
-    wxCHK_CHECKED,
-    wxCHK_UNDETERMINED /* 3-state checkbox only */
-};
-
-
-extern WXDLLEXPORT_DATA(const wxChar) wxCheckBoxNameStr[];
+extern WXDLLIMPEXP_DATA_CORE(const char) wxCheckBoxNameStr[];
 
 // ----------------------------------------------------------------------------
 // wxCheckBox: a control which shows a label and a box which may be checked
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxCheckBoxBase : public wxControl
+class WXDLLIMPEXP_CORE wxCheckBoxBase : public wxControl
 {
 public:
-    wxCheckBoxBase() { }
+    wxCheckBoxBase() = default;
 
     // set/get the checked status of the listbox
     virtual void SetValue(bool value) = 0;
@@ -106,18 +96,40 @@ public:
         return HasFlag(wxCHK_ALLOW_3RD_STATE_FOR_USER);
     }
 
-    virtual bool HasTransparentBackground() { return true; }
+    virtual bool HasTransparentBackground() override { return true; }
+
+    // This semi-private function is currently used to allow wxMSW checkbox to
+    // blend in with its parent background colour without changing the
+    // background colour of the checkbox itself under the other platforms.
+    virtual void SetTransparentPartColour(const wxColour& WXUNUSED(col)) { }
+
+    // do the window-specific processing before processing the update event
+    // (mainly for deciding whether wxUpdateUIEvent::Is3State() is set)
+    virtual void DoPrepareUpdateWindowUI(wxUpdateUIEvent& event) const override
+        { event.Allow3rdState(Is3State()); }
 
     // wxCheckBox-specific processing after processing the update event
-    virtual void DoUpdateWindowUI(wxUpdateUIEvent& event)
+    virtual void DoUpdateWindowUI(wxUpdateUIEvent& event) override
     {
         wxControl::DoUpdateWindowUI(event);
 
         if ( event.GetSetChecked() )
-            SetValue(event.GetChecked());
+        {
+            if ( Is3State() )
+            {
+                Set3StateValue(event.Get3StateValue());
+            }
+            else
+            {
+                SetValue(event.GetChecked());
+            }
+        }
     }
 
 protected:
+    // choose the default border for this window
+    virtual wxBorder GetDefaultBorder() const override { return wxBORDER_NONE; }
+
     virtual void DoSet3StateValue(wxCheckBoxState WXUNUSED(state)) { wxFAIL; }
 
     virtual wxCheckBoxState DoGet3StateValue() const
@@ -126,31 +138,63 @@ protected:
         return wxCHK_UNCHECKED;
     }
 
+    // Helper function to be called from derived classes Create()
+    // implementations: it checks that the style doesn't contain any
+    // incompatible bits and modifies it to be sane if it does.
+    static void WXValidateStyle(long *stylePtr)
+    {
+        long& style = *stylePtr;
+
+        if ( !(style & (wxCHK_2STATE | wxCHK_3STATE)) )
+        {
+            // For compatibility we use absence of style flags as wxCHK_2STATE
+            // because wxCHK_2STATE used to have the value of 0 and some
+            // existing code uses 0 instead of it. Moreover, some code even
+            // uses some non-0 style, e.g. wxBORDER_XXX, but specifies
+            // neither wxCHK_2STATE nor wxCHK_3STATE -- to avoid breaking it,
+            // assume (much more common) 2 state checkbox by default.
+            style |= wxCHK_2STATE;
+        }
+
+        if ( style & wxCHK_3STATE )
+        {
+            if ( style & wxCHK_2STATE )
+            {
+                wxFAIL_MSG( "wxCHK_2STATE and wxCHK_3STATE can't be used "
+                            "together" );
+                style &= ~wxCHK_3STATE;
+            }
+        }
+        else // No wxCHK_3STATE
+        {
+            if ( style & wxCHK_ALLOW_3RD_STATE_FOR_USER )
+            {
+                wxFAIL_MSG( "wxCHK_ALLOW_3RD_STATE_FOR_USER doesn't make sense "
+                            "without wxCHK_3STATE" );
+                style &= ~wxCHK_ALLOW_3RD_STATE_FOR_USER;
+            }
+        }
+    }
+
 private:
-    DECLARE_NO_COPY_CLASS(wxCheckBoxBase)
+    wxDECLARE_NO_COPY_CLASS(wxCheckBoxBase);
 };
+
+// All still supported ports support 3 state checkboxes.
+#define wxHAS_3STATE_CHECKBOX
 
 #if defined(__WXUNIVERSAL__)
     #include "wx/univ/checkbox.h"
 #elif defined(__WXMSW__)
     #include "wx/msw/checkbox.h"
-#elif defined(__WXMOTIF__)
-    #include "wx/motif/checkbox.h"
-#elif defined(__WXGTK20__)
-    #include "wx/gtk/checkbox.h"
 #elif defined(__WXGTK__)
-    #include "wx/gtk1/checkbox.h"
+    #include "wx/gtk/checkbox.h"
 #elif defined(__WXMAC__)
-    #include "wx/mac/checkbox.h"
-#elif defined(__WXCOCOA__)
-    #include "wx/cocoa/checkbox.h"
-#elif defined(__WXPM__)
-    #include "wx/os2/checkbox.h"
-#elif defined(__WXPALMOS__)
-    #include "wx/palmos/checkbox.h"
+    #include "wx/osx/checkbox.h"
+#elif defined(__WXQT__)
+    #include "wx/qt/checkbox.h"
 #endif
 
 #endif // wxUSE_CHECKBOX
 
-#endif
-    // _WX_CHECKBOX_H_BASE_
+#endif // _WX_CHECKBOX_H_BASE_

@@ -2,9 +2,7 @@
 // Name:        wx/propdlg.h
 // Purpose:     wxPropertySheetDialog base header
 // Author:      Julian Smart
-// Modified by:
 // Created:
-// RCS-ID:      $Id: propdlg.h 33948 2005-05-04 18:57:50Z JS $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////

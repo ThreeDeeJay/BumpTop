@@ -2,15 +2,13 @@
 // Name:        wx/volume.h
 // Purpose:     wxFSVolume - encapsulates system volume information
 // Author:      George Policello
-// Modified by:
 // Created:     28 Jan 02
-// RCS-ID:      $Id: volume.h 39399 2006-05-28 23:08:31Z ABX $
 // Copyright:   (c) 2002 George Policello
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
 // ----------------------------------------------------------------------------
-// wxFSVolume represents a volume/drive/mount point in a file system
+// wxFSVolume represents a volume/drive in a file system
 // ----------------------------------------------------------------------------
 
 #ifndef _WX_FSVOLUME_H_
@@ -23,7 +21,7 @@
 #include "wx/arrstr.h"
 
 // the volume flags
-enum
+enum wxFSVolumeFlags
 {
     // is the volume mounted?
     wxFS_VOL_MOUNTED = 0x0001,
@@ -68,7 +66,7 @@ public:
     // create the volume object with this name (should be one of those returned
     // by GetVolumes()).
     wxFSVolumeBase();
-    wxFSVolumeBase(const wxString& name);
+    explicit wxFSVolumeBase(const wxString& name);
     bool Create(const wxString& name);
 
     // accessors
@@ -91,7 +89,7 @@ public:
     wxString GetName() const { return m_volName; }
     wxString GetDisplayName() const { return m_dispName; }
 
-    // TODO: operatios (Mount(), Unmount(), Eject(), ...)?
+    // TODO: Add operations (Mount(), Unmount(), Eject(), ...)?
 
 protected:
     // the internal volume name
@@ -107,7 +105,8 @@ protected:
 #if wxUSE_GUI
 
 #include "wx/icon.h"
-#include "wx/iconbndl.h" // only for wxIconArray
+
+#include <vector>
 
 enum wxFSIconType
 {
@@ -122,16 +121,13 @@ enum wxFSIconType
 class WXDLLIMPEXP_CORE wxFSVolume : public wxFSVolumeBase
 {
 public:
-    wxFSVolume() : wxFSVolumeBase() { InitIcons(); }
-    wxFSVolume(const wxString& name) : wxFSVolumeBase(name) { InitIcons(); }
+    using wxFSVolumeBase::wxFSVolumeBase;
 
     wxIcon GetIcon(wxFSIconType type) const;
 
 private:
-    void InitIcons();
-
     // the different icons for this volume (created on demand)
-    wxIconArray m_icons;
+    std::vector<wxIcon> m_icons;
 };
 
 #else // !wxUSE_GUI

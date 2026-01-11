@@ -1,22 +1,13 @@
 /////////////////////////////////////////////////////////////////////////////
-// Name:        scrolbar.h
+// Name:        wx/gtk/scrolbar.h
 // Purpose:
 // Author:      Robert Roebling
-// Id:          $Id: scrolbar.h 41020 2006-09-05 20:47:48Z VZ $
 // Copyright:   (c) 1998 Robert Roebling
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
 #ifndef _WX_GTK_SCROLLBAR_H_
 #define _WX_GTK_SCROLLBAR_H_
-
-#include "wx/defs.h"
-
-//-----------------------------------------------------------------------------
-// classes
-//-----------------------------------------------------------------------------
-
-class WXDLLIMPEXP_CORE wxScrollBar;
 
 //-----------------------------------------------------------------------------
 // wxScrollBar
@@ -31,7 +22,7 @@ public:
            const wxSize& size = wxDefaultSize,
            long style = wxSB_HORIZONTAL,
            const wxValidator& validator = wxDefaultValidator,
-           const wxString& name = wxScrollBarNameStr )
+           const wxString& name = wxASCII_STR(wxScrollBarNameStr) )
     {
         Create( parent, id, pos, size, style, validator, name );
     }
@@ -40,15 +31,15 @@ public:
            const wxSize& size = wxDefaultSize,
            long style = wxSB_HORIZONTAL,
            const wxValidator& validator = wxDefaultValidator,
-           const wxString& name = wxScrollBarNameStr );
+           const wxString& name = wxASCII_STR(wxScrollBarNameStr) );
     virtual ~wxScrollBar();
-    int GetThumbPosition() const;
-    int GetThumbSize() const;
-    int GetPageSize() const;
-    int GetRange() const;
-    virtual void SetThumbPosition( int viewStart );
+    int GetThumbPosition() const override;
+    int GetThumbSize() const override;
+    int GetPageSize() const override;
+    int GetRange() const override;
+    virtual void SetThumbPosition( int viewStart ) override;
     virtual void SetScrollbar( int position, int thumbSize, int range, int pageSize,
-      bool refresh = true );
+      bool refresh = true ) override;
 
     void SetThumbSize(int thumbSize);
     void SetPageSize( int pageLength );
@@ -56,12 +47,8 @@ public:
 
     static wxVisualAttributes
     GetClassDefaultAttributes(wxWindowVariant variant = wxWINDOW_VARIANT_NORMAL);
-    
-protected:
-    virtual GdkWindow *GTKGetWindow(wxArrayGdkWindows& windows) const;
 
-private:
-    DECLARE_DYNAMIC_CLASS(wxScrollBar)
+    wxDECLARE_DYNAMIC_CLASS(wxScrollBar);
 };
 
 #endif // _WX_GTK_SCROLLBAR_H_

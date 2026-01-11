@@ -4,7 +4,6 @@
 * Author:      John Labenski and others
 * Modified by:
 * Created:     02/02/03
-* RCS-ID:      $Id: math.h 44690 2007-03-08 04:31:24Z PC $
 * Copyright:   (c) John Labenski
 * Licence:     wxWindows licence
 */
@@ -22,9 +21,9 @@
     #define M_PI 3.1415926535897932384626433832795
 #endif
 
-/* Scaling factors for various unit conversions */
+/* Scaling factors for various unit conversions: 1 inch = 2.54 cm */
 #ifndef METRIC_CONVERSION_CONSTANT
-    #define METRIC_CONVERSION_CONSTANT 0.0393700787
+    #define METRIC_CONVERSION_CONSTANT (1/25.4)
 #endif
 
 #ifndef mm2inches
@@ -52,76 +51,96 @@
 #endif
 
 
-/* unknown __VISAGECC__, __SYMANTECCC__ */
-
-#if defined(__VISUALC__) || defined(__BORLANDC__) || defined(__WATCOMC__)
-    #include <float.h>
-    #define wxFinite(x) _finite(x)
-#elif defined(__GNUG__)||defined(__GNUWIN32__)||defined(__DJGPP__)|| \
-      defined(__SGI_CC__)||defined(__SUNCC__)||defined(__XLC__)|| \
-      defined(__HPUX__)||defined(__MWERKS__)
-    #define wxFinite(x) finite(x)
-#else
-    #define wxFinite(x) ((x) == (x))
-#endif
-
-
-#if defined(__VISUALC__)||defined(__BORLAND__)
-    #define wxIsNaN(x) _isnan(x)
-#elif defined(__GNUG__)||defined(__GNUWIN32__)||defined(__DJGPP__)|| \
-      defined(__SGI_CC__)||defined(__SUNCC__)||defined(__XLC__)|| \
-      defined(__HPUX__)||defined(__MWERKS__)
-    #define wxIsNaN(x) isnan(x)
-#else
-    #define wxIsNaN(x) ((x) != (x))
-#endif
-
 #ifdef __cplusplus
 
-    #ifdef __INTELC__
+#include <cmath>
 
-        inline bool wxIsSameDouble(double x, double y)
-        {
-            // VZ: this warning, given for operators==() and !=() is not wrong, as ==
-            //     shouldn't be used with doubles, but we get too many of them and
-            //     removing these operators is probably not a good idea
-            //
-            //     Maybe we should alway compare doubles up to some "epsilon" precision
-            #pragma warning(push)
+#define wxFinite(x) std::isfinite(x)
+#define wxIsNaN(x) std::isnan(x)
 
-            // floating-point equality and inequality comparisons are unreliable
-            #pragma warning(disable: 1572)
+#ifdef __INTELC__
 
-            return x == y;
-
-            #pragma warning(pop)
-        }
-
-    #else /* !__INTELC__ */
-
-        inline bool wxIsSameDouble(double x, double y) { return x == y; }
-
-    #endif /* __INTELC__/!__INTELC__ */
-
-    inline bool wxIsNullDouble(double x) { return wxIsSameDouble(x, 0.); }
-
-    inline int wxRound(double x)
+    inline bool wxIsSameDouble(double x, double y)
     {
-        #if defined(HAVE_ROUND)
-            return int(round(x));
-        #else
-            return (int)(x < 0 ? x - 0.5 : x + 0.5);
-        #endif
+        // VZ: this warning, given for operators==() and !=() is not wrong, as ==
+        //     shouldn't be used with doubles, but we get too many of them and
+        //     removing these operators is probably not a good idea
+        //
+        //     Maybe we should always compare doubles up to some "epsilon" precision
+        #pragma warning(push)
+
+        // floating-point equality and inequality comparisons are unreliable
+        #pragma warning(disable: 1572)
+
+        return x == y;
+
+        #pragma warning(pop)
     }
+
+#else /* !__INTELC__ */
+    wxGCC_WARNING_SUPPRESS(float-equal)
+    inline bool wxIsSameDouble(double x, double y) { return x == y; }
+    wxGCC_WARNING_RESTORE(float-equal)
+
+#endif /* __INTELC__/!__INTELC__ */
+
+inline bool wxIsNullDouble(double x) { return wxIsSameDouble(x, 0.); }
+
+inline int wxRound(double x)
+{
+    wxASSERT_MSG(x > double(INT_MIN) - 0.5 && x < double(INT_MAX) + 0.5,
+        "argument out of supported range");
+
+    return int(std::lround(x));
+}
+
+inline int wxRound(float x)
+{
+    wxASSERT_MSG(x > float(INT_MIN) && x < float(INT_MAX),
+        "argument out of supported range");
+
+    return int(std::lround(x));
+}
+
+inline int wxRound(long double x) { return wxRound(double(x)); }
+
+// For compatibility purposes, make wxRound() work with integer types too, as
+// this used to compile with wx 3.0.
+#if WXWIN_COMPATIBILITY_3_0
+
+template <typename T>
+wxDEPRECATED_MSG("rounding an integer is useless")
+inline int wxRound(T x)
+{
+    // We have to disable this warning for the unsigned types. We do handle
+    // them correctly in this comparison due to "x > 0" below (removing it
+    // would make this fail for them!).
+    wxGCC_WARNING_SUPPRESS(sign-compare)
+
+    wxASSERT_MSG((x > 0 || x > INT_MIN) && x < INT_MAX,
+        "argument out of supported range");
+
+    wxGCC_WARNING_RESTORE(sign-compare)
+
+    return int(x);
+}
+
+#endif // WXWIN_COMPATIBILITY_3_0
+
+// Convert between degrees and radians.
+inline double wxDegToRad(double deg) { return (deg * M_PI) / 180.0; }
+inline double wxRadToDeg(double rad) { return (rad * 180.0) / M_PI; }
+
+// Count trailing zeros.
+WXDLLIMPEXP_BASE unsigned int wxCTZ(wxUint32 x);
+
 #endif /* __cplusplus */
 
 
-#if defined(__WXMSW__) && !defined(__WXWINCE__)
+#if defined(__WINDOWS__)
     #define wxMulDivInt32( a , b , c ) ::MulDiv( a , b , c )
-#elif defined( __WXMAC__ )
-    #define wxMulDivInt32( a , b , c ) ( (wxInt32) ( ( (wxInt64)(a) * (wxInt64)(b) ) / (wxInt64)(c) ) )
 #else
-    #define wxMulDivInt32( a , b , c ) ((wxInt32)((a)*(((wxDouble)b)/((wxDouble)c))))
+    #define wxMulDivInt32( a , b , c ) (wxRound((a)*(((wxDouble)b)/((wxDouble)c))))
 #endif
 
 #if wxUSE_APPLE_IEEE
@@ -129,12 +148,15 @@
     extern "C" {
 #endif
     /* functions from common/extended.c */
-    extern wxFloat64 ConvertFromIeeeExtended(const wxInt8 *bytes);
-    extern void ConvertToIeeeExtended(wxFloat64 num, wxInt8 *bytes);
+    WXDLLIMPEXP_BASE wxFloat64 wxConvertFromIeeeExtended(const wxInt8 *bytes);
+    WXDLLIMPEXP_BASE void wxConvertToIeeeExtended(wxFloat64 num, wxInt8 *bytes);
+
 #ifdef __cplusplus
     }
 #endif
 #endif /* wxUSE_APPLE_IEEE */
 
+/* Compute the greatest common divisor of two positive integers */
+WXDLLIMPEXP_BASE unsigned int wxGCD(unsigned int u, unsigned int v);
 
 #endif /* _WX_MATH_H_ */

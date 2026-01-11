@@ -4,7 +4,6 @@
 // Author:      Julian Smart and Guillermo Rodriguez Garcia
 // Modified by: Francesco Montorsi
 // Created:     13/8/99
-// RCS-ID:      $Id: animate.h 53961 2008-06-03 12:42:13Z VZ $
 // Copyright:   (c) Julian Smart and Guillermo Rodriguez Garcia
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -14,60 +13,6 @@
 
 typedef struct _GdkPixbufAnimation GdkPixbufAnimation;
 typedef struct _GdkPixbufAnimationIter GdkPixbufAnimationIter;
-
-// ----------------------------------------------------------------------------
-// wxAnimation
-// Unlike the generic wxAnimation object (see generic\animate.cpp), we won't
-// use directly wxAnimationHandlers as gdk-pixbuf already provides the
-// concept of handler and will automatically use the available handlers.
-// Like generic wxAnimation object, this implementation of wxAnimation is
-// refcounted so that assignment is very fast
-// ----------------------------------------------------------------------------
-
-class WXDLLIMPEXP_ADV wxAnimation : public wxAnimationBase
-{
-public:
-    wxAnimation(GdkPixbufAnimation *p = NULL);
-    wxAnimation(const wxAnimation&);
-    ~wxAnimation() { UnRef(); }
-
-    wxAnimation& operator= (const wxAnimation&);
-
-    virtual bool IsOk() const
-        { return m_pixbuf != NULL; }
-
-
-    // unfortunately GdkPixbufAnimation does not expose these info:
-
-    virtual unsigned int GetFrameCount() const { return 0; }
-    virtual wxImage GetFrame(unsigned int frame) const;
-
-    // we can retrieve the delay for a frame only after building
-    // a GdkPixbufAnimationIter...
-    virtual int GetDelay(unsigned int WXUNUSED(frame)) const { return 0; }
-
-    virtual wxSize GetSize() const;
-
-    virtual bool LoadFile(const wxString &name, wxAnimationType type = wxANIMATION_TYPE_ANY);
-    virtual bool Load(wxInputStream &stream, wxAnimationType type = wxANIMATION_TYPE_ANY);
-
-    // Implementation
-public:     // used by GTK callbacks
-
-    GdkPixbufAnimation *GetPixbuf() const
-        { return m_pixbuf; }
-    void SetPixbuf(GdkPixbufAnimation* p);
-
-protected:
-    GdkPixbufAnimation *m_pixbuf;
-
-private:
-    void UnRef();
-
-    typedef wxAnimationBase base_type;
-    DECLARE_DYNAMIC_CLASS(wxAnimation)
-};
-
 
 // ----------------------------------------------------------------------------
 // wxAnimationCtrl
@@ -86,21 +31,19 @@ public:
                         const wxPoint& pos = wxDefaultPosition,
                         const wxSize& size = wxDefaultSize,
                         long style = wxAC_DEFAULT_STYLE,
-                        const wxString& name = wxAnimationCtrlNameStr)
+                        const wxString& name = wxASCII_STR(wxAnimationCtrlNameStr))
     {
         Init();
 
         Create(parent, id, anim, pos, size, style, name);
     }
 
-    void Init();
-
     bool Create(wxWindow *parent, wxWindowID id,
                 const wxAnimation& anim = wxNullAnimation,
                 const wxPoint& pos = wxDefaultPosition,
                 const wxSize& size = wxDefaultSize,
                 long style = wxAC_DEFAULT_STYLE,
-                const wxString& name = wxAnimationCtrlNameStr);
+                const wxString& name = wxASCII_STR(wxAnimationCtrlNameStr));
 
     ~wxAnimationCtrl();
 
@@ -110,28 +53,35 @@ public:     // event handler
 
 public:     // public API
 
-    virtual bool LoadFile(const wxString& filename, wxAnimationType type = wxANIMATION_TYPE_ANY);
+    virtual bool LoadFile(const wxString& filename, wxAnimationType type = wxANIMATION_TYPE_ANY) override;
+    virtual bool Load(wxInputStream& stream, wxAnimationType type = wxANIMATION_TYPE_ANY) override;
 
-    virtual void SetAnimation(const wxAnimation &anim);
-    virtual wxAnimation GetAnimation() const
-        { return wxAnimation(m_anim); }
+    void SetAnimation(const wxAnimationBundle& anim) override;
 
-    virtual bool Play();
-    virtual void Stop();
+    virtual bool Play() override;
+    virtual void Stop() override;
 
-    virtual bool IsPlaying() const;
+    virtual bool IsPlaying() const override;
 
-    bool SetBackgroundColour( const wxColour &colour );
+    bool SetBackgroundColour( const wxColour &colour ) override;
+
+    static wxAnimation CreateCompatibleAnimation();
 
 protected:
+    virtual wxAnimationImpl* DoCreateAnimationImpl() const override;
 
-    virtual void DisplayStaticImage();
-    virtual wxSize DoGetBestSize() const;
+    virtual void DisplayStaticImage() override;
+    virtual wxSize DoGetBestSize() const override;
     void FitToAnimation();
     void ClearToBackgroundColour();
 
     void ResetAnim();
     void ResetIter();
+
+    // Helpers to safely access methods in the wxAnimationGTKImpl that are
+    // specific to the gtk implementation
+    GdkPixbufAnimation *AnimationImplGetPixbuf() const;
+    void AnimationImplSetPixbuf(GdkPixbufAnimation* p);
 
 protected:      // internal vars
 
@@ -143,8 +93,11 @@ protected:      // internal vars
 
 private:
     typedef wxAnimationCtrlBase base_type;
-    DECLARE_DYNAMIC_CLASS(wxAnimationCtrl)
-    DECLARE_EVENT_TABLE()
+
+    void Init();
+
+    wxDECLARE_DYNAMIC_CLASS(wxAnimationCtrl);
+    wxDECLARE_EVENT_TABLE();
 };
 
 #endif // _WX_GTKANIMATEH__

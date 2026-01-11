@@ -2,9 +2,7 @@
 // Name:        wx/quantize.h
 // Purpose:     wxQuantizer class
 // Author:      Julian Smart
-// Modified by:
 // Created:     22/6/2000
-// RCS-ID:      $Id: quantize.h 49804 2007-11-10 01:09:42Z VZ $
 // Copyright:   (c) Julian Smart
 // Licence:
 /////////////////////////////////////////////////////////////////////////////
@@ -34,15 +32,15 @@ class WXDLLIMPEXP_FWD_CORE wxPalette;
 #define wxQUANTIZE_RETURN_8BIT_DATA             0x02
 #define wxQUANTIZE_FILL_DESTINATION_IMAGE       0x04
 
-class WXDLLEXPORT wxQuantize: public wxObject
+class WXDLLIMPEXP_CORE wxQuantize: public wxObject
 {
 public:
-DECLARE_DYNAMIC_CLASS(wxQuantize)
+    wxDECLARE_DYNAMIC_CLASS(wxQuantize);
 
 //// Constructor
 
-    wxQuantize() {}
-    virtual ~wxQuantize() {}
+    wxQuantize() = default;
+    virtual ~wxQuantize() = default;
 
 //// Operations
 
@@ -53,13 +51,13 @@ DECLARE_DYNAMIC_CLASS(wxQuantize)
     // If you pass a palette pointer, you must free the palette yourself.
 
     static bool Quantize(const wxImage& src, wxImage& dest, wxPalette** pPalette, int desiredNoColours = 236,
-        unsigned char** eightBitData = 0, int flags = wxQUANTIZE_INCLUDE_WINDOWS_COLOURS|wxQUANTIZE_FILL_DESTINATION_IMAGE|wxQUANTIZE_RETURN_8BIT_DATA);
+        unsigned char** eightBitData = nullptr, int flags = wxQUANTIZE_INCLUDE_WINDOWS_COLOURS|wxQUANTIZE_FILL_DESTINATION_IMAGE|wxQUANTIZE_RETURN_8BIT_DATA);
 
     // This version sets a palette in the destination image so you don't
     // have to manage it yourself.
 
     static bool Quantize(const wxImage& src, wxImage& dest, int desiredNoColours = 236,
-        unsigned char** eightBitData = 0, int flags = wxQUANTIZE_INCLUDE_WINDOWS_COLOURS|wxQUANTIZE_FILL_DESTINATION_IMAGE|wxQUANTIZE_RETURN_8BIT_DATA);
+        unsigned char** eightBitData = nullptr, int flags = wxQUANTIZE_INCLUDE_WINDOWS_COLOURS|wxQUANTIZE_FILL_DESTINATION_IMAGE|wxQUANTIZE_RETURN_8BIT_DATA);
 
 //// Helpers
 

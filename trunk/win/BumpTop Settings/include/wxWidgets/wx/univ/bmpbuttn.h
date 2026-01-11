@@ -2,9 +2,7 @@
 // Name:        wx/univ/bmpbuttn.h
 // Purpose:     wxBitmapButton class for wxUniversal
 // Author:      Vadim Zeitlin
-// Modified by:
 // Created:     25.08.00
-// RCS-ID:      $Id: bmpbuttn.h 35650 2005-09-23 12:56:45Z MR $
 // Copyright:   (c) Vadim Zeitlin
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -12,60 +10,65 @@
 #ifndef _WX_UNIV_BMPBUTTN_H_
 #define _WX_UNIV_BMPBUTTN_H_
 
-class WXDLLEXPORT wxBitmapButton : public wxBitmapButtonBase
+class WXDLLIMPEXP_CORE wxBitmapButton : public wxBitmapButtonBase
 {
 public:
-    wxBitmapButton() { }
+    wxBitmapButton() = default;
 
     wxBitmapButton(wxWindow *parent,
                    wxWindowID id,
-                   const wxBitmap& bitmap,
+                   const wxBitmapBundle& bitmap,
                    const wxPoint& pos = wxDefaultPosition,
                    const wxSize& size = wxDefaultSize,
                    long style = 0,
                    const wxValidator& validator = wxDefaultValidator,
-                   const wxString& name = wxButtonNameStr)
+                   const wxString& name = wxASCII_STR(wxButtonNameStr))
     {
         Create(parent, id, bitmap, pos, size, style, validator, name);
     }
 
     bool Create(wxWindow *parent,
                 wxWindowID id,
-                const wxBitmap& bitmap,
+                const wxBitmapBundle& bitmap,
                 const wxPoint& pos = wxDefaultPosition,
                 const wxSize& size = wxDefaultSize,
                 long style = 0,
                 const wxValidator& validator = wxDefaultValidator,
-                const wxString& name = wxButtonNameStr);
+                const wxString& name = wxASCII_STR(wxButtonNameStr));
 
-    virtual void SetMargins(int x, int y)
+    bool CreateCloseButton(wxWindow* parent,
+                           wxWindowID winid,
+                           const wxString& name = wxString());
+
+
+    virtual void SetMargins(int x, int y) override
     {
-        SetImageMargins(x, y);
+        SetBitmapMargins(x, y);
 
         wxBitmapButtonBase::SetMargins(x, y);
     }
 
-    virtual bool Enable(bool enable = true);
+    virtual bool Enable(bool enable = true) override;
 
-    virtual bool SetCurrent(bool doit = true);
+    virtual bool WXMakeCurrent(bool doit = true) override;
 
-    virtual void Press();
-    virtual void Release();
+    virtual void Press() override;
+    virtual void Release() override;
 
 protected:
     void OnSetFocus(wxFocusEvent& event);
     void OnKillFocus(wxFocusEvent& event);
 
     // called when one of the bitmap is changed by user
-    virtual void OnSetBitmap();
+    virtual void OnSetBitmap() override;
 
-    // set bitmap to the given one if it's ok or to m_bmpNormal and return
-    // true if the bitmap really changed
+    // set bitmap to the given one if it's ok or to the normal bitmap and
+    // return true if the bitmap really changed
     bool ChangeBitmap(const wxBitmap& bmp);
 
 private:
-    DECLARE_EVENT_TABLE()
-    DECLARE_DYNAMIC_CLASS(wxBitmapButton)
+    wxDECLARE_EVENT_TABLE();
+    wxDECLARE_DYNAMIC_CLASS(wxBitmapButton);
 };
 
 #endif // _WX_UNIV_BMPBUTTN_H_

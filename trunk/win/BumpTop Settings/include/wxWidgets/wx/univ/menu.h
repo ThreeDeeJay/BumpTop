@@ -2,9 +2,7 @@
 // Name:        wx/univ/menu.h
 // Purpose:     wxMenu and wxMenuBar classes for wxUniversal
 // Author:      Vadim Zeitlin
-// Modified by:
 // Created:     05.05.01
-// RCS-ID:      $Id: menu.h 48053 2007-08-13 17:07:01Z JS $
 // Copyright:   (c) 2001 SciTech Software, Inc. (www.scitechsoft.com)
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -19,18 +17,16 @@
 #include "wx/dynarray.h"
 
 // fwd declarations
-class WXDLLEXPORT wxMenuInfo;
-WX_DECLARE_EXPORTED_OBJARRAY(wxMenuInfo, wxMenuInfoArray);
-
-class WXDLLEXPORT wxMenuGeometryInfo;
-class WXDLLEXPORT wxPopupMenuWindow;
-class WXDLLEXPORT wxRenderer;
+class WXDLLIMPEXP_FWD_CORE wxMenuInfo;
+class WXDLLIMPEXP_FWD_CORE wxMenuGeometryInfo;
+class WXDLLIMPEXP_FWD_CORE wxPopupMenuWindow;
+class WXDLLIMPEXP_FWD_CORE wxRenderer;
 
 // ----------------------------------------------------------------------------
 // wxMenu
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxMenu : public wxMenuBase
+class WXDLLIMPEXP_CORE wxMenu : public wxMenuBase
 {
 public:
     // ctors and dtor
@@ -56,8 +52,8 @@ public:
     void Dismiss();
 
     // override the base class methods to connect/disconnect event handlers
-    virtual void Attach(wxMenuBarBase *menubar);
-    virtual void Detach();
+    virtual void Attach(wxMenuBarBase *menubar) override;
+    virtual void Detach() override;
 
     // implementation only from here
 
@@ -75,9 +71,9 @@ public:
 
 protected:
     // implement base class virtuals
-    virtual wxMenuItem* DoAppend(wxMenuItem *item);
-    virtual wxMenuItem* DoInsert(size_t pos, wxMenuItem *item);
-    virtual wxMenuItem* DoRemove(wxMenuItem *item);
+    virtual wxMenuItem* DoAppend(wxMenuItem *item) override;
+    virtual wxMenuItem* DoInsert(size_t pos, wxMenuItem *item) override;
+    virtual wxMenuItem* DoRemove(wxMenuItem *item) override;
 
     // common part of DoAppend and DoInsert
     void OnItemAdded(wxMenuItem *item);
@@ -94,7 +90,7 @@ protected:
     // forget old menu geometry info
     void InvalidateGeometryInfo();
 
-    // return either the menubar or the invoking window, normally never NULL
+    // return either the menubar or the invoking window, normally never null
     wxWindow *GetRootWindow() const;
 
     // get the renderer we use for drawing: either the one of the menu bar or
@@ -118,7 +114,7 @@ private:
     // which is opaque and defined by the renderer
     wxMenuGeometryInfo *m_geometry;
 
-    // the menu shown on screen or NULL if not currently shown
+    // the menu shown on screen or nullptr if not currently shown
     wxPopupMenuWindow *m_popupMenu;
 
 #if wxUSE_ACCEL
@@ -131,44 +127,44 @@ private:
 
     // it calls out OnDismiss()
     friend class wxPopupMenuWindow;
-    DECLARE_DYNAMIC_CLASS(wxMenu)
+    wxDECLARE_DYNAMIC_CLASS(wxMenu);
 };
 
 // ----------------------------------------------------------------------------
 // wxMenuBar
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxMenuBar : public wxMenuBarBase
+class WXDLLIMPEXP_CORE wxMenuBar : public wxMenuBarBase
 {
 public:
     // ctors and dtor
-    wxMenuBar(long WXUNUSED(style) = 0) { Init(); }
+    wxMenuBar(long WXUNUSED(style) = 0);
     wxMenuBar(size_t n, wxMenu *menus[], const wxString titles[], long style = 0);
     virtual ~wxMenuBar();
 
     // implement base class virtuals
-    virtual bool Append( wxMenu *menu, const wxString &title );
-    virtual bool Insert(size_t pos, wxMenu *menu, const wxString& title);
-    virtual wxMenu *Replace(size_t pos, wxMenu *menu, const wxString& title);
-    virtual wxMenu *Remove(size_t pos);
+    virtual bool Append( wxMenu *menu, const wxString &title ) override;
+    virtual bool Insert(size_t pos, wxMenu *menu, const wxString& title) override;
+    virtual wxMenu *Replace(size_t pos, wxMenu *menu, const wxString& title) override;
+    virtual wxMenu *Remove(size_t pos) override;
 
-    virtual void EnableTop(size_t pos, bool enable);
-    virtual bool IsEnabledTop(size_t pos) const;
+    virtual void EnableTop(size_t pos, bool enable) override;
+    virtual bool IsEnabledTop(size_t pos) const override;
 
-    virtual void SetLabelTop(size_t pos, const wxString& label);
-    virtual wxString GetLabelTop(size_t pos) const;
+    virtual void SetMenuLabel(size_t pos, const wxString& label) override;
+    virtual wxString GetMenuLabel(size_t pos) const override;
 
-    virtual void Attach(wxFrame *frame);
-    virtual void Detach();
+    virtual void Attach(wxFrame *frame) override;
+    virtual void Detach() override;
 
     // get the next item for the givan accel letter (used by wxFrame), return
     // -1 if none
     //
-    // if unique is not NULL, filled with true if there is only one item with
+    // if unique is not null, filled with true if there is only one item with
     // this accel, false if two or more
     int FindNextItemForAccel(int idxStart,
                              int keycode,
-                             bool *unique = NULL) const;
+                             bool *unique = nullptr) const;
 
     // called by wxFrame to set focus to or open the given menu
     void SelectMenu(size_t pos);
@@ -188,9 +184,11 @@ protected:
 
     // event handlers
     void OnLeftDown(wxMouseEvent& event);
+    void OnLeftUp(wxMouseEvent& event);
     void OnMouseMove(wxMouseEvent& event);
     void OnKeyDown(wxKeyEvent& event);
     void OnKillFocus(wxFocusEvent& event);
+    void OnCaptureLost(wxMouseCaptureLostEvent& event);
 
     // process the mouse move event, return true if we did, false to continue
     // processing as usual
@@ -203,16 +201,16 @@ protected:
     void OnDismiss();
 
     // draw the menubar
-    virtual void DoDraw(wxControlRenderer *renderer);
+    virtual void DoDraw(wxControlRenderer *renderer) override;
 
     // menubar geometry
-    virtual wxSize DoGetBestClientSize() const;
+    virtual wxSize DoGetBestClientSize() const override;
 
     // has the menubar been created already?
-    bool IsCreated() const { return m_frameLast != NULL; }
+    bool IsCreated() const { return m_frameLast != nullptr; }
 
     // "fast" version of GetMenuCount()
-    size_t GetCount() const { return m_menuInfos.GetCount(); }
+    size_t GetCount() const;
 
     // get the (total) width of the specified menu
     wxCoord GetItemWidth(size_t pos) const;
@@ -239,7 +237,7 @@ protected:
     void DismissMenu();
 
     // do we show a menu currently?
-    bool IsShowingMenu() const { return m_menuShown != 0; }
+    bool IsShowingMenu() const { return m_menuShown != nullptr; }
 
     // we don't want to have focus except while selecting from menu
     void GiveAwayFocus();
@@ -248,35 +246,28 @@ protected:
     bool ReleaseMouseCapture();
 
     // the array containing extra menu info we need
-    wxMenuInfoArray m_menuInfos;
+    std::vector<wxMenuInfo> m_menuInfos;
 
     // the current item (only used when menubar has focus)
     int m_current;
 
 private:
-    // the last frame to which we were attached, NULL initially
+    // the last frame to which we were attached, nullptr initially
     wxFrame *m_frameLast;
 
-    // the currently shown menu or NULL
+    // the currently shown menu or nullptr
     wxMenu *m_menuShown;
 
     // should be showing the menu? this is subtly different from m_menuShown !=
-    // NULL as the menu which should be shown may be disabled in which case we
+    // nullptr as the menu which should be shown may be disabled in which case we
     // don't show it - but will do as soon as the focus shifts to another menu
     bool m_shouldShowMenu;
 
     // it calls out ProcessMouseEvent()
     friend class wxPopupMenuWindow;
 
-    DECLARE_EVENT_TABLE()
-    DECLARE_DYNAMIC_CLASS(wxMenuBar)
-
-public:
-
-#if wxABI_VERSION >= 20805
-    // Gets the original label at the top-level of the menubar
-    wxString GetMenuLabel(size_t pos) const;
-#endif
+    wxDECLARE_EVENT_TABLE();
+    wxDECLARE_DYNAMIC_CLASS(wxMenuBar);
 };
 
 #endif // _WX_UNIV_MENU_H_

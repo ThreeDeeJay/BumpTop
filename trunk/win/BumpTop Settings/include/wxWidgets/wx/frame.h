@@ -2,9 +2,7 @@
 // Name:        wx/frame.h
 // Purpose:     wxFrame class interface
 // Author:      Vadim Zeitlin
-// Modified by:
 // Created:     15.11.99
-// RCS-ID:      $Id: frame.h 49804 2007-11-10 01:09:42Z VZ $
 // Copyright:   (c) wxWidgets team
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -17,13 +15,17 @@
 // ----------------------------------------------------------------------------
 
 #include "wx/toplevel.h"      // the base class
+#include "wx/statusbr.h"
 
-// the default names for various classs
-extern WXDLLEXPORT_DATA(const wxChar) wxStatusLineNameStr[];
-extern WXDLLEXPORT_DATA(const wxChar) wxToolBarNameStr[];
+// the default names for various classes
+extern WXDLLIMPEXP_DATA_CORE(const char) wxStatusLineNameStr[];
+extern WXDLLIMPEXP_DATA_CORE(const char) wxToolBarNameStr[];
 
 class WXDLLIMPEXP_FWD_CORE wxFrame;
+#if wxUSE_MENUBAR
 class WXDLLIMPEXP_FWD_CORE wxMenuBar;
+#endif
+class WXDLLIMPEXP_FWD_CORE wxMenuItem;
 class WXDLLIMPEXP_FWD_CORE wxStatusBar;
 class WXDLLIMPEXP_FWD_CORE wxToolBar;
 
@@ -32,10 +34,11 @@ class WXDLLIMPEXP_FWD_CORE wxToolBar;
 // ----------------------------------------------------------------------------
 
 // wxFrame-specific (i.e. not for wxDialog) styles
+//
+// Also see the bit summary table in wx/toplevel.h.
 #define wxFRAME_NO_TASKBAR      0x0002  // No taskbar button (MSW only)
 #define wxFRAME_TOOL_WINDOW     0x0004  // No taskbar button, no system menu
 #define wxFRAME_FLOAT_ON_PARENT 0x0008  // Always above its parent
-#define wxFRAME_SHAPED          0x0010  // Create a window that is able to be shaped
 
 // ----------------------------------------------------------------------------
 // wxFrame is a top-level window with optional menubar, statusbar and toolbar
@@ -49,7 +52,7 @@ class WXDLLIMPEXP_FWD_CORE wxToolBar;
 // CreateXXXBar() is called.
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxFrameBase : public wxTopLevelWindow
+class WXDLLIMPEXP_CORE wxFrameBase : public wxTopLevelWindow
 {
 public:
     // construction
@@ -62,39 +65,50 @@ public:
                  const wxPoint& pos = wxDefaultPosition,
                  const wxSize& size = wxDefaultSize,
                  long style = wxDEFAULT_FRAME_STYLE,
-                 const wxString& name = wxFrameNameStr);
+                 const wxString& name = wxASCII_STR(wxFrameNameStr));
 
     // frame state
     // -----------
 
     // get the origin of the client area (which may be different from (0, 0)
     // if the frame has a toolbar) in client coordinates
-    virtual wxPoint GetClientAreaOrigin() const;
+    virtual wxPoint GetClientAreaOrigin() const override;
 
-    // sends a size event to the window using its current size -- this has an
-    // effect of refreshing the window layout
-    virtual void SendSizeEvent();
 
     // menu bar functions
     // ------------------
 
 #if wxUSE_MENUS
+#if wxUSE_MENUBAR
     virtual void SetMenuBar(wxMenuBar *menubar);
     virtual wxMenuBar *GetMenuBar() const { return m_frameMenuBar; }
-#endif // wxUSE_MENUS
 
-    // process menu command: returns true if processed
+    // find the item by id in the frame menu bar: this is an internal function
+    // and exists mainly in order to be overridden in the MDI parent frame
+    // which also looks at its active child menu bar
+    virtual wxMenuItem *FindItemInMenuBar(int menuId) const;
+#endif
+    // generate menu command corresponding to the given menu item
+    //
+    // returns true if processed
+    bool ProcessCommand(wxMenuItem *item);
+
+    // generate menu command corresponding to the given menu command id
+    //
+    // returns true if processed
     bool ProcessCommand(int winid);
+#else
+    bool ProcessCommand(int WXUNUSED(winid)) { return false; }
+#endif // wxUSE_MENUS
 
     // status bar functions
     // --------------------
 #if wxUSE_STATUSBAR
     // create the main status bar by calling OnCreateStatusBar()
     virtual wxStatusBar* CreateStatusBar(int number = 1,
-                                         long style = wxST_SIZEGRIP|wxFULL_REPAINT_ON_RESIZE,
+                                         long style = wxSTB_DEFAULT_STYLE,
                                          wxWindowID winid = 0,
-                                         const wxString& name =
-                                            wxStatusLineNameStr);
+                                         const wxString& name = wxASCII_STR(wxStatusLineNameStr));
     // return a new status bar
     virtual wxStatusBar *OnCreateStatusBar(int number,
                                            long style,
@@ -124,7 +138,7 @@ public:
     // create main toolbar bycalling OnCreateToolBar()
     virtual wxToolBar* CreateToolBar(long style = -1,
                                      wxWindowID winid = wxID_ANY,
-                                     const wxString& name = wxToolBarNameStr);
+                                     const wxString& name = wxASCII_STR(wxToolBarNameStr));
     // return a new toolbar
     virtual wxToolBar *OnCreateToolBar(long style,
                                        wxWindowID winid,
@@ -140,39 +154,36 @@ public:
 
     // event handlers
 #if wxUSE_MENUS
-#if wxUSE_STATUSBAR
     void OnMenuOpen(wxMenuEvent& event);
+#if wxUSE_STATUSBAR
     void OnMenuClose(wxMenuEvent& event);
     void OnMenuHighlight(wxMenuEvent& event);
 #endif // wxUSE_STATUSBAR
 
     // send wxUpdateUIEvents for all menu items in the menubar,
-    // or just for menu if non-NULL
-    virtual void DoMenuUpdates(wxMenu* menu = NULL);
+    // or just for menu if non-null
+    virtual void DoMenuUpdates(wxMenu* menu = nullptr);
 #endif // wxUSE_MENUS
 
     // do the UI update processing for this window
-    virtual void UpdateWindowUI(long flags = wxUPDATE_UI_NONE);
+    virtual void UpdateWindowUI(long flags = wxUPDATE_UI_NONE) override;
 
     // Implement internal behaviour (menu updating on some platforms)
-    virtual void OnInternalIdle();
-
-    // if there is no real wxTopLevelWindow on this platform we have to define
-    // some wxTopLevelWindowBase pure virtual functions here to avoid breaking
-    // old ports (wxMotif) which don't define them in wxFrame
-#ifndef wxTopLevelWindowNative
-    virtual bool ShowFullScreen(bool WXUNUSED(show),
-                                long WXUNUSED(style) = wxFULLSCREEN_ALL)
-        { return false; }
-    virtual bool IsFullScreen() const
-        { return false; }
-#endif // no wxTopLevelWindowNative
+    virtual void OnInternalIdle() override;
 
 #if wxUSE_MENUS || wxUSE_TOOLBAR
-    // show help text (typically in the statusbar); show is false
-    // if you are hiding the help, true otherwise
+    // show help text for the currently selected menu or toolbar item
+    // (typically in the status bar) or hide it and restore the status bar text
+    // originally shown before the menu was opened if show == false
     virtual void DoGiveHelp(const wxString& text, bool show);
 #endif
+
+    virtual void RemoveChild(wxWindowBase *child) override;
+
+    virtual bool IsClientAreaChild(const wxWindow *child) const override
+    {
+        return !IsOneOfBars(child) && wxTopLevelWindow::IsClientAreaChild(child);
+    }
 
 protected:
     // the frame main menu/status/tool bars
@@ -183,9 +194,9 @@ protected:
     void DeleteAllBars();
 
     // test whether this window makes part of the frame
-    virtual bool IsOneOfBars(const wxWindow *win) const;
+    virtual bool IsOneOfBars(const wxWindow *win) const override;
 
-#if wxUSE_MENUS
+#if wxUSE_MENUBAR
     // override to update menu bar position when the frame size changes
     virtual void PositionMenuBar() { }
 
@@ -196,13 +207,22 @@ protected:
     // override to do something special when the menu bar is attached to the
     // frame
     virtual void AttachMenuBar(wxMenuBar *menubar);
+#endif // wxUSE_MENUBAR
 
+    // Return true if we should update the menu item state from idle event
+    // handler or false if we should delay it until the menu is opened.
+    static bool ShouldUpdateMenuFromIdle();
+
+#if wxUSE_MENUBAR
     wxMenuBar *m_frameMenuBar;
-#endif // wxUSE_MENUS
+#endif // wxUSE_MENUBAR
 
 #if wxUSE_STATUSBAR && (wxUSE_MENUS || wxUSE_TOOLBAR)
     // the saved status bar text overwritten by DoGiveHelp()
     wxString m_oldStatusText;
+
+    // the last help string we have shown in the status bar
+    wxString m_lastHelpShown;
 #endif
 
 #if wxUSE_STATUSBAR
@@ -210,9 +230,10 @@ protected:
     // something changes
     virtual void PositionStatusBar() { }
 
-    // show the help string for this menu item in the given status bar: the
-    // status bar pointer can be NULL; return true if help was shown
-    bool ShowMenuHelp(wxStatusBar *statbar, int helpid);
+    // show the help string for the given menu item using DoGiveHelp() if the
+    // given item does have a help string (as determined by FindInMenuBar()),
+    // return false if there is no help for such item
+    bool ShowMenuHelp(int helpid);
 
     wxStatusBar *m_frameStatusBar;
 #endif // wxUSE_STATUSBAR
@@ -228,33 +249,25 @@ protected:
     wxToolBar *m_frameToolBar;
 #endif // wxUSE_TOOLBAR
 
-#if wxUSE_MENUS && wxUSE_STATUSBAR
-    DECLARE_EVENT_TABLE()
-#endif // wxUSE_MENUS && wxUSE_STATUSBAR
+#if wxUSE_MENUS
+    wxDECLARE_EVENT_TABLE();
+#endif // wxUSE_MENUS
 
-    DECLARE_NO_COPY_CLASS(wxFrameBase)
+    wxDECLARE_NO_COPY_CLASS(wxFrameBase);
 };
 
 // include the real class declaration
-#if defined(__WXUNIVERSAL__) // && !defined(__WXMICROWIN__)
+#if defined(__WXUNIVERSAL__)
     #include "wx/univ/frame.h"
 #else // !__WXUNIVERSAL__
-    #if defined(__WXPALMOS__)
-        #include "wx/palmos/frame.h"
-    #elif defined(__WXMSW__)
+    #if defined(__WXMSW__)
         #include "wx/msw/frame.h"
-    #elif defined(__WXGTK20__)
-        #include "wx/gtk/frame.h"
     #elif defined(__WXGTK__)
-        #include "wx/gtk1/frame.h"
-    #elif defined(__WXMOTIF__)
-        #include "wx/motif/frame.h"
+        #include "wx/gtk/frame.h"
     #elif defined(__WXMAC__)
-        #include "wx/mac/frame.h"
-    #elif defined(__WXCOCOA__)
-        #include "wx/cocoa/frame.h"
-    #elif defined(__WXPM__)
-        #include "wx/os2/frame.h"
+        #include "wx/osx/frame.h"
+    #elif defined(__WXQT__)
+        #include "wx/qt/frame.h"
     #endif
 #endif
 

@@ -2,9 +2,7 @@
 // Name:        wx/gdicmn.h
 // Purpose:     Common GDI classes, types and declarations
 // Author:      Julian Smart
-// Modified by:
 // Created:     01/02/97
-// RCS-ID:      $Id: gdicmn.h 49563 2007-10-31 20:46:21Z VZ $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -20,7 +18,6 @@
 #include "wx/list.h"
 #include "wx/string.h"
 #include "wx/fontenc.h"
-#include "wx/hashmap.h"
 #include "wx/math.h"
 
 // ---------------------------------------------------------------------------
@@ -31,12 +28,15 @@ class WXDLLIMPEXP_FWD_CORE wxBitmap;
 class WXDLLIMPEXP_FWD_CORE wxBrush;
 class WXDLLIMPEXP_FWD_CORE wxColour;
 class WXDLLIMPEXP_FWD_CORE wxCursor;
+class WXDLLIMPEXP_FWD_CORE wxCursorBundle;
 class WXDLLIMPEXP_FWD_CORE wxFont;
 class WXDLLIMPEXP_FWD_CORE wxIcon;
 class WXDLLIMPEXP_FWD_CORE wxPalette;
 class WXDLLIMPEXP_FWD_CORE wxPen;
 class WXDLLIMPEXP_FWD_CORE wxRegion;
 class WXDLLIMPEXP_FWD_BASE wxString;
+class WXDLLIMPEXP_FWD_CORE wxIconBundle;
+class WXDLLIMPEXP_FWD_CORE wxPoint;
 
 // ---------------------------------------------------------------------------
 // constants
@@ -57,8 +57,10 @@ enum wxBitmapType
     wxBITMAP_TYPE_XBM_DATA,
     wxBITMAP_TYPE_XPM,
     wxBITMAP_TYPE_XPM_DATA,
-    wxBITMAP_TYPE_TIF,
-    wxBITMAP_TYPE_TIF_RESOURCE,
+    wxBITMAP_TYPE_TIFF,
+    wxBITMAP_TYPE_TIF = wxBITMAP_TYPE_TIFF,
+    wxBITMAP_TYPE_TIFF_RESOURCE,
+    wxBITMAP_TYPE_TIF_RESOURCE = wxBITMAP_TYPE_TIFF_RESOURCE,
     wxBITMAP_TYPE_GIF,
     wxBITMAP_TYPE_GIF_RESOURCE,
     wxBITMAP_TYPE_PNG,
@@ -78,7 +80,18 @@ enum wxBitmapType
     wxBITMAP_TYPE_TGA,
     wxBITMAP_TYPE_MACCURSOR,
     wxBITMAP_TYPE_MACCURSOR_RESOURCE,
+    wxBITMAP_TYPE_WEBP,
+    wxBITMAP_TYPE_WEBP_RESOURCE,
+
+    wxBITMAP_TYPE_MAX,
     wxBITMAP_TYPE_ANY = 50
+};
+
+//  Polygon filling mode
+enum wxPolygonFillMode
+{
+    wxODDEVEN_RULE = 1,
+    wxWINDING_RULE
 };
 
 // Standard cursors
@@ -124,52 +137,92 @@ enum wxStockCursor
     wxCURSOR_BASED_ARROW_UP,
     wxCURSOR_BASED_ARROW_DOWN,
 #endif // X11
-
     wxCURSOR_ARROWWAIT,
+#ifdef __WXMAC__
+    wxCURSOR_OPEN_HAND,
+    wxCURSOR_CLOSED_HAND,
+#endif
 
     wxCURSOR_MAX
 };
 
 #ifndef __WXGTK__
-    #define wxCURSOR_DEFAULT wxCURSOR_ARROW
+    #define wxCURSOR_DEFAULT        wxCURSOR_ARROW
 #endif
+
+#ifndef __WXMAC__
+    // TODO CS supply openhand and closedhand cursors
+    #define wxCURSOR_OPEN_HAND      wxCURSOR_HAND
+    #define wxCURSOR_CLOSED_HAND    wxCURSOR_HAND
+#endif
+
+// ----------------------------------------------------------------------------
+// Ellipsize() constants
+// ----------------------------------------------------------------------------
+
+enum wxEllipsizeFlags
+{
+    wxELLIPSIZE_FLAGS_NONE = 0,
+    wxELLIPSIZE_FLAGS_PROCESS_MNEMONICS = 1,
+    wxELLIPSIZE_FLAGS_EXPAND_TABS = 2,
+
+    wxELLIPSIZE_FLAGS_DEFAULT = wxELLIPSIZE_FLAGS_PROCESS_MNEMONICS |
+    wxELLIPSIZE_FLAGS_EXPAND_TABS
+};
+
+// NB: Don't change the order of these values, they're the same as in
+//     PangoEllipsizeMode enum.
+enum wxEllipsizeMode
+{
+    wxELLIPSIZE_NONE,
+    wxELLIPSIZE_START,
+    wxELLIPSIZE_MIDDLE,
+    wxELLIPSIZE_END
+};
 
 // ---------------------------------------------------------------------------
 // macros
 // ---------------------------------------------------------------------------
 
+// The difference between wxHAS_IMAGES_IN_RESOURCES and wxHAS_IMAGE_RESOURCES
+// is that the former is, historically, only defined under MSW while the latter
+// is also defined under macOS, which uses a different resource concept, and
+// may be also defined for any other ports where images don't need to be
+// embedded into the program text in order to be available during run-time.
+#if defined(__WINDOWS__) && wxUSE_WXDIB
+    #define wxHAS_IMAGES_IN_RESOURCES
+#endif
+
+#if defined(wxHAS_IMAGES_IN_RESOURCES) || defined(__WXOSX__)
+    #define wxHAS_IMAGE_RESOURCES
+#endif
+
 /* Useful macro for creating icons portably, for example:
 
-    wxIcon *icon = new wxICON(mondrian);
+    wxIcon *icon = new wxICON(sample);
 
   expands into:
 
-    wxIcon *icon = new wxIcon("mondrian");      // On wxMSW
-    wxIcon *icon = new wxIcon(mondrian_xpm);    // On wxGTK
+    wxIcon *icon = new wxIcon("sample");      // On Windows
+    wxIcon *icon = new wxIcon(sample_xpm);    // On wxGTK/Linux
  */
 
-#ifdef __WXMSW__
+#ifdef wxHAS_IMAGES_IN_RESOURCES
     // Load from a resource
     #define wxICON(X) wxIcon(wxT(#X))
-#elif defined(__WXPM__)
-    // Load from a resource
-    #define wxICON(X) wxIcon(wxT(#X))
-#elif defined(__WXMGL__)
-    // Initialize from an included XPM
-    #define wxICON(X) wxIcon( (const char**) X##_xpm )
 #elif defined(__WXDFB__)
     // Initialize from an included XPM
-    #define wxICON(X) wxIcon( (const char**) X##_xpm )
+    #define wxICON(X) wxIcon( X##_xpm )
 #elif defined(__WXGTK__)
     // Initialize from an included XPM
-    #define wxICON(X) wxIcon( (const char**) X##_xpm )
+    #define wxICON(X) wxIcon( X##_xpm )
 #elif defined(__WXMAC__)
-    // Initialize from an included XPM
-    #define wxICON(X) wxIcon( (const char**) X##_xpm )
-#elif defined(__WXMOTIF__)
     // Initialize from an included XPM
     #define wxICON(X) wxIcon( X##_xpm )
 #elif defined(__WXX11__)
+    // Initialize from an included XPM
+    #define wxICON(X) wxIcon( X##_xpm )
+#elif defined(__WXQT__)
     // Initialize from an included XPM
     #define wxICON(X) wxIcon( X##_xpm )
 #else
@@ -178,23 +231,39 @@ enum wxStockCursor
 #endif // platform
 
 /* Another macro: this one is for portable creation of bitmaps. We assume that
-   under Unix bitmaps live in XPMs and under Windows they're in ressources.
+   under Unix bitmaps live in XPMs and under Windows they're in resources.
+
+   This is a legacy macro, prefer using wxBITMAP_PNG() in the new code.
  */
 
-#if defined(__WXMSW__) || defined(__WXPM__)
-    #define wxBITMAP(name) wxBitmap(wxT(#name), wxBITMAP_TYPE_RESOURCE)
-#elif defined(__WXGTK__)   || \
-      defined(__WXMOTIF__) || \
-      defined(__WXX11__)   || \
-      defined(__WXMAC__)   || \
-      defined(__WXMGL__)   || \
-      defined(__WXDFB__)   || \
-      defined(__WXCOCOA__)
+#if defined(__WINDOWS__) && wxUSE_WXDIB
+    #define wxBITMAP(name) wxBitmap(wxT(#name), wxBITMAP_TYPE_BMP_RESOURCE)
+#else
     // Initialize from an included XPM
-    #define wxBITMAP(name) wxBitmap( (const char**) name##_xpm )
-#else // other platforms
-    #define wxBITMAP(name) wxBitmap(name##_xpm, wxBITMAP_TYPE_XPM)
+    #define wxBITMAP(name) wxBitmap(name##_xpm)
 #endif // platform
+
+// Macro for creating wxBitmap from in-memory PNG data.
+//
+// It reads PNG data from name_png static byte arrays that can be created using
+// e.g. misc/scripts/png2c.py.
+//
+// This macro exists mostly as a helper for wxBITMAP_PNG() below but also
+// because it's slightly more convenient to use than NewFromPNGData() directly.
+#define wxBITMAP_PNG_FROM_DATA(name) \
+    wxBitmap::NewFromPNGData(name##_png, WXSIZEOF(name##_png))
+
+// Similar to wxBITMAP but used for the bitmaps in PNG format.
+//
+// Under Windows they should be embedded into the resource file using RT_RCDATA
+// resource type and under OS X the PNG file with the specified name must be
+// available in the resource subdirectory of the bundle. Elsewhere, this is
+// exactly the same thing as wxBITMAP_PNG_FROM_DATA() described above.
+#ifdef wxHAS_IMAGE_RESOURCES
+    #define wxBITMAP_PNG(name) wxBitmap(wxS(#name), wxBITMAP_TYPE_PNG_RESOURCE)
+#else
+    #define wxBITMAP_PNG(name) wxBITMAP_PNG_FROM_DATA(name)
+#endif
 
 // ===========================================================================
 // classes
@@ -204,47 +273,151 @@ enum wxStockCursor
 // wxSize
 // ---------------------------------------------------------------------------
 
-class WXDLLEXPORT wxSize
+class WXDLLIMPEXP_CORE wxWARN_UNUSED wxSize
 {
 public:
-    // members are public for compatibility, don't use them directly.
-    int x, y;
+    int x = 0, y = 0;
 
     // constructors
-    wxSize() : x(0), y(0) { }
+    wxSize() = default;
     wxSize(int xx, int yy) : x(xx), y(yy) { }
 
     // no copy ctor or assignment operator - the defaults are ok
 
-    bool operator==(const wxSize& sz) const { return x == sz.x && y == sz.y; }
-    bool operator!=(const wxSize& sz) const { return x != sz.x || y != sz.y; }
-
-    wxSize operator+(const wxSize& sz) const { return wxSize(x + sz.x, y + sz.y); }
-    wxSize operator-(const wxSize& sz) const { return wxSize(x - sz.x, y - sz.y); }
-    wxSize operator/(int i) const { return wxSize(x / i, y / i); }
-    wxSize operator*(int i) const { return wxSize(x * i, y * i); }
-
     wxSize& operator+=(const wxSize& sz) { x += sz.x; y += sz.y; return *this; }
     wxSize& operator-=(const wxSize& sz) { x -= sz.x; y -= sz.y; return *this; }
-    wxSize& operator/=(const int i) { x /= i; y /= i; return *this; }
-    wxSize& operator*=(const int i) { x *= i; y *= i; return *this; }
+    wxSize& operator/=(int i) { x /= i; y /= i; return *this; }
+    wxSize& operator*=(int i) { x *= i; y *= i; return *this; }
+    wxSize& operator/=(unsigned int i) { x /= i; y /= i; return *this; }
+    wxSize& operator*=(unsigned int i) { x *= i; y *= i; return *this; }
+    wxSize& operator/=(long i) { x /= i; y /= i; return *this; }
+    wxSize& operator*=(long i) { x *= i; y *= i; return *this; }
+    wxSize& operator/=(unsigned long i) { x /= i; y /= i; return *this; }
+    wxSize& operator*=(unsigned long i) { x *= i; y *= i; return *this; }
+    wxSize& operator/=(double i) { x = wxRound(x/i); y = wxRound(y/i); return *this; }
+    wxSize& operator*=(double i) { x = wxRound(x*i); y = wxRound(y*i); return *this; }
+
+    friend bool operator==(const wxSize& s1, const wxSize& s2)
+    {
+        return s1.x == s2.x && s1.y == s2.y;
+    }
+
+    friend bool operator!=(const wxSize& s1, const wxSize& s2)
+    {
+        return s1.x != s2.x || s1.y != s2.y;
+    }
+
+    friend wxSize operator+(const wxSize& s1, const wxSize& s2)
+    {
+        return wxSize(s1.x + s2.x, s1.y + s2.y);
+    }
+
+    friend wxSize operator-(const wxSize& s1, const wxSize& s2)
+    {
+        return wxSize(s1.x - s2.x, s1.y - s2.y);
+    }
+
+    friend wxSize operator/(const wxSize& s, int i)
+    {
+        return wxSize(s.x / i, s.y / i);
+    }
+
+    friend wxSize operator*(const wxSize& s, int i)
+    {
+        return wxSize(s.x * i, s.y * i);
+    }
+
+    friend wxSize operator*(int i, const wxSize& s)
+    {
+        return wxSize(s.x * i, s.y * i);
+    }
+
+    friend wxSize operator/(const wxSize& s, unsigned int i)
+    {
+        return wxSize(s.x / i, s.y / i);
+    }
+
+    friend wxSize operator*(const wxSize& s, unsigned int i)
+    {
+        return wxSize(s.x * i, s.y * i);
+    }
+
+    friend wxSize operator*(unsigned int i, const wxSize& s)
+    {
+        return wxSize(s.x * i, s.y * i);
+    }
+
+    friend wxSize operator/(const wxSize& s, long i)
+    {
+        return wxSize(s.x / i, s.y / i);
+    }
+
+    friend wxSize operator*(const wxSize& s, long i)
+    {
+        return wxSize(int(s.x * i), int(s.y * i));
+    }
+
+    friend wxSize operator*(long i, const wxSize& s)
+    {
+        return wxSize(int(s.x * i), int(s.y * i));
+    }
+
+    friend wxSize operator/(const wxSize& s, unsigned long i)
+    {
+        return wxSize(int(s.x / i), int(s.y / i));
+    }
+
+    friend wxSize operator*(const wxSize& s, unsigned long i)
+    {
+        return wxSize(int(s.x * i), int(s.y * i));
+    }
+
+    friend wxSize operator*(unsigned long i, const wxSize& s)
+    {
+        return wxSize(int(s.x * i), int(s.y * i));
+    }
+
+    friend wxSize operator/(const wxSize& s, double i)
+    {
+        return wxSize(wxRound(s.x / i), wxRound(s.y / i));
+    }
+
+    friend wxSize operator*(const wxSize& s, double i)
+    {
+        return wxSize(wxRound(s.x * i), wxRound(s.y * i));
+    }
+
+    friend wxSize operator*(double i, const wxSize& s)
+    {
+        return wxSize(wxRound(s.x * i), wxRound(s.y * i));
+    }
+
 
     void IncTo(const wxSize& sz)
         { if ( sz.x > x ) x = sz.x; if ( sz.y > y ) y = sz.y; }
     void DecTo(const wxSize& sz)
         { if ( sz.x < x ) x = sz.x; if ( sz.y < y ) y = sz.y; }
+    void DecToIfSpecified(const wxSize& sz)
+    {
+        if ( sz.x != wxDefaultCoord && sz.x < x )
+            x = sz.x;
+        if ( sz.y != wxDefaultCoord && sz.y < y )
+            y = sz.y;
+    }
 
     void IncBy(int dx, int dy) { x += dx; y += dy; }
+    void IncBy(const wxPoint& pt);
     void IncBy(const wxSize& sz) { IncBy(sz.x, sz.y); }
     void IncBy(int d) { IncBy(d, d); }
 
     void DecBy(int dx, int dy) { IncBy(-dx, -dy); }
+    void DecBy(const wxPoint& pt);
     void DecBy(const wxSize& sz) { DecBy(sz.x, sz.y); }
     void DecBy(int d) { DecBy(d, d); }
 
 
-    wxSize& Scale(float xscale, float yscale)
-        { x = (int)(x*xscale); y = (int)(y*yscale); return *this; }
+    wxSize& Scale(double xscale, double yscale)
+        { x = wxRound(x*xscale); y = wxRound(y*yscale); return *this; }
 
     // accessors
     void Set(int xx, int yy) { x = xx; y = yy; }
@@ -255,6 +428,13 @@ public:
     int GetHeight() const { return y; }
 
     bool IsFullySpecified() const { return x != wxDefaultCoord && y != wxDefaultCoord; }
+
+    // Return true if size doesn't define a valid, non-empty area.
+    bool IsEmpty() const { return x <= 0 || y <= 0; }
+
+    // Check that this size object is at least as big as the other one in both
+    // directions.
+    bool IsAtLeast(const wxSize& sz) const { return x >= sz.x && y >= sz.y; }
 
     // combine this size with the other one replacing the default (i.e. equal
     // to wxDefaultCoord) components of this object with those of the other
@@ -275,66 +455,326 @@ public:
 // Point classes: with real or integer coordinates
 // ---------------------------------------------------------------------------
 
-class WXDLLEXPORT wxRealPoint
+class WXDLLIMPEXP_CORE wxWARN_UNUSED wxRealPoint
 {
 public:
-    double x;
-    double y;
+    double x = 0.0;
+    double y = 0.0;
 
-    wxRealPoint() : x(0.0), y(0.0) { }
+    wxRealPoint() = default;
     wxRealPoint(double xx, double yy) : x(xx), y(yy) { }
-
-    wxRealPoint operator+(const wxRealPoint& pt) const { return wxRealPoint(x + pt.x, y + pt.y); }
-    wxRealPoint operator-(const wxRealPoint& pt) const { return wxRealPoint(x - pt.x, y - pt.y); }
-
-    bool operator==(const wxRealPoint& pt) const
-    {
-        return wxIsSameDouble(x, pt.x) && wxIsSameDouble(y, pt.y);
-    }
-    bool operator!=(const wxRealPoint& pt) const { return !(*this == pt); }
-};
-
-
-class WXDLLEXPORT wxPoint
-{
-public:
-    int x, y;
-
-    wxPoint() : x(0), y(0) { }
-    wxPoint(int xx, int yy) : x(xx), y(yy) { }
+    wxRealPoint(const wxPoint& pt);
 
     // no copy ctor or assignment operator - the defaults are ok
 
-    // comparison
-    bool operator==(const wxPoint& p) const { return x == p.x && y == p.y; }
-    bool operator!=(const wxPoint& p) const { return !(*this == p); }
+    //assignment operators
+    wxRealPoint& operator+=(const wxRealPoint& p) { x += p.x; y += p.y; return *this; }
+    wxRealPoint& operator-=(const wxRealPoint& p) { x -= p.x; y -= p.y; return *this; }
 
-    // arithmetic operations (component wise)
-    wxPoint operator+(const wxPoint& p) const { return wxPoint(x + p.x, y + p.y); }
-    wxPoint operator-(const wxPoint& p) const { return wxPoint(x - p.x, y - p.y); }
+    wxRealPoint& operator+=(const wxSize& s) { x += s.GetWidth(); y += s.GetHeight(); return *this; }
+    wxRealPoint& operator-=(const wxSize& s) { x -= s.GetWidth(); y -= s.GetHeight(); return *this; }
 
+    wxRealPoint& operator/=(int i) { x *= i; y *= i; return *this; }
+    wxRealPoint& operator*=(int i) { x /= i; y /= i; return *this; }
+    wxRealPoint& operator/=(double f) { x /= f; y /= f; return *this; }
+    wxRealPoint& operator*=(double f) { x *= f; y *= f; return *this; }
+
+    friend bool operator==(const wxRealPoint& p1, const wxRealPoint& p2)
+    {
+        return wxIsSameDouble(p1.x, p2.x) && wxIsSameDouble(p1.y, p2.y);
+    }
+
+    friend bool operator!=(const wxRealPoint& p1, const wxRealPoint& p2)
+    {
+        return !(p1 == p2);
+    }
+
+    friend wxRealPoint operator+(const wxRealPoint& p1, const wxRealPoint& p2)
+    {
+        return wxRealPoint(p1.x + p2.x, p1.y + p2.y);
+    }
+
+    friend wxRealPoint operator-(const wxRealPoint& p1, const wxRealPoint& p2)
+    {
+        return wxRealPoint(p1.x - p2.x, p1.y - p2.y);
+    }
+
+    friend wxRealPoint operator+(const wxRealPoint& pt, const wxSize& sz)
+    {
+        return wxRealPoint(pt.x + sz.GetWidth(), pt.y + sz.GetHeight());
+    }
+
+    friend wxRealPoint operator-(const wxRealPoint& pt, const wxSize& sz)
+    {
+        return wxRealPoint(pt.x - sz.GetWidth(), pt.y - sz.GetHeight());
+    }
+
+    friend wxRealPoint operator+(const wxSize& sz, const wxRealPoint& pt)
+    {
+        return wxRealPoint(sz.GetWidth() + pt.x, sz.GetHeight() + pt.y);
+    }
+
+    friend wxRealPoint operator-(const wxSize& sz, const wxRealPoint& pt)
+    {
+        return wxRealPoint(sz.GetWidth() - pt.x, sz.GetHeight() - pt.y);
+    }
+
+    friend wxRealPoint operator-(const wxRealPoint& pt)
+    {
+        return wxRealPoint(-pt.x, -pt.y);
+    }
+
+    friend wxRealPoint operator/(const wxRealPoint& p, int i)
+    {
+        return wxRealPoint(p.x / i, p.y / i);
+    }
+
+    friend wxRealPoint operator*(const wxRealPoint& p, int i)
+    {
+        return wxRealPoint(p.x * i, p.y * i);
+    }
+
+    friend wxRealPoint operator*(int i, const wxRealPoint& p)
+    {
+        return wxRealPoint(p.x * i, p.y * i);
+    }
+
+    friend wxRealPoint operator/(const wxRealPoint& p, unsigned int i)
+    {
+        return wxRealPoint(p.x / i, p.y / i);
+    }
+
+    friend wxRealPoint operator*(const wxRealPoint& p, unsigned int i)
+    {
+        return wxRealPoint(p.x * i, p.y * i);
+    }
+
+    friend wxRealPoint operator*(unsigned int i, const wxRealPoint& p)
+    {
+        return wxRealPoint(p.x * i, p.y * i);
+    }
+
+    friend wxRealPoint operator/(const wxRealPoint& p, long i)
+    {
+        return wxRealPoint(p.x / i, p.y / i);
+    }
+
+    friend wxRealPoint operator*(const wxRealPoint& p, long i)
+    {
+        return wxRealPoint(p.x * i, p.y * i);
+    }
+
+    friend wxRealPoint operator*(long i, const wxRealPoint& p)
+    {
+        return wxRealPoint(p.x * i, p.y * i);
+    }
+
+    friend wxRealPoint operator/(const wxRealPoint& p, unsigned long i)
+    {
+        return wxRealPoint(p.x / i, p.y / i);
+    }
+
+    friend wxRealPoint operator*(const wxRealPoint& p, unsigned long i)
+    {
+        return wxRealPoint(p.x * i, p.y * i);
+    }
+
+    friend wxRealPoint operator*(unsigned long i, const wxRealPoint& p)
+    {
+        return wxRealPoint(p.x * i, p.y * i);
+    }
+
+    friend wxRealPoint operator/(const wxRealPoint& p, double f)
+    {
+        return wxRealPoint(p.x / f, p.y / f);
+    }
+
+    friend wxRealPoint operator*(const wxRealPoint& p, double f)
+    {
+        return wxRealPoint(p.x * f, p.y * f);
+    }
+
+    friend wxRealPoint operator*(double f, const wxRealPoint& p)
+    {
+        return wxRealPoint(p.x * f, p.y * f);
+    }
+};
+
+
+// ----------------------------------------------------------------------------
+// wxPoint: 2D point with integer coordinates
+// ----------------------------------------------------------------------------
+
+class WXDLLIMPEXP_CORE wxWARN_UNUSED wxPoint
+{
+public:
+    int x = 0, y = 0;
+
+    wxPoint() = default;
+    wxPoint(int xx, int yy) : x(xx), y(yy) { }
+    wxPoint(const wxRealPoint& pt) : x(wxRound(pt.x)), y(wxRound(pt.y)) { }
+
+    // no copy ctor or assignment operator - the defaults are ok
+
+    //assignment operators
     wxPoint& operator+=(const wxPoint& p) { x += p.x; y += p.y; return *this; }
     wxPoint& operator-=(const wxPoint& p) { x -= p.x; y -= p.y; return *this; }
 
     wxPoint& operator+=(const wxSize& s) { x += s.GetWidth(); y += s.GetHeight(); return *this; }
     wxPoint& operator-=(const wxSize& s) { x -= s.GetWidth(); y -= s.GetHeight(); return *this; }
 
-    wxPoint operator+(const wxSize& s) const { return wxPoint(x + s.GetWidth(), y + s.GetHeight()); }
-    wxPoint operator-(const wxSize& s) const { return wxPoint(x - s.GetWidth(), y - s.GetHeight()); }
+    wxPoint& operator/=(int i) { x /= i; y /= i; return *this; }
+    wxPoint& operator*=(int i) { x *= i; y *= i; return *this; }
+    wxPoint& operator/=(double f) { x = wxRound(x/f); y = wxRound(y/f); return *this; }
+    wxPoint& operator*=(double f) { x = wxRound(x*f); y = wxRound(y*f); return *this; }
 
-    wxPoint operator-() const { return wxPoint(-x, -y); }
+    // comparison
+    friend bool operator==(const wxPoint& p1, const wxPoint& p2)
+    {
+        return p1.x == p2.x && p1.y == p2.y;
+    }
+
+    friend bool operator!=(const wxPoint& p1, const wxPoint& p2)
+    {
+        return !(p1 == p2);
+    }
+
+
+    // arithmetic operations (component wise)
+    friend wxPoint operator+(const wxPoint& p1, const wxPoint& p2)
+    {
+        return wxPoint(p1.x + p2.x, p1.y + p2.y);
+    }
+
+    friend wxPoint operator-(const wxPoint& p1, const wxPoint& p2)
+    {
+        return wxPoint(p1.x - p2.x, p1.y - p2.y);
+    }
+
+    friend wxPoint operator+(const wxPoint& p, const wxSize& s)
+    {
+        return wxPoint(p.x + s.x, p.y + s.y);
+    }
+
+    friend wxPoint operator-(const wxPoint& p, const wxSize& s)
+    {
+        return wxPoint(p.x - s.x, p.y - s.y);
+    }
+
+    friend wxPoint operator+(const wxSize& s, const wxPoint& p)
+    {
+        return wxPoint(p.x + s.x, p.y + s.y);
+    }
+
+    friend wxPoint operator-(const wxSize& s, const wxPoint& p)
+    {
+        return wxPoint(s.x - p.x, s.y - p.y);
+    }
+
+    friend wxPoint operator-(const wxPoint& p)
+    {
+        return wxPoint(-p.x, -p.y);
+    }
+
+    friend wxPoint operator/(const wxPoint& p, int i)
+    {
+        return wxPoint(p.x / i, p.y / i);
+    }
+
+    friend wxPoint operator*(const wxPoint& p, int i)
+    {
+        return wxPoint(p.x * i, p.y * i);
+    }
+
+    friend wxPoint operator*(int i, const wxPoint& p)
+    {
+        return wxPoint(p.x * i, p.y * i);
+    }
+
+    friend wxPoint operator/(const wxPoint& p, unsigned int i)
+    {
+        return wxPoint(p.x / i, p.y / i);
+    }
+
+    friend wxPoint operator*(const wxPoint& p, unsigned int i)
+    {
+        return wxPoint(p.x * i, p.y * i);
+    }
+
+    friend wxPoint operator*(unsigned int i, const wxPoint& p)
+    {
+        return wxPoint(p.x * i, p.y * i);
+    }
+
+    friend wxPoint operator/(const wxPoint& p, long i)
+    {
+        return wxPoint(p.x / i, p.y / i);
+    }
+
+    friend wxPoint operator*(const wxPoint& p, long i)
+    {
+        return wxPoint(int(p.x * i), int(p.y * i));
+    }
+
+    friend wxPoint operator*(long i, const wxPoint& p)
+    {
+        return wxPoint(int(p.x * i), int(p.y * i));
+    }
+
+    friend wxPoint operator/(const wxPoint& p, unsigned long i)
+    {
+        return wxPoint(p.x / i, p.y / i);
+    }
+
+    friend wxPoint operator*(const wxPoint& p, unsigned long i)
+    {
+        return wxPoint(int(p.x * i), int(p.y * i));
+    }
+
+    friend wxPoint operator*(unsigned long i, const wxPoint& p)
+    {
+        return wxPoint(int(p.x * i), int(p.y * i));
+    }
+
+    friend wxPoint operator/(const wxPoint& p, double f)
+    {
+        return wxPoint(wxRound(p.x / f), wxRound(p.y / f));
+    }
+
+    friend wxPoint operator*(const wxPoint& p, double f)
+    {
+        return wxPoint(int(p.x * f), int(p.y * f));
+    }
+
+    friend wxPoint operator*(double f, const wxPoint& p)
+    {
+        return wxPoint(int(p.x * f), int(p.y * f));
+    }
+
+    // check if both components are set/initialized
+    bool IsFullySpecified() const { return x != wxDefaultCoord && y != wxDefaultCoord; }
+
+    // fill in the unset components with the values from the other point
+    void SetDefaults(const wxPoint& pt)
+    {
+        if ( x == wxDefaultCoord )
+            x = pt.x;
+        if ( y == wxDefaultCoord )
+            y = pt.y;
+    }
 };
+
+
+WX_DECLARE_LIST_WITH_DECL(wxPoint, wxPointList, class WXDLLIMPEXP_CORE);
 
 // ---------------------------------------------------------------------------
 // wxRect
 // ---------------------------------------------------------------------------
 
-class WXDLLEXPORT wxRect
+class WXDLLIMPEXP_CORE wxWARN_UNUSED wxRect
 {
 public:
-    wxRect()
-        : x(0), y(0), width(0), height(0)
-        { }
+    wxRect() = default;
     wxRect(int xx, int yy, int ww, int hh)
         : x(xx), y(yy), width(ww), height(hh)
         { }
@@ -343,7 +783,7 @@ public:
         : x(pt.x), y(pt.y), width(size.x), height(size.y)
         { }
     wxRect(const wxSize& size)
-        : x(0), y(0), width(size.x), height(size.y)
+        : width(size.x), height(size.y)
         { }
 
     // default copy ctor and assignment operators ok
@@ -391,7 +831,7 @@ public:
     wxPoint GetTopRight() const { return wxPoint(GetRight(), GetTop()); }
     wxPoint GetRightTop() const { return GetTopRight(); }
     void SetTopRight(const wxPoint &p) { SetRight(p.x); SetTop(p.y); }
-    void SetRightTop(const wxPoint &p) { SetTopLeft(p); }
+    void SetRightTop(const wxPoint &p) { SetTopRight(p); }
 
     wxPoint GetBottomLeft() const { return wxPoint(GetLeft(), GetBottom()); }
     wxPoint GetLeftBottom() const { return GetBottomLeft(); }
@@ -438,43 +878,52 @@ public:
         return r;
     }
 
-    // compare rectangles
-    bool operator==(const wxRect& rect) const;
-    bool operator!=(const wxRect& rect) const { return !(*this == rect); }
-
-    // return true if the point is (not strcitly) inside the rect
+    // return true if the point is (not strictly) inside the rect
     bool Contains(int x, int y) const;
     bool Contains(const wxPoint& pt) const { return Contains(pt.x, pt.y); }
-    // return true if the rectangle is (not strcitly) inside the rect
+    // return true if the rectangle 'rect' is (not strictly) inside this rect
     bool Contains(const wxRect& rect) const;
-
-#if WXWIN_COMPATIBILITY_2_6
-    // use Contains() instead
-    wxDEPRECATED( bool Inside(int x, int y) const );
-    wxDEPRECATED( bool Inside(const wxPoint& pt) const );
-    wxDEPRECATED( bool Inside(const wxRect& rect) const );
-#endif // WXWIN_COMPATIBILITY_2_6
 
     // return true if the rectangles have a non empty intersection
     bool Intersects(const wxRect& rect) const;
 
+    // like Union() but don't ignore empty rectangles
+    wxRect& operator+=(const wxRect& rect);
+    friend WXDLLIMPEXP_CORE wxRect operator+(const wxRect& r1, const wxRect& r2);
 
-    // these are like Union() but don't ignore empty rectangles
-    wxRect operator+(const wxRect& rect) const;
-    wxRect& operator+=(const wxRect& rect)
+    // intersections of two rectangles not testing for empty rectangles
+    wxRect& operator*=(const wxRect& rect);
+    friend WXDLLIMPEXP_CORE wxRect operator*(const wxRect& r1, const wxRect& r2);
+
+    // compare rectangles
+    friend bool operator==(const wxRect& r1, const wxRect& r2)
     {
-        *this = *this + rect;
-        return *this;
+        return (r1.x == r2.x) && (r1.y == r2.y) &&
+               (r1.width == r2.width) && (r1.height == r2.height);
+    }
+
+    friend bool operator!=(const wxRect& r1, const wxRect& r2)
+    {
+        return !(r1 == r2);
     }
 
 
     // centre this rectangle in the given (usually, but not necessarily,
     // larger) one
+    void MakeCenteredIn(const wxRect& r, int dir = wxBOTH)
+    {
+        if ( dir & wxHORIZONTAL )
+            x = r.x + (r.width - width)/2;
+        if ( dir & wxVERTICAL )
+            y = r.y + (r.height - height)/2;
+    }
+
+    // same as above but returns the new rectangle instead of modifying this one
     wxRect CentreIn(const wxRect& r, int dir = wxBOTH) const
     {
-        return wxRect(dir & wxHORIZONTAL ? r.x + (r.width - width)/2 : x,
-                      dir & wxVERTICAL ? r.y + (r.height - height)/2 : y,
-                      width, height);
+        wxRect rect(*this);
+        rect.MakeCenteredIn(r, dir);
+        return rect;
     }
 
     wxRect CenterIn(const wxRect& r, int dir = wxBOTH) const
@@ -483,15 +932,17 @@ public:
     }
 
 public:
-    int x, y, width, height;
+    int x = 0,
+        y = 0,
+        width = 0,
+        height = 0;
 };
 
-#if WXWIN_COMPATIBILITY_2_6
-inline bool wxRect::Inside(int cx, int cy) const { return Contains(cx, cy); }
-inline bool wxRect::Inside(const wxPoint& pt) const { return Contains(pt); }
-inline bool wxRect::Inside(const wxRect& rect) const { return Contains(rect); }
-#endif // WXWIN_COMPATIBILITY_2_6
 
+// define functions which couldn't be defined above because of declarations
+// order
+inline void wxSize::IncBy(const wxPoint& pt) { IncBy(pt.x, pt.y); }
+inline void wxSize::DecBy(const wxPoint& pt) { DecBy(pt.x, pt.y); }
 
 // ---------------------------------------------------------------------------
 // Management of pens, brushes and fonts
@@ -508,65 +959,33 @@ protected:
     wxList list;
 };
 
-class WXDLLIMPEXP_CORE wxPenList: public wxGDIObjListBase
-{
-public:
-    wxPen *FindOrCreatePen(const wxColour& colour, int width, int style);
-#if WXWIN_COMPATIBILITY_2_6
-    wxDEPRECATED( void AddPen(wxPen*) );
-    wxDEPRECATED( void RemovePen(wxPen*) );
-#endif
-};
+class wxStringToColourHashMap;
 
-class WXDLLIMPEXP_CORE wxBrushList: public wxGDIObjListBase
-{
-public:
-    wxBrush *FindOrCreateBrush(const wxColour& colour, int style = wxSOLID);
-#if WXWIN_COMPATIBILITY_2_6
-    wxDEPRECATED( void AddBrush(wxBrush*) );
-    wxDEPRECATED( void RemoveBrush(wxBrush*) );
-#endif
-};
-
-class WXDLLIMPEXP_CORE wxFontList: public wxGDIObjListBase
-{
-public:
-    wxFont *FindOrCreateFont(int pointSize, int family, int style, int weight,
-                             bool underline = false,
-                             const wxString& face = wxEmptyString,
-                             wxFontEncoding encoding = wxFONTENCODING_DEFAULT);
-#if WXWIN_COMPATIBILITY_2_6
-    wxDEPRECATED( void AddFont(wxFont*) );
-    wxDEPRECATED( void RemoveFont(wxFont*) );
-#endif
-};
-
-WX_DECLARE_STRING_HASH_MAP(wxColour*, wxStringToColourHashMap);
-
-class WXDLLEXPORT wxColourDatabase
+class WXDLLIMPEXP_CORE wxColourDatabase
 {
 public:
     wxColourDatabase();
     ~wxColourDatabase();
 
+    // use the given colour scheme: CSS one is the default since 3.3.0,
+    // Traditional is the legacy colour scheme used by wxWidgets before it.
+    enum Scheme
+    {
+        CSS,
+        Traditional
+    };
+
+    void UseScheme(Scheme scheme);
+
     // find colour by name or name for the given colour
     wxColour Find(const wxString& name) const;
     wxString FindName(const wxColour& colour) const;
 
+    // list all known colours by name
+    wxVector<wxString> GetAllNames() const;
+
     // add a new colour to the database
     void AddColour(const wxString& name, const wxColour& colour);
-
-#if WXWIN_COMPATIBILITY_2_6
-    // deprecated, use Find() instead
-    wxDEPRECATED( wxColour *FindColour(const wxString& name) );
-#endif // WXWIN_COMPATIBILITY_2_6
-
-
-#ifdef __WXPM__
-    // PM keeps its own type of colour table
-    long*                           m_palTable;
-    size_t                          m_nSize;
-#endif
 
 private:
     // load the database with the built in colour values when called for the
@@ -574,32 +993,42 @@ private:
     void Initialize();
 
     wxStringToColourHashMap *m_map;
+
+    Scheme m_scheme;
 };
 
-class WXDLLEXPORT wxResourceCache: public wxList
+#if WXWIN_COMPATIBILITY_3_2
+
+class
+wxDEPRECATED_MSG("Use wxList directly or just a standard container")
+wxResourceCache : public wxList
 {
 public:
-    wxResourceCache() { }
-#if !wxUSE_STL
-    wxResourceCache(const unsigned int keyType) : wxList(keyType) { }
-#endif
-    virtual ~wxResourceCache();
+    using wxList::wxList;
+    virtual ~wxResourceCache()
+    {
+        wxList::compatibility_iterator node = GetFirst ();
+        while (node) {
+            wxObject *item = (wxObject *)node->GetData();
+            delete item;
+
+            node = node->GetNext ();
+        }
+    }
 };
+
+#endif // WXWIN_COMPATIBILITY_3_2
 
 // ---------------------------------------------------------------------------
 // global variables
 // ---------------------------------------------------------------------------
 
-// Lists of GDI objects
-extern WXDLLEXPORT_DATA(wxPenList*)   wxThePenList;
-extern WXDLLEXPORT_DATA(wxBrushList*)   wxTheBrushList;
-extern WXDLLEXPORT_DATA(wxFontList*)    wxTheFontList;
 
 /* Stock objects
 
   wxStockGDI creates the stock GDI objects on demand.  Pointers to the
   created objects are stored in the ms_stockObject array, which is indexed
-  by the Item enum values.  Platorm-specific fonts can be created by
+  by the Item enum values.  Platform-specific fonts can be created by
   implementing a derived class with an override for the GetFont function.
   wxStockGDI operates as a singleton, accessed through the ms_instance
   pointer.  By default this pointer is set to an instance of wxStockGDI.
@@ -613,6 +1042,7 @@ public:
         BRUSH_BLUE,
         BRUSH_CYAN,
         BRUSH_GREEN,
+        BRUSH_YELLOW,
         BRUSH_GREY,
         BRUSH_LIGHTGREY,
         BRUSH_MEDIUMGREY,
@@ -623,7 +1053,10 @@ public:
         COLOUR_BLUE,
         COLOUR_CYAN,
         COLOUR_GREEN,
+        COLOUR_YELLOW,
+        COLOUR_GREY,
         COLOUR_LIGHTGREY,
+        COLOUR_MEDIUMGREY,
         COLOUR_RED,
         COLOUR_WHITE,
         CURSOR_CROSS,
@@ -635,8 +1068,10 @@ public:
         FONT_SWISS,
         PEN_BLACK,
         PEN_BLACKDASHED,
+        PEN_BLUE,
         PEN_CYAN,
         PEN_GREEN,
+        PEN_YELLOW,
         PEN_GREY,
         PEN_LIGHTGREY,
         PEN_MEDIUMGREY,
@@ -664,7 +1099,7 @@ protected:
 
     static wxObject* ms_stockObject[ITEMCOUNT];
 
-    DECLARE_NO_COPY_CLASS(wxStockGDI)
+    wxDECLARE_NO_COPY_CLASS(wxStockGDI);
 };
 
 #define wxITALIC_FONT  wxStockGDI::instance().GetFont(wxStockGDI::FONT_ITALIC)
@@ -674,8 +1109,10 @@ protected:
 
 #define wxBLACK_DASHED_PEN  wxStockGDI::GetPen(wxStockGDI::PEN_BLACKDASHED)
 #define wxBLACK_PEN         wxStockGDI::GetPen(wxStockGDI::PEN_BLACK)
+#define wxBLUE_PEN          wxStockGDI::GetPen(wxStockGDI::PEN_BLUE)
 #define wxCYAN_PEN          wxStockGDI::GetPen(wxStockGDI::PEN_CYAN)
 #define wxGREEN_PEN         wxStockGDI::GetPen(wxStockGDI::PEN_GREEN)
+#define wxYELLOW_PEN        wxStockGDI::GetPen(wxStockGDI::PEN_YELLOW)
 #define wxGREY_PEN          wxStockGDI::GetPen(wxStockGDI::PEN_GREY)
 #define wxLIGHT_GREY_PEN    wxStockGDI::GetPen(wxStockGDI::PEN_LIGHTGREY)
 #define wxMEDIUM_GREY_PEN   wxStockGDI::GetPen(wxStockGDI::PEN_MEDIUMGREY)
@@ -687,6 +1124,7 @@ protected:
 #define wxBLUE_BRUSH         wxStockGDI::GetBrush(wxStockGDI::BRUSH_BLUE)
 #define wxCYAN_BRUSH         wxStockGDI::GetBrush(wxStockGDI::BRUSH_CYAN)
 #define wxGREEN_BRUSH        wxStockGDI::GetBrush(wxStockGDI::BRUSH_GREEN)
+#define wxYELLOW_BRUSH       wxStockGDI::GetBrush(wxStockGDI::BRUSH_YELLOW)
 #define wxGREY_BRUSH         wxStockGDI::GetBrush(wxStockGDI::BRUSH_GREY)
 #define wxLIGHT_GREY_BRUSH   wxStockGDI::GetBrush(wxStockGDI::BRUSH_LIGHTGREY)
 #define wxMEDIUM_GREY_BRUSH  wxStockGDI::GetBrush(wxStockGDI::BRUSH_MEDIUMGREY)
@@ -698,6 +1136,7 @@ protected:
 #define wxBLUE        wxStockGDI::GetColour(wxStockGDI::COLOUR_BLUE)
 #define wxCYAN        wxStockGDI::GetColour(wxStockGDI::COLOUR_CYAN)
 #define wxGREEN       wxStockGDI::GetColour(wxStockGDI::COLOUR_GREEN)
+#define wxYELLOW      wxStockGDI::GetColour(wxStockGDI::COLOUR_YELLOW)
 #define wxLIGHT_GREY  wxStockGDI::GetColour(wxStockGDI::COLOUR_LIGHTGREY)
 #define wxRED         wxStockGDI::GetColour(wxStockGDI::COLOUR_RED)
 #define wxWHITE       wxStockGDI::GetColour(wxStockGDI::COLOUR_WHITE)
@@ -707,49 +1146,54 @@ protected:
 #define wxSTANDARD_CURSOR   wxStockGDI::GetCursor(wxStockGDI::CURSOR_STANDARD)
 
 // 'Null' objects
-extern WXDLLEXPORT_DATA(wxBitmap)     wxNullBitmap;
-extern WXDLLEXPORT_DATA(wxIcon)       wxNullIcon;
-extern WXDLLEXPORT_DATA(wxCursor)     wxNullCursor;
-extern WXDLLEXPORT_DATA(wxPen)        wxNullPen;
-extern WXDLLEXPORT_DATA(wxBrush)      wxNullBrush;
-extern WXDLLEXPORT_DATA(wxPalette)     wxNullPalette;
-extern WXDLLEXPORT_DATA(wxFont)       wxNullFont;
-extern WXDLLEXPORT_DATA(wxColour)     wxNullColour;
+extern WXDLLIMPEXP_DATA_CORE(wxBitmap)     wxNullBitmap;
+extern WXDLLIMPEXP_DATA_CORE(wxIcon)       wxNullIcon;
+extern WXDLLIMPEXP_DATA_CORE(wxCursor)     wxNullCursor;
+extern WXDLLIMPEXP_DATA_CORE(wxPen)        wxNullPen;
+extern WXDLLIMPEXP_DATA_CORE(wxBrush)      wxNullBrush;
+extern WXDLLIMPEXP_DATA_CORE(wxPalette)    wxNullPalette;
+extern WXDLLIMPEXP_DATA_CORE(wxFont)       wxNullFont;
+extern WXDLLIMPEXP_DATA_CORE(wxColour)     wxNullColour;
+extern WXDLLIMPEXP_DATA_CORE(wxIconBundle) wxNullIconBundle;
 
-extern WXDLLEXPORT_DATA(wxColourDatabase*)  wxTheColourDatabase;
+extern WXDLLIMPEXP_DATA_CORE(wxColourDatabase*)  wxTheColourDatabase;
 
-extern WXDLLEXPORT_DATA(const wxChar) wxPanelNameStr[];
+extern WXDLLIMPEXP_DATA_CORE(const char) wxPanelNameStr[];
 
-extern WXDLLEXPORT_DATA(const wxSize) wxDefaultSize;
-extern WXDLLEXPORT_DATA(const wxPoint) wxDefaultPosition;
+extern WXDLLIMPEXP_DATA_CORE(const wxSize) wxDefaultSize;
+extern WXDLLIMPEXP_DATA_CORE(const wxPoint) wxDefaultPosition;
 
 // ---------------------------------------------------------------------------
 // global functions
 // ---------------------------------------------------------------------------
 
 // resource management
-extern void WXDLLEXPORT wxInitializeStockLists();
-extern void WXDLLEXPORT wxDeleteStockLists();
+extern void WXDLLIMPEXP_CORE wxInitializeStockLists();
+extern void WXDLLIMPEXP_CORE wxDeleteStockLists();
+
+// Note: all the display-related functions here exist for compatibility only,
+// please use wxDisplay class in the new code
 
 // is the display colour (or monochrome)?
-extern bool WXDLLEXPORT wxColourDisplay();
+extern bool WXDLLIMPEXP_CORE wxColourDisplay();
 
 // Returns depth of screen
-extern int WXDLLEXPORT wxDisplayDepth();
+extern int WXDLLIMPEXP_CORE wxDisplayDepth();
 #define wxGetDisplayDepth wxDisplayDepth
 
 // get the display size
-extern void WXDLLEXPORT wxDisplaySize(int *width, int *height);
-extern wxSize WXDLLEXPORT wxGetDisplaySize();
-extern void WXDLLEXPORT wxDisplaySizeMM(int *width, int *height);
-extern wxSize WXDLLEXPORT wxGetDisplaySizeMM();
+extern void WXDLLIMPEXP_CORE wxDisplaySize(int *width, int *height);
+extern wxSize WXDLLIMPEXP_CORE wxGetDisplaySize();
+extern void WXDLLIMPEXP_CORE wxDisplaySizeMM(int *width, int *height);
+extern wxSize WXDLLIMPEXP_CORE wxGetDisplaySizeMM();
+extern wxSize WXDLLIMPEXP_CORE wxGetDisplayPPI();
 
 // Get position and size of the display workarea
-extern void WXDLLEXPORT wxClientDisplayRect(int *x, int *y, int *width, int *height);
-extern wxRect WXDLLEXPORT wxGetClientDisplayRect();
+extern void WXDLLIMPEXP_CORE wxClientDisplayRect(int *x, int *y, int *width, int *height);
+extern wxRect WXDLLIMPEXP_CORE wxGetClientDisplayRect();
 
 // set global cursor
-extern void WXDLLEXPORT wxSetCursor(const wxCursor& cursor);
+extern void WXDLLIMPEXP_CORE wxSetCursor(const wxCursorBundle& cursors);
 
 #endif
     // _WX_GDICMNH__

@@ -2,9 +2,7 @@
 // Name:        wx/unix/apptrait.h
 // Purpose:     standard implementations of wxAppTraits for Unix
 // Author:      Vadim Zeitlin
-// Modified by:
 // Created:     23.06.2003
-// RCS-ID:      $Id: apptrait.h 43629 2006-11-24 11:33:53Z RR $
 // Copyright:   (c) 2003 Vadim Zeitlin <vadim@wxwidgets.org>
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -16,36 +14,77 @@
 // wxGUI/ConsoleAppTraits: must derive from wxAppTraits, not wxAppTraitsBase
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxConsoleAppTraits : public wxConsoleAppTraitsBase
+class WXDLLIMPEXP_BASE wxConsoleAppTraits : public wxConsoleAppTraitsBase
 {
 public:
-    virtual bool CreateEndProcessPipe(wxExecuteData& execData);
-    virtual bool IsWriteFDOfEndProcessPipe(wxExecuteData& execData, int fd);
-    virtual void DetachWriteFDOfEndProcessPipe(wxExecuteData& execData);
-    virtual int WaitForChild(wxExecuteData& execData);
+#if wxUSE_CONSOLE_EVENTLOOP
+    virtual wxEventLoopBase *CreateEventLoop() override;
+#endif // wxUSE_CONSOLE_EVENTLOOP
+#if wxUSE_TIMER
+    virtual wxTimerImpl *CreateTimerImpl(wxTimer *timer) override;
+#endif
 };
 
 #if wxUSE_GUI
 
-class WXDLLEXPORT wxGUIAppTraits : public wxGUIAppTraitsBase
+// GTK and Qt integrate sockets and child processes monitoring directly in
+// their main loop, the other Unix ports do it at wxEventLoop level and so use
+// the non-GUI traits and don't need anything here
+//
+// TODO: Should we use XtAddInput() for wxX11 too? Or, vice versa, if there is
+//       no advantage in doing this compared to the generic way currently used
+//       by wxX11, should we continue to use GTK-specific stuff?
+#if defined(__WXGTK__) || defined(__WXQT__)
+    #define wxHAS_GUI_FDIOMANAGER
+    #define wxHAS_GUI_PROCESS_CALLBACKS
+#endif // ports using wxFDIOManager
+
+#if defined(__WXMAC__)
+    #define wxHAS_GUI_PROCESS_CALLBACKS
+    #define wxHAS_GUI_SOCKET_MANAGER
+#endif
+
+class WXDLLIMPEXP_CORE wxGUIAppTraits : public wxGUIAppTraitsBase
 {
 public:
-    virtual bool CreateEndProcessPipe(wxExecuteData& execData);
-    virtual bool IsWriteFDOfEndProcessPipe(wxExecuteData& execData, int fd);
-    virtual void DetachWriteFDOfEndProcessPipe(wxExecuteData& execData);
-    virtual int WaitForChild(wxExecuteData& execData);
-
-#if defined(__WXMAC__) || defined(__WXCOCOA__)
-    virtual wxStandardPathsBase& GetStandardPaths();
+    virtual wxEventLoopBase *CreateEventLoop() override;
+    virtual int WaitForChild(wxExecuteData& execData) override;
+#if wxUSE_TIMER
+    virtual wxTimerImpl *CreateTimerImpl(wxTimer *timer) override;
 #endif
-    virtual wxPortId GetToolkitVersion(int *majVer, int *minVer) const;
-
-#ifdef __WXGTK__
-    virtual wxString GetDesktopEnvironment() const;
+#if wxUSE_THREADS && defined(__WXGTK__)
+    virtual void MutexGuiEnter() override;
+    virtual void MutexGuiLeave() override;
 #endif
 
-#if defined(__WXDEBUG__) && defined(__WXGTK20__)
-    virtual bool ShowAssertDialog(const wxString& msg);
+    wxPortId GetToolkitVersion(int *majVer = nullptr,
+                               int *minVer = nullptr,
+                               int *microVer = nullptr) const override;
+
+    virtual wxString GetDesktopEnvironment() const override;
+
+#if defined(__WXGTK__) || defined(__WXQT__)
+    virtual wxString GetPlatformDescription() const override;
+#endif
+
+#if defined(__WXGTK__)
+    virtual bool ShowAssertDialog(const wxString& msg) override;
+#endif
+
+#if wxUSE_SOCKETS
+
+#ifdef wxHAS_GUI_SOCKET_MANAGER
+    virtual wxSocketManager *GetSocketManager() override;
+#endif
+
+#ifdef wxHAS_GUI_FDIOMANAGER
+    virtual wxFDIOManager *GetFDIOManager() override;
+#endif
+
+#endif // wxUSE_SOCKETS
+
+#if wxUSE_EVENTLOOP_SOURCE
+    virtual wxEventLoopSourcesManagerBase* GetEventLoopSourcesManager() override;
 #endif
 };
 

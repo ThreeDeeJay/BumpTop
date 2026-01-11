@@ -1,10 +1,8 @@
 /////////////////////////////////////////////////////////////////////////////
-// Name:        paper.h
+// Name:        wx/paper.h
 // Purpose:     Paper database types and classes
 // Author:      Julian Smart
-// Modified by:
 // Created:     01/02/97
-// RCS-ID:      $Id: paper.h 53135 2008-04-12 02:31:04Z VZ $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -16,7 +14,8 @@
 #include "wx/event.h"
 #include "wx/cmndata.h"
 #include "wx/intl.h"
-#include "wx/hashmap.h"
+
+#include <vector>
 
 /*
  * Paper type: see defs.h for wxPaperSize enum.
@@ -30,7 +29,7 @@
 #define WXADDPAPER(paperId, platformId, name, w, h) AddPaperType(paperId, 0, name, w, h)
 #endif
 
-class WXDLLEXPORT wxPrintPaperType: public wxObject
+class WXDLLIMPEXP_CORE wxPrintPaperType: public wxObject
 {
 public:
     wxPrintPaperType();
@@ -63,14 +62,10 @@ public:
     wxString    m_paperName;
 
 private:
-    DECLARE_DYNAMIC_CLASS(wxPrintPaperType)
+    wxDECLARE_DYNAMIC_CLASS(wxPrintPaperType);
 };
 
-WX_DECLARE_STRING_HASH_MAP(wxPrintPaperType*, wxStringToPrintPaperTypeHashMap);
-
-class WXDLLIMPEXP_FWD_CORE wxPrintPaperTypeList;
-
-class WXDLLEXPORT wxPrintPaperDatabase
+class WXDLLIMPEXP_CORE wxPrintPaperDatabase
 {
 public:
     wxPrintPaperDatabase();
@@ -83,39 +78,44 @@ public:
     void AddPaperType(wxPaperSize paperId, int platformId, const wxString& name, int w, int h);
 
     // Find by name
-    wxPrintPaperType *FindPaperType(const wxString& name);
+    wxPrintPaperType *FindPaperType(const wxString& name) const;
 
     // Find by size id
-    wxPrintPaperType *FindPaperType(wxPaperSize id);
+    wxPrintPaperType *FindPaperType(wxPaperSize id) const;
 
     // Find by platform id
-    wxPrintPaperType *FindPaperTypeByPlatformId(int id);
+    wxPrintPaperType *FindPaperTypeByPlatformId(int id) const;
 
     // Find by size
-    wxPrintPaperType *FindPaperType(const wxSize& size);
+    wxPrintPaperType *FindPaperType(const wxSize& size) const;
 
     // Convert name to size id
-    wxPaperSize ConvertNameToId(const wxString& name);
+    wxPaperSize ConvertNameToId(const wxString& name) const;
 
     // Convert size id to name
-    wxString ConvertIdToName(wxPaperSize paperId);
+    wxString ConvertIdToName(wxPaperSize paperId) const;
 
     // Get the paper size
-    wxSize GetSize(wxPaperSize paperId);
+    wxSize GetSize(wxPaperSize paperId) const;
 
     // Get the paper size
-    wxPaperSize GetSize(const wxSize& size);
+    wxPaperSize GetSize(const wxSize& size) const;
 
     //
     wxPrintPaperType* Item(size_t index) const;
     size_t GetCount() const;
 private:
-    wxStringToPrintPaperTypeHashMap* m_map;
-    wxPrintPaperTypeList* m_list;
-    // DECLARE_DYNAMIC_CLASS(wxPrintPaperDatabase)
+    // Helper used by the existing functions to keep returning non-const
+    // pointers for compatibility.
+    static wxPrintPaperType* AsNonConstPtr(const wxPrintPaperType& paperType)
+    {
+        return const_cast<wxPrintPaperType*>(&paperType);
+    }
+
+    std::vector<wxPrintPaperType> m_paperTypes;
 };
 
-extern WXDLLEXPORT_DATA(wxPrintPaperDatabase*) wxThePrintPaperDatabase;
+extern WXDLLIMPEXP_DATA_CORE(wxPrintPaperDatabase*) wxThePrintPaperDatabase;
 
 
 #endif

@@ -2,9 +2,7 @@
 // Name:        wx/univ/stattext.h
 // Purpose:     wxStaticText
 // Author:      Vadim Zeitlin
-// Modified by:
 // Created:     14.08.00
-// RCS-ID:      $Id: stattext.h 35650 2005-09-23 12:56:45Z MR $
 // Copyright:   (c) 2000 SciTech Software, Inc. (www.scitechsoft.com)
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -12,10 +10,12 @@
 #ifndef _WX_UNIV_STATTEXT_H_
 #define _WX_UNIV_STATTEXT_H_
 
-class WXDLLEXPORT wxStaticText : public wxStaticTextBase
+#include "wx/generic/stattextg.h"
+
+class WXDLLIMPEXP_CORE wxStaticText : public wxGenericStaticText
 {
 public:
-    wxStaticText() { }
+    wxStaticText() = default;
 
     // usual ctor
     wxStaticText(wxWindow *parent,
@@ -23,7 +23,7 @@ public:
                  const wxPoint& pos = wxDefaultPosition,
                  const wxSize& size = wxDefaultSize)
     {
-        Create(parent, wxID_ANY, label, pos, size, 0, wxStaticTextNameStr);
+        Create(parent, wxID_ANY, label, pos, size, 0, wxASCII_STR(wxStaticTextNameStr));
     }
 
     // full form
@@ -33,7 +33,7 @@ public:
                  const wxPoint& pos = wxDefaultPosition,
                  const wxSize& size = wxDefaultSize,
                  long style = 0,
-                 const wxString &name = wxStaticTextNameStr)
+                 const wxString &name = wxASCII_STR(wxStaticTextNameStr))
     {
         Create(parent, id, label, pos, size, style, name);
     }
@@ -45,22 +45,22 @@ public:
                 const wxPoint &pos = wxDefaultPosition,
                 const wxSize &size = wxDefaultSize,
                 long style = 0,
-                const wxString &name = wxStaticTextNameStr);
+                const wxString &name = wxASCII_STR(wxStaticTextNameStr));
 
     // implementation only from now on
 
-    virtual void SetLabel(const wxString& label);
+    virtual void SetLabel(const wxString& label) override;
 
-    virtual bool IsFocused() const { return false; }
+    virtual bool IsFocused() const override { return false; }
 
 protected:
-    // calculate the optimal size for the label
-    virtual wxSize DoGetBestClientSize() const;
-
     // draw the control
-    virtual void DoDraw(wxControlRenderer *renderer);
+    virtual void DoDraw(wxControlRenderer *renderer) override;
 
-    DECLARE_ABSTRACT_CLASS(wxStaticText)
+    virtual void WXSetVisibleLabel(const wxString& str) override;
+    virtual wxString WXGetVisibleLabel() const override;
+
+    wxDECLARE_DYNAMIC_CLASS(wxStaticText);
 };
 
 #endif // _WX_UNIV_STATTEXT_H_

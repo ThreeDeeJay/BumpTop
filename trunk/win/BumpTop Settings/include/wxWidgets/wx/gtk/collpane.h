@@ -2,9 +2,7 @@
 // Name:        wx/gtk/collpane.h
 // Purpose:     wxCollapsiblePane
 // Author:      Francesco Montorsi
-// Modified by:
 // Created:     8/10/2006
-// RCS-ID:      $Id: collpane.h 43853 2006-12-07 07:22:55Z PC $
 // Copyright:   (c) Francesco Montorsi
 // Licence:     wxWindows Licence
 /////////////////////////////////////////////////////////////////////////////
@@ -12,13 +10,11 @@
 #ifndef _WX_COLLAPSABLE_PANEL_H_GTK_
 #define _WX_COLLAPSABLE_PANEL_H_GTK_
 
-#include "wx/generic/collpaneg.h"
-
 // ----------------------------------------------------------------------------
 // wxCollapsiblePane
 // ----------------------------------------------------------------------------
 
-class WXDLLIMPEXP_CORE wxCollapsiblePane : public wxGenericCollapsiblePane
+class WXDLLIMPEXP_CORE wxCollapsiblePane : public wxCollapsiblePaneBase
 {
 public:
     wxCollapsiblePane() { Init(); }
@@ -30,16 +26,11 @@ public:
                         const wxSize& size = wxDefaultSize,
                         long style = wxCP_DEFAULT_STYLE,
                         const wxValidator& val = wxDefaultValidator,
-                        const wxString& name = wxCollapsiblePaneNameStr)
+                        const wxString& name = wxASCII_STR(wxCollapsiblePaneNameStr))
     {
         Init();
 
         Create(parent, winid, label, pos, size, style, val, name);
-    }
-
-    void Init()
-    {
-        m_bIgnoreNextChange = false;
     }
 
     bool Create(wxWindow *parent,
@@ -49,24 +40,39 @@ public:
                 const wxSize& size = wxDefaultSize,
                 long style = wxCP_DEFAULT_STYLE,
                 const wxValidator& val = wxDefaultValidator,
-                const wxString& name = wxCollapsiblePaneNameStr);
+                const wxString& name = wxASCII_STR(wxCollapsiblePaneNameStr));
 
-    void Collapse(bool collapse = true);
-    bool IsCollapsed() const;
-    void SetLabel(const wxString &str);
+    virtual void Collapse(bool collapse = true) override;
+    virtual bool IsCollapsed() const override;
+    virtual void SetLabel(const wxString& str) override;
+
+    virtual wxWindow *GetPane() const override { return m_pPane; }
+    virtual wxString GetLabel() const override { return m_strLabel; }
 
 protected:
-    virtual wxSize DoGetBestSize() const;
+    virtual wxSize DoGetBestSize() const override;
 
 public:     // used by GTK callbacks
     bool m_bIgnoreNextChange;
     wxSize m_szCollapsed;
 
-private:
-    void OnSize(wxSizeEvent&);
+    wxWindow *m_pPane;
 
-    DECLARE_DYNAMIC_CLASS(wxCollapsiblePane)
-    DECLARE_EVENT_TABLE()
+    // the button label without ">>" or "<<"
+    wxString m_strLabel;
+
+private:
+    void Init()
+    {
+        m_bIgnoreNextChange = false;
+    }
+
+    void OnSize(wxSizeEvent&);
+    virtual void AddChildGTK(wxWindowGTK* child) override;
+    GdkWindow *GTKGetWindow(wxArrayGdkWindows& windows) const override;
+
+    wxDECLARE_DYNAMIC_CLASS(wxCollapsiblePane);
+    wxDECLARE_EVENT_TABLE();
 };
 
 #endif // _WX_COLLAPSABLE_PANEL_H_GTK_

@@ -2,7 +2,6 @@
 // Name:        wx/gtk/stattext.h
 // Purpose:
 // Author:      Robert Roebling
-// Id:          $Id: stattext.h 42077 2006-10-17 14:44:52Z ABX $
 // Copyright:   (c) 1998 Robert Roebling
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -14,7 +13,7 @@
 // wxStaticText
 //-----------------------------------------------------------------------------
 
-class WXDLLIMPEXP_CORE wxStaticText : public wxControl
+class WXDLLIMPEXP_CORE wxStaticText : public wxStaticTextBase
 {
 public:
     wxStaticText();
@@ -24,7 +23,7 @@ public:
                  const wxPoint &pos = wxDefaultPosition,
                  const wxSize &size = wxDefaultSize,
                  long style = 0,
-                 const wxString &name = wxStaticTextNameStr );
+                 const wxString &name = wxASCII_STR(wxStaticTextNameStr) );
 
     bool Create(wxWindow *parent,
                 wxWindowID id,
@@ -32,34 +31,41 @@ public:
                 const wxPoint &pos = wxDefaultPosition,
                 const wxSize &size = wxDefaultSize,
                 long style = 0,
-                const wxString &name = wxStaticTextNameStr );
+                const wxString &name = wxASCII_STR(wxStaticTextNameStr) );
 
-    wxString GetLabel() const;
-    void SetLabel( const wxString &label );
+    void SetLabel( const wxString &label ) override;
 
-    bool SetFont( const wxFont &font );
-    bool SetForegroundColour( const wxColour& colour );
+    bool SetFont( const wxFont &font ) override;
 
     static wxVisualAttributes
     GetClassDefaultAttributes(wxWindowVariant variant = wxWINDOW_VARIANT_NORMAL);
-
-    // see wx/stattext.h
-    void Wrap(int width);
 
     // implementation
     // --------------
 
 protected:
-    virtual bool GTKWidgetNeedsMnemonic() const;
-    virtual void GTKWidgetDoSetMnemonic(GtkWidget* w);
+    virtual bool GTKWidgetNeedsMnemonic() const override;
+    virtual void GTKWidgetDoSetMnemonic(GtkWidget* w) override;
 
-    virtual void DoSetSize(int x, int y,
-                           int width, int height,
-                           int sizeFlags = wxSIZE_AUTO);
+    virtual wxSize DoGetBestSize() const override;
 
-    virtual wxSize DoGetBestSize() const;
+    virtual wxString WXGetVisibleLabel() const override;
+    virtual void WXSetVisibleLabel(const wxString& str) override;
+#if wxUSE_MARKUP
+    virtual bool DoSetLabelMarkup(const wxString& markup) override;
+#endif // wxUSE_MARKUP
 
-    DECLARE_DYNAMIC_CLASS(wxStaticText)
+private:
+    // Common part of SetLabel() and DoSetLabelMarkup().
+    typedef void (wxStaticText::*GTKLabelSetter)(GtkLabel *, const wxString&);
+
+    void GTKDoSetLabel(GTKLabelSetter setter, const wxString& label);
+
+    // If our font has been changed, we compute the best size ourselves because
+    // GTK doesn't always do it correctly, see DoGetBestSize().
+    bool m_computeOurOwnBestSize = false;
+
+    wxDECLARE_DYNAMIC_CLASS(wxStaticText);
 };
 
 #endif

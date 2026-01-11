@@ -1,10 +1,8 @@
 /////////////////////////////////////////////////////////////////////////////
-// Name:        private.h
+// Name:        wx/x11/private.h
 // Purpose:     Private declarations for X11 port
 // Author:      Julian Smart
-// Modified by:
 // Created:     17/09/98
-// RCS-ID:      $Id: private.h 39407 2006-05-28 23:51:23Z VZ $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -13,7 +11,6 @@
 #define _WX_PRIVATE_H_
 
 #include "wx/defs.h"
-#include "wx/hashmap.h"
 #include "wx/utils.h"
 #if defined( __cplusplus ) && defined( __VMS )
 #pragma message disable nosimpint
@@ -28,32 +25,20 @@
 // Include common declarations
 #include "wx/x11/privx.h"
 
-#if wxUSE_UNICODE
-#include "pango/pango.h"
-#endif
+#include <pango/pango.h>
 
-class WXDLLIMPEXP_CORE wxMouseEvent;
-class WXDLLIMPEXP_CORE wxKeyEvent;
-class WXDLLIMPEXP_CORE wxWindow;
+#include <unordered_map>
 
-// ----------------------------------------------------------------------------
-// Some Unicode <-> UTF8 macros stolen from GTK
-// ----------------------------------------------------------------------------
-
-#if wxUSE_UNICODE
-    #define wxGTK_CONV(s) wxConvUTF8.cWX2MB(s)
-    #define wxGTK_CONV_BACK(s) wxConvUTF8.cMB2WX(s)
-#else
-    #define wxGTK_CONV(s) s.c_str()
-    #define wxGTK_CONV_BACK(s) s
-#endif
+class WXDLLIMPEXP_FWD_CORE wxMouseEvent;
+class WXDLLIMPEXP_FWD_CORE wxKeyEvent;
+class WXDLLIMPEXP_FWD_CORE wxWindow;
 
 // ----------------------------------------------------------------------------
 // we maintain a hash table which contains the mapping from Widget to wxWindow
 // corresponding to the window for this widget
 // ----------------------------------------------------------------------------
 
-WX_DECLARE_HASH_MAP(Window, wxWindow *, wxIntegerHash, wxIntegerEqual, wxWindowHash);
+using wxWindowHash = std::unordered_map<Window, wxWindow*>;
 
 // these hashes are defined in app.cpp
 extern wxWindowHash *wxWidgetHashTable;
@@ -79,10 +64,6 @@ extern Window wxGetWindowParent(Window window);
 // given wxWidgets style
 bool wxSetWMDecorations(Window w, long style);
 bool wxMWMIsRunning(Window w);
-
-// Checks if any of our children are finished.
-// implemented in src/x11/utils.cpp
-void wxCheckForFinishedChildren();
 
 #endif
 // _WX_PRIVATE_H_

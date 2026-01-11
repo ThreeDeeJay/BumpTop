@@ -1,10 +1,8 @@
 /////////////////////////////////////////////////////////////////////////////
-// Name:        reparent.h
+// Name:        wx/x11/reparent.h
 // Purpose:     Reparenting classes
 // Author:      Julian Smart
-// Modified by:
 // Created:     2002-03-09
-// RCS-ID:      $Id: reparent.h 41020 2006-09-05 20:47:48Z VZ $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -18,11 +16,11 @@
  * This class helps to reparent a specific window
  */
 
-class WXDLLIMPEXP_CORE wxAdoptedWindow;
+class WXDLLIMPEXP_FWD_CORE wxAdoptedWindow;
 class WXDLLIMPEXP_CORE wxReparenter: public wxObject
 {
 public:
-    wxReparenter() {}
+    wxReparenter() = default;
 
     // We assume that toReparent has had its X window set
     // appropriately. toReparent is typically a wxAdoptedWindow.
@@ -39,7 +37,7 @@ protected:
 
     bool ProcessXEvent(WXEvent* event);
     WXWindow FindAClientWindow(WXWindow window, const wxString& name);
-    
+
     static bool sm_done;
     static wxAdoptedWindow* sm_toReparent;
     static wxWindow* sm_newParent;
@@ -60,7 +58,7 @@ class WXDLLIMPEXP_CORE wxAdoptedWindow: public wxWindow
     virtual ~wxAdoptedWindow();
 
     void SetHandle(WXWindow window) { m_mainWindow = window; m_clientWindow = window; }
-    WXWindow GetHandle() const { return GetMainWindow(); }
+    WXWindow GetHandle() const { return X11GetMainWindow(); }
 };
 
 #endif

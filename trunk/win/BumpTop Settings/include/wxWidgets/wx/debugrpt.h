@@ -3,8 +3,7 @@
 // Purpose:     declaration of wxDebugReport class
 // Author:      Vadim Zeitlin
 // Created:     2005-01-17
-// RCS-ID:      $Id: debugrpt.h 49563 2007-10-31 20:46:21Z VZ $
-// Copyright:   (c) 2005 Vadim Zeitlin <vadim@wxwindows.org>
+// Copyright:   (c) 2005 Vadim Zeitlin <vadim@wxwidgets.org>
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -17,6 +16,7 @@
 
 #include "wx/string.h"
 #include "wx/arrstr.h"
+#include "wx/filename.h"
 
 class WXDLLIMPEXP_FWD_XML wxXmlNode;
 
@@ -26,6 +26,8 @@ class WXDLLIMPEXP_FWD_XML wxXmlNode;
 
 class WXDLLIMPEXP_QA wxDebugReport
 {
+    friend class wxDebugReportDialog;
+
 public:
     // this is used for the functions which may report either the current state
     // or the state during the last (fatal) exception
@@ -114,6 +116,9 @@ protected:
     // used by Process()
     virtual bool DoProcess();
 
+    // return the location where the report will be saved
+    virtual wxFileName GetSaveLocation() const;
+
 private:
     // name of the report directory
     wxString m_dir;
@@ -132,15 +137,31 @@ private:
 class WXDLLIMPEXP_QA wxDebugReportCompress : public wxDebugReport
 {
 public:
-    wxDebugReportCompress() { }
+    wxDebugReportCompress() = default;
+
+    // you can optionally specify the directory and/or name of the file where
+    // the debug report should be generated, a default location under the
+    // directory containing temporary files will be used if you don't
+    //
+    // both of these functions should be called before Process()ing the report
+    // if they're called at all
+    void SetCompressedFileDirectory(const wxString& dir);
+    void SetCompressedFileBaseName(const wxString& name);
 
     // returns the full path of the compressed file (empty if creation failed)
     const wxString& GetCompressedFileName() const { return m_zipfile; }
 
 protected:
-    virtual bool DoProcess();
+    virtual bool DoProcess() override;
+
+    // return the location where the report will be saved
+    wxFileName GetSaveLocation() const override;
 
 private:
+    // user-specified file directory/base name, use defaults if empty
+    wxString m_zipDir,
+             m_zipName;
+
     // full path to the ZIP file we created
     wxString m_zipfile;
 };
@@ -161,10 +182,10 @@ public:
     wxDebugReportUpload(const wxString& url,
                         const wxString& input,
                         const wxString& action,
-                        const wxString& curl = _T("curl"));
+                        const wxString& curl = wxT("curl"));
 
 protected:
-    virtual bool DoProcess();
+    virtual bool DoProcess() override;
 
     // this function may be overridden in a derived class to show the output
     // from curl: this may be an HTML page or anything else that the server
@@ -201,7 +222,7 @@ class WXDLLIMPEXP_QA wxDebugReportPreview
 {
 public:
     // ctor is trivial
-    wxDebugReportPreview() { }
+    wxDebugReportPreview() = default;
 
     // present the report to the user and allow him to modify it by removing
     // some or all of the files and, potentially, adding some notes
@@ -211,7 +232,7 @@ public:
     virtual bool Show(wxDebugReport& dbgrpt) const = 0;
 
     // dtor is trivial as well but should be virtual for a base class
-    virtual ~wxDebugReportPreview() { }
+    virtual ~wxDebugReportPreview() = default;
 };
 
 #if wxUSE_GUI
@@ -223,9 +244,9 @@ public:
 class WXDLLIMPEXP_QA wxDebugReportPreviewStd : public wxDebugReportPreview
 {
 public:
-    wxDebugReportPreviewStd() { }
+    wxDebugReportPreviewStd() = default;
 
-    virtual bool Show(wxDebugReport& dbgrpt) const;
+    virtual bool Show(wxDebugReport& dbgrpt) const override;
 };
 
 #endif // wxUSE_GUI

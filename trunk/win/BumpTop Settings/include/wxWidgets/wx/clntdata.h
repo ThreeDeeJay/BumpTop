@@ -2,9 +2,7 @@
 // Name:        wx/clntdata.h
 // Purpose:     A mixin class for holding a wxClientData or void pointer
 // Author:      Robin Dunn
-// Modified by:
 // Created:     9-Oct-2001
-// RCS-ID:      $Id: clntdata.h 36973 2006-01-18 16:45:41Z JS $
 // Copyright:   (c) wxWidgets team
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -14,28 +12,23 @@
 
 #include "wx/defs.h"
 #include "wx/string.h"
-#include "wx/hashmap.h"
+#include "wx/object.h"
+
+#include <unordered_map>
 
 typedef int (*wxShadowObjectMethod)(void*, void*);
-WX_DECLARE_STRING_HASH_MAP_WITH_DECL(
-    wxShadowObjectMethod,
-    wxShadowObjectMethods,
-    class WXDLLIMPEXP_BASE
-);
-WX_DECLARE_STRING_HASH_MAP_WITH_DECL(
-    void *,
-    wxShadowObjectFields,
-    class WXDLLIMPEXP_BASE
-);
+
+using wxShadowObjectMethods = std::unordered_map<wxString, wxShadowObjectMethod>;
+using wxShadowObjectFields = std::unordered_map<wxString, void*>;
 
 class WXDLLIMPEXP_BASE wxShadowObject
 {
 public:
-    wxShadowObject() { }
+    wxShadowObject() = default;
 
     void AddMethod( const wxString &name, wxShadowObjectMethod method )
     {
-        wxShadowObjectMethods::iterator it = m_methods.find( name );
+        const auto it = m_methods.find( name );
         if (it == m_methods.end())
             m_methods[ name ] = method;
         else
@@ -44,19 +37,19 @@ public:
 
     bool InvokeMethod( const wxString &name, void* window, void* param, int* returnValue )
     {
-        wxShadowObjectMethods::iterator it = m_methods.find( name );
+        const auto it = m_methods.find( name );
         if (it == m_methods.end())
             return false;
         wxShadowObjectMethod method = it->second;
-        int ret = (*method)(window, param);
+        const int ret = (*method)(window, param);
         if (returnValue)
             *returnValue = ret;
         return true;
     }
 
-    void AddField( const wxString &name, void* initialValue = NULL )
+    void AddField( const wxString &name, void* initialValue = nullptr )
     {
-        wxShadowObjectFields::iterator it = m_fields.find( name );
+        const auto it = m_fields.find( name );
         if (it == m_fields.end())
             m_fields[ name ] = initialValue;
         else
@@ -65,15 +58,15 @@ public:
 
     void SetField( const wxString &name, void* value )
     {
-        wxShadowObjectFields::iterator it = m_fields.find( name );
+        const auto it = m_fields.find( name );
         if (it == m_fields.end())
             return;
         it->second = value;
     }
 
-    void* GetField( const wxString &name, void *defaultValue = NULL )
+    void* GetField( const wxString &name, void *defaultValue = nullptr )
     {
-        wxShadowObjectFields::iterator it = m_fields.find( name );
+        const auto it = m_fields.find( name );
         if (it == m_fields.end())
             return defaultValue;
         return it->second;
@@ -98,8 +91,8 @@ enum wxClientDataType
 class WXDLLIMPEXP_BASE wxClientData
 {
 public:
-    wxClientData() { }
-    virtual ~wxClientData() { }
+    wxClientData() = default;
+    virtual ~wxClientData() = default;
 };
 
 class WXDLLIMPEXP_BASE wxStringClientData : public wxClientData
@@ -159,114 +152,46 @@ protected:
 
 };
 
-#include "wx/vector.h"
+// This class is a replacement for wxClientDataContainer, and unlike
+// wxClientDataContainer the wxSharedClientDataContainer client data is
+// copiable, so it can be copied when objects containing it are cloned.
+// Like wxClientDataContainer, wxSharedClientDataContainer is a mixin
+// that provides storage and management of "client data.". The client data
+// is reference counted and managed by the container.
+//
+// NOTE:  If your class has a clone function and needs to store client data,
+//        use wxSharedClientDataContainer and not wxClientDataContainer!
 
-struct WXDLLIMPEXP_BASE wxClientDataDictionaryPair
-{
-    wxClientDataDictionaryPair( size_t idx ) : index( idx ), data( 0 ) { }
-
-    size_t index;
-    wxClientData* data;
-};
-
-_WX_DECLARE_VECTOR(
-    wxClientDataDictionaryPair,
-    wxClientDataDictionaryPairVector,
-    WXDLLIMPEXP_BASE
-);
-
-// this class is used internally to maintain the association between items
-// of (some subclasses of) wxControlWithItems and their client data
-// NOTE: this class does not keep track of whether it contains
-// wxClientData or void*. The client must ensure that
-// it does not contain a mix of the two, and that
-// DestroyData is called if it contains wxClientData
-class WXDLLIMPEXP_BASE wxClientDataDictionary
+class WXDLLIMPEXP_BASE wxSharedClientDataContainer
 {
 public:
-    wxClientDataDictionary() {}
+    // Provide the same functions as in wxClientDataContainer, so that objects
+    // using it and this class could be used in exactly the same way.
+    void SetClientObject(wxClientData *data);
+    wxClientData *GetClientObject() const;
+    void SetClientData(void *data);
+    void *GetClientData() const;
 
-    // deletes all the data
-    void DestroyData()
+protected:
+    bool HasClientDataContainer() const { return m_data.get() != nullptr; }
+    void CopyClientDataContainer(const wxSharedClientDataContainer& other)
     {
-        for( size_t i = 0, end = m_vec.size(); i != end; ++i )
-            delete m_vec[i].data;
-        m_vec.clear();
+        m_data = other.m_data;
     }
 
-    // if data for the given index is not present, add it,
-    // if it is present, delete the old data and replace it with
-    // the new one
-    void Set( size_t index, wxClientData* data, bool doDelete )
-    {
-        size_t ptr = Find( index );
-
-        if( !data )
-        {
-            if( ptr == m_vec.size() ) return;
-            if( doDelete )
-                delete m_vec[ptr].data;
-            m_vec.erase( ptr );
-        }
-        else
-        {
-            if( ptr == m_vec.size() )
-            {
-                m_vec.push_back( wxClientDataDictionaryPair( index ) );
-                ptr = m_vec.size() - 1;
-            }
-
-            if( doDelete )
-                delete m_vec[ptr].data;
-            m_vec[ptr].data = data;
-        }
-    }
-
-    // get the data associated with the given index,
-    // return 0 if not found
-    wxClientData* Get( size_t index ) const
-    {
-        size_t it = Find( index );
-        if( it == m_vec.size() ) return 0;
-        return (wxClientData*)m_vec[it].data; // const cast
-    }
-
-    // delete the data associated with the given index
-    // it also decreases by one the indices of all the elements
-    // with an index greater than the given index
-    void Delete( size_t index, bool doDelete )
-    {
-        size_t todel = m_vec.size();
-
-        for( size_t i = 0, end = m_vec.size(); i != end; ++i )
-        {
-            if( m_vec[i].index == index )
-                todel = i;
-            else if( m_vec[i].index > index )
-                --(m_vec[i].index);
-        }
-
-        if( todel != m_vec.size() )
-        {
-            if( doDelete )
-                delete m_vec[todel].data;
-            m_vec.erase( todel );
-        }
-    }
 private:
-    // returns MyVec.size() if not found
-    size_t Find( size_t index ) const
+    class wxRefCountedClientDataContainer : public wxClientDataContainer,
+                                            public wxRefCounter
     {
-        for( size_t i = 0, end = m_vec.size(); i != end; ++i )
-        {
-            if( m_vec[i].index == index )
-                return i;
-        }
+    };
 
-        return m_vec.size();
-    }
+    // Helper function that will create m_data if it is currently null
+    wxClientDataContainer *GetValidClientData();
 
-    wxClientDataDictionaryPairVector m_vec;
+    // m_data is shared, not deep copied, when cloned. If you make changes to
+    // the data in one instance of your class, you change it for all cloned
+    // instances!
+    wxObjectDataPtr<wxRefCountedClientDataContainer> m_data;
 };
 
 #endif // _WX_CLNTDATAH__

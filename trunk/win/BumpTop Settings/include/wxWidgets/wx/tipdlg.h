@@ -1,10 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Name:        tipdlg.h
+// Name:        wx/tipdlg.h
 // Purpose:     declaration of wxTipDialog
 // Author:      Vadim Zeitlin
-// Modified by:
 // Created:     28.06.99
-// RCS-ID:      $Id: tipdlg.h 35650 2005-09-23 12:56:45Z MR $
 // Copyright:   (c) Vadim Zeitlin
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -21,6 +19,8 @@
 #if wxUSE_STARTUP_TIPS
 
 #include "wx/textfile.h"
+
+class WXDLLIMPEXP_FWD_CORE wxWindow;
 
 // ----------------------------------------------------------------------------
 // wxTipProvider - a class which is used by wxTipDialog to get the text of the
@@ -45,13 +45,14 @@ public:
     // from where to start the next time)
     size_t GetCurrentTip() const { return m_currentTip; }
 
-    // Allows any user-derived class to optionally override this function to
-    // modify the tip as soon as it is read. If return wxEmptyString, then
-    // the tip is skipped, and the next one is read.
-    virtual wxString PreprocessTip(const wxString& tip) { return tip; }
-
     // virtual dtor for the base class
-    virtual ~wxTipProvider() { }
+    virtual ~wxTipProvider() = default;
+
+
+#if WXWIN_COMPATIBILITY_3_0
+    wxDEPRECATED_MSG("this method does nothing, simply don't call it")
+    wxString PreprocessTip(const wxString& tip) { return tip; }
+#endif
 
 protected:
     size_t m_currentTip;
@@ -61,8 +62,10 @@ protected:
 // specified text file as the source of tips (each line is a tip).
 //
 // NB: the caller is responsible for deleting the pointer!
+#if wxUSE_TEXTFILE
 WXDLLIMPEXP_ADV wxTipProvider *wxCreateFileTipProvider(const wxString& filename,
                                                        size_t currentTip);
+#endif // wxUSE_TEXTFILE
 
 // ----------------------------------------------------------------------------
 // wxTipDialog

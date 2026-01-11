@@ -2,9 +2,7 @@
 // Name:        wx/univ/scrolbar.h
 // Purpose:     wxScrollBar for wxUniversal
 // Author:      Vadim Zeitlin
-// Modified by:
 // Created:     20.08.00
-// RCS-ID:      $Id: scrolbar.h 42716 2006-10-30 12:33:25Z VS $
 // Copyright:   (c) 2000 SciTech Software, Inc. (www.scitechsoft.com)
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -12,7 +10,7 @@
 #ifndef _WX_UNIV_SCROLBAR_H_
 #define _WX_UNIV_SCROLBAR_H_
 
-class WXDLLEXPORT wxScrollTimer;
+class WXDLLIMPEXP_FWD_CORE wxScrollTimer;
 
 #include "wx/univ/scrarrow.h"
 #include "wx/renderer.h"
@@ -22,23 +20,23 @@ class WXDLLEXPORT wxScrollTimer;
 // ----------------------------------------------------------------------------
 
 // scroll the bar
-#define wxACTION_SCROLL_START       _T("start")     // to the beginning
-#define wxACTION_SCROLL_END         _T("end")       // to the end
-#define wxACTION_SCROLL_LINE_UP     _T("lineup")    // one line up/left
-#define wxACTION_SCROLL_PAGE_UP     _T("pageup")    // one page up/left
-#define wxACTION_SCROLL_LINE_DOWN   _T("linedown")  // one line down/right
-#define wxACTION_SCROLL_PAGE_DOWN   _T("pagedown")  // one page down/right
+#define wxACTION_SCROLL_START       wxT("start")     // to the beginning
+#define wxACTION_SCROLL_END         wxT("end")       // to the end
+#define wxACTION_SCROLL_LINE_UP     wxT("lineup")    // one line up/left
+#define wxACTION_SCROLL_PAGE_UP     wxT("pageup")    // one page up/left
+#define wxACTION_SCROLL_LINE_DOWN   wxT("linedown")  // one line down/right
+#define wxACTION_SCROLL_PAGE_DOWN   wxT("pagedown")  // one page down/right
 
 // the scrollbar thumb may be dragged
-#define wxACTION_SCROLL_THUMB_DRAG      _T("thumbdrag")
-#define wxACTION_SCROLL_THUMB_MOVE      _T("thumbmove")
-#define wxACTION_SCROLL_THUMB_RELEASE   _T("thumbrelease")
+#define wxACTION_SCROLL_THUMB_DRAG      wxT("thumbdrag")
+#define wxACTION_SCROLL_THUMB_MOVE      wxT("thumbmove")
+#define wxACTION_SCROLL_THUMB_RELEASE   wxT("thumbrelease")
 
 // ----------------------------------------------------------------------------
 // wxScrollBar
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxScrollBar : public wxScrollBarBase,
+class WXDLLIMPEXP_CORE wxScrollBar : public wxScrollBarBase,
                                 public wxControlWithArrows
 {
 public:
@@ -63,7 +61,7 @@ public:
                 const wxSize& size = wxDefaultSize,
                 long style = wxSB_HORIZONTAL,
                 const wxValidator& validator = wxDefaultValidator,
-                const wxString& name = wxScrollBarNameStr);
+                const wxString& name = wxASCII_STR(wxScrollBarNameStr));
 
     bool Create(wxWindow *parent,
                 wxWindowID id,
@@ -71,52 +69,52 @@ public:
                 const wxSize& size = wxDefaultSize,
                 long style = wxSB_HORIZONTAL,
                 const wxValidator& validator = wxDefaultValidator,
-                const wxString& name = wxScrollBarNameStr);
+                const wxString& name = wxASCII_STR(wxScrollBarNameStr));
 
     virtual ~wxScrollBar();
 
     // implement base class pure virtuals
-    virtual int GetThumbPosition() const;
-    virtual int GetThumbSize() const;
-    virtual int GetPageSize() const;
-    virtual int GetRange() const;
+    virtual int GetThumbPosition() const override;
+    virtual int GetThumbSize() const override;
+    virtual int GetPageSize() const override;
+    virtual int GetRange() const override;
 
-    virtual void SetThumbPosition(int thumbPos);
+    virtual void SetThumbPosition(int thumbPos) override;
     virtual void SetScrollbar(int position, int thumbSize,
                               int range, int pageSize,
-                              bool refresh = true);
+                              bool refresh = true) override;
 
     // wxScrollBar actions
     void ScrollToStart();
     void ScrollToEnd();
-    bool ScrollLines(int nLines);
-    bool ScrollPages(int nPages);
+    bool ScrollLines(int nLines) override;
+    bool ScrollPages(int nPages) override;
 
     virtual bool PerformAction(const wxControlAction& action,
                                long numArg = 0,
-                               const wxString& strArg = wxEmptyString);
+                               const wxString& strArg = wxEmptyString) override;
 
     static wxInputHandler *GetStdInputHandler(wxInputHandler *handlerDef);
-    virtual wxInputHandler *DoGetStdInputHandler(wxInputHandler *handlerDef)
+    virtual wxInputHandler *DoGetStdInputHandler(wxInputHandler *handlerDef) override
     {
         return GetStdInputHandler(handlerDef);
     }
 
     // scrollbars around a normal window should not receive the focus
-    virtual bool AcceptsFocus() const;
+    virtual bool AcceptsFocus() const override;
 
     // wxScrollBar sub elements state (combination of wxCONTROL_XXX)
     void SetState(Element which, int flags);
     int GetState(Element which) const;
 
     // implement wxControlWithArrows methods
-    virtual wxRenderer *GetRenderer() const { return m_renderer; }
-    virtual wxWindow *GetWindow() { return this; }
-    virtual bool IsVertical() const { return wxScrollBarBase::IsVertical(); }
-    virtual int GetArrowState(wxScrollArrows::Arrow arrow) const;
-    virtual void SetArrowFlag(wxScrollArrows::Arrow arrow, int flag, bool set);
-    virtual bool OnArrow(wxScrollArrows::Arrow arrow);
-    virtual wxScrollArrows::Arrow HitTestArrow(const wxPoint& pt) const;
+    virtual wxRenderer *GetRenderer() const override { return m_renderer; }
+    virtual wxWindow *GetWindow() override { return this; }
+    virtual bool IsVertical() const override { return wxScrollBarBase::IsVertical(); }
+    virtual int GetArrowState(wxScrollArrows::Arrow arrow) const override;
+    virtual void SetArrowFlag(wxScrollArrows::Arrow arrow, int flag, bool set) override;
+    virtual bool OnArrow(wxScrollArrows::Arrow arrow) override;
+    virtual wxScrollArrows::Arrow HitTestArrow(const wxPoint& pt) const override;
 
     // for wxControlRenderer::DrawScrollbar() only
     const wxScrollArrows& GetArrows() const { return m_arrows; }
@@ -125,14 +123,14 @@ public:
     wxHitTest HitTestBar(const wxPoint& pt) const;
 
     // idle processing
-    virtual void OnInternalIdle();
+    virtual void OnInternalIdle() override;
 
 protected:
-    virtual wxSize DoGetBestClientSize() const;
-    virtual void DoDraw(wxControlRenderer *renderer);
-    virtual wxBorder GetDefaultBorder() const { return wxBORDER_NONE; }
+    virtual wxSize DoGetBestClientSize() const override;
+    virtual void DoDraw(wxControlRenderer *renderer) override;
+    virtual wxBorder GetDefaultBorder() const override { return wxBORDER_NONE; }
 
-    // forces update of thumb's visual appearence (does nothing if m_dirty=false)
+    // forces update of thumb's visual appearance (does nothing if m_dirty=false)
     void UpdateThumb();
 
     // SetThumbPosition() helper
@@ -192,18 +190,18 @@ private:
     // the object handling the arrows
     wxScrollArrows m_arrows;
 
-    friend WXDLLEXPORT class wxControlRenderer; // for geometry methods
+    friend class WXDLLIMPEXP_FWD_CORE wxControlRenderer; // for geometry methods
     friend class wxStdScrollBarInputHandler; // for geometry methods
 
-    DECLARE_EVENT_TABLE()
-    DECLARE_DYNAMIC_CLASS(wxScrollBar)
+    wxDECLARE_EVENT_TABLE();
+    wxDECLARE_DYNAMIC_CLASS(wxScrollBar);
 };
 
 // ----------------------------------------------------------------------------
 // Standard scrollbar input handler which can be used as a base class
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxStdScrollBarInputHandler : public wxStdInputHandler
+class WXDLLIMPEXP_CORE wxStdScrollBarInputHandler : public wxStdInputHandler
 {
 public:
     // constructor takes a renderer (used for scrollbar hit testing) and the
@@ -213,10 +211,10 @@ public:
 
     virtual bool HandleKey(wxInputConsumer *consumer,
                            const wxKeyEvent& event,
-                           bool pressed);
+                           bool pressed) override;
     virtual bool HandleMouse(wxInputConsumer *consumer,
-                             const wxMouseEvent& event);
-    virtual bool HandleMouseMove(wxInputConsumer *consumer, const wxMouseEvent& event);
+                             const wxMouseEvent& event) override;
+    virtual bool HandleMouseMove(wxInputConsumer *consumer, const wxMouseEvent& event) override;
 
     virtual ~wxStdScrollBarInputHandler();
 
@@ -255,7 +253,7 @@ protected:
     void HandleThumbMove(wxScrollBar *scrollbar, const wxMouseEvent& event);
 
 
-    // the window (scrollbar) which has capture or NULL and the flag telling if
+    // the window (scrollbar) which has capture or nullptr and the flag telling if
     // the mouse is inside the element which captured it or not
     wxWindow *m_winCapture;
     bool      m_winHasMouse;

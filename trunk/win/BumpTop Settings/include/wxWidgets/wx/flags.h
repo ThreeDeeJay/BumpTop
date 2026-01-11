@@ -2,15 +2,15 @@
 // Name:        wx/flags.h
 // Purpose:     a bitset suited for replacing the current style flags
 // Author:      Stefan Csomor
-// Modified by:
 // Created:     27/07/03
-// RCS-ID:      $Id: flags.h 35650 2005-09-23 12:56:45Z MR $
 // Copyright:   (c) 2003 Stefan Csomor
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
 #ifndef _WX_SETH__
 #define _WX_SETH__
+
+#include "wx/defs.h"
 
 // wxBitset should be applied to an enum, then this can be used like
 // bitwise operators but keeps the type safety and information, the
@@ -153,13 +153,21 @@ private :
     unsigned long m_data;
 };
 
-#define WX_DEFINE_FLAGS( flags ) \
-    class WXDLLEXPORT flags \
+#if wxUSE_EXTENDED_RTTI
+
+#define wxDEFINE_FLAGS( flags ) \
+    class WXDLLIMPEXP_BASE flags \
     {\
     public : \
         flags(long data=0) :m_data(data) {} \
         long m_data ;\
         bool operator ==(const flags &rhs) const { return m_data == rhs.m_data; }\
     } ;
+
+#else
+
+#define wxDEFINE_FLAGS( flags )
+
+#endif
 
 #endif

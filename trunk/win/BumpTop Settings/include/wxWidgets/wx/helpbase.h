@@ -1,10 +1,8 @@
 /////////////////////////////////////////////////////////////////////////////
-// Name:        helpbase.h
+// Name:        wx/helpbase.h
 // Purpose:     Help system base classes
 // Author:      Julian Smart
-// Modified by:
 // Created:     04/01/98
-// RCS-ID:      $Id: helpbase.h 45498 2007-04-16 13:03:05Z VZ $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -32,11 +30,11 @@ enum wxHelpSearchMode
 };
 
 // Defines the API for help controllers
-class WXDLLEXPORT wxHelpControllerBase: public wxObject
+class WXDLLIMPEXP_CORE wxHelpControllerBase: public wxObject
 {
 public:
-    inline wxHelpControllerBase(wxWindow* parentWindow = NULL) { m_parentWindow = parentWindow; }
-    inline ~wxHelpControllerBase() {}
+    inline wxHelpControllerBase(wxWindow* parentWindow = nullptr) { m_parentWindow = parentWindow; }
+    inline ~wxHelpControllerBase() = default;
 
     // Must call this to set the filename and server name.
     // server is only required when implementing TCP/IP-based
@@ -51,7 +49,7 @@ public:
     virtual bool LoadFile(const wxString& file = wxEmptyString) = 0;
 
     // Displays the contents
-    virtual bool DisplayContents(void) = 0;
+    virtual bool DisplayContents() = 0;
 
     // Display the given section
     virtual bool DisplaySection(int sectionNo) = 0;
@@ -78,11 +76,11 @@ public:
     }
     /// Obtains the latest settings used by the help frame and the help
     /// frame.
-    virtual wxFrame *GetFrameParameters(wxSize *WXUNUSED(size) = NULL,
-        wxPoint *WXUNUSED(pos) = NULL,
-        bool *WXUNUSED(newFrameEachTime) = NULL)
+    virtual wxFrame *GetFrameParameters(wxSize *WXUNUSED(size) = nullptr,
+        wxPoint *WXUNUSED(pos) = nullptr,
+        bool *WXUNUSED(newFrameEachTime) = nullptr)
     {
-        return (wxFrame*) NULL; // does nothing by default
+        return nullptr; // does nothing by default
     }
 
     virtual bool Quit() = 0;
@@ -97,7 +95,7 @@ public:
 protected:
     wxWindow* m_parentWindow;
 private:
-    DECLARE_CLASS(wxHelpControllerBase)
+    wxDECLARE_CLASS(wxHelpControllerBase);
 };
 
 #endif // wxUSE_HELP

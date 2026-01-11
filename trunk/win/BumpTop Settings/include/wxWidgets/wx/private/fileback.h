@@ -1,8 +1,7 @@
 /////////////////////////////////////////////////////////////////////////////
-// Name:        include/wx/private/fileback.h
+// Name:        wx/private/fileback.h
 // Purpose:     Back an input stream with memory or a file
 // Author:      Mike Wetherell
-// RCS-ID:      $Id: fileback.h 42651 2006-10-29 20:06:45Z MW $
 // Copyright:   (c) 2006 Mike Wetherell
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -33,15 +32,15 @@ public:
     // backing file is never created and the backing is done with memory.
     wxBackingFile(wxInputStream *stream,
                   size_t bufsize = DefaultBufSize,
-                  const wxString& prefix = _T("wxbf"));
+                  const wxString& prefix = wxT("wxbf"));
 
-    wxBackingFile() : m_impl(NULL) { }
+    wxBackingFile() : m_impl(nullptr) { }
     ~wxBackingFile();
 
     wxBackingFile(const wxBackingFile& backer);
     wxBackingFile& operator=(const wxBackingFile& backer);
 
-    operator bool() const { return m_impl != NULL; }
+    operator bool() const { return m_impl != nullptr; }
 
 private:
     class wxBackingFileImpl *m_impl;
@@ -59,23 +58,23 @@ public:
 
     // If the length of the backer's parent stream is unknown then GetLength()
     // returns wxInvalidOffset until the parent has been read to the end.
-    wxFileOffset GetLength() const;
+    wxFileOffset GetLength() const override;
 
     // Returns the length, reading the parent stream to the end if necessary.
     wxFileOffset FindLength() const;
 
-    bool IsSeekable() const { return true; }
+    bool IsSeekable() const override { return true; }
 
 protected:
-    size_t OnSysRead(void *buffer, size_t size);
-    wxFileOffset OnSysSeek(wxFileOffset pos, wxSeekMode mode);
-    wxFileOffset OnSysTell() const;
+    size_t OnSysRead(void *buffer, size_t size) override;
+    wxFileOffset OnSysSeek(wxFileOffset pos, wxSeekMode mode) override;
+    wxFileOffset OnSysTell() const override;
 
 private:
     wxBackingFile m_backer;
     wxFileOffset m_pos;
 
-    DECLARE_NO_COPY_CLASS(wxBackedInputStream)
+    wxDECLARE_NO_COPY_CLASS(wxBackedInputStream);
 };
 
 #endif // wxUSE_FILESYSTEM

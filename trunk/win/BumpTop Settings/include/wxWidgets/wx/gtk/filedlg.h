@@ -1,55 +1,70 @@
 /////////////////////////////////////////////////////////////////////////////
-// Name:        filedlg.h
+// Name:        wx/gtk/filedlg.h
 // Purpose:
 // Author:      Robert Roebling
-// Id:          $Id: filedlg.h 39402 2006-05-28 23:32:12Z VZ $
 // Copyright:   (c) 1998 Robert Roebling
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
-#ifndef __GTKFILEDLGH__
-#define __GTKFILEDLGH__
+#ifndef _WX_GTKFILEDLG_H_
+#define _WX_GTKFILEDLG_H_
 
-#include "wx/generic/filedlgg.h"
+#include "wx/gtk/filectrl.h"    // for wxGtkFileChooser
+
+typedef struct _GtkFileChooser GtkFileChooser;
 
 //-------------------------------------------------------------------------
 // wxFileDialog
 //-------------------------------------------------------------------------
 
-class WXDLLIMPEXP_CORE wxFileDialog: public wxGenericFileDialog
+class WXDLLIMPEXP_CORE wxFileDialog: public wxFileDialogBase
 {
+    typedef wxFileDialogBase BaseType;
 public:
-    wxFileDialog() { }
+    wxFileDialog() = default;
 
     wxFileDialog(wxWindow *parent,
-                 const wxString& message = wxFileSelectorPromptStr,
+                 const wxString& message = wxASCII_STR(wxFileSelectorPromptStr),
                  const wxString& defaultDir = wxEmptyString,
                  const wxString& defaultFile = wxEmptyString,
-                 const wxString& wildCard = wxFileSelectorDefaultWildcardStr,
+                 const wxString& wildCard = wxASCII_STR(wxFileSelectorDefaultWildcardStr),
                  long style = wxFD_DEFAULT_STYLE,
                  const wxPoint& pos = wxDefaultPosition,
                  const wxSize& sz = wxDefaultSize,
-                 const wxString& name = wxFileDialogNameStr);
+                 const wxString& name = wxASCII_STR(wxFileDialogNameStr));
+    bool Create(wxWindow *parent,
+                 const wxString& message = wxASCII_STR(wxFileSelectorPromptStr),
+                 const wxString& defaultDir = wxEmptyString,
+                 const wxString& defaultFile = wxEmptyString,
+                 const wxString& wildCard = wxASCII_STR(wxFileSelectorDefaultWildcardStr),
+                 long style = wxFD_DEFAULT_STYLE,
+                 const wxPoint& pos = wxDefaultPosition,
+                 const wxSize& sz = wxDefaultSize,
+                 const wxString& name = wxASCII_STR(wxFileDialogNameStr));
+    virtual ~wxFileDialog();
 
-    virtual ~wxFileDialog() {}
+    virtual wxString GetPath() const override;
+    virtual void GetPaths(wxArrayString& paths) const override;
+    virtual wxString GetFilename() const override;
+    virtual void GetFilenames(wxArrayString& files) const override;
+    virtual int GetFilterIndex() const override;
 
-    virtual wxString GetPath() const;
-    virtual void GetPaths(wxArrayString& paths) const;
-    virtual wxString GetDirectory() const;
-    virtual wxString GetFilename() const;
-    virtual void GetFilenames(wxArrayString& files) const;
-    virtual int GetFilterIndex() const;
+    virtual void SetMessage(const wxString& message) override;
+    virtual void SetPath(const wxString& path) override;
+    virtual void SetDirectory(const wxString& dir) override;
+    virtual void SetFilename(const wxString& name) override;
+    virtual void SetWildcard(const wxString& wildCard) override;
+    virtual void SetFilterIndex(int filterIndex) override;
 
-    virtual void SetMessage(const wxString& message);
-    virtual void SetPath(const wxString& path);
-    virtual void SetDirectory(const wxString& dir);
-    virtual void SetFilename(const wxString& name);
-    virtual void SetWildcard(const wxString& wildCard);
-    virtual void SetFilterIndex(int filterIndex);
+    virtual int ShowModal() override;
+    virtual void EndModal(int retCode) override;
 
-    virtual int ShowModal();
-    virtual bool Show( bool show = true );
+    virtual bool AddShortcut(const wxString& directory, int flags = 0) override;
+    virtual bool SupportsExtraControl() const override { return true; }
 
+    // Implementation only.
+    void GTKSelectionChanged(const wxString& filename);
+    void GTKDropNative();
 
 
 protected:
@@ -57,13 +72,25 @@ protected:
     // form doesn't have any m_wxwindow
     virtual void DoSetSize(int x, int y,
                            int width, int height,
-                           int sizeFlags = wxSIZE_AUTO);
+                           int sizeFlags = wxSIZE_AUTO) override;
 
 
 private:
-    DECLARE_DYNAMIC_CLASS(wxFileDialog)
-    DECLARE_EVENT_TABLE()
     void OnFakeOk( wxCommandEvent &event );
+    void OnSize(wxSizeEvent&);
+    virtual void AddChildGTK(wxWindowGTK* child) override;
+
+    const wxGtkFileChooser& GetFileChooser() const
+    {
+        return m_fcNative ? *m_fcNative : m_fc;
+    }
+
+    wxGtkFileChooser    m_fc;
+    wxGtkFileChooser* m_fcNative = nullptr;
+    GtkFileChooser* m_fileChooserNative = nullptr;
+
+    wxDECLARE_DYNAMIC_CLASS(wxFileDialog);
+    wxDECLARE_EVENT_TABLE();
 };
 
-#endif // __GTKFILEDLGH__
+#endif // _WX_GTKFILEDLG_H_

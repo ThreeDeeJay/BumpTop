@@ -3,9 +3,7 @@
 // Purpose:     wxDragImage class: a kind of a cursor, that can cope
 //              with more sophisticated images
 // Author:      Julian Smart
-// Modified by:
 // Created:     08/04/99
-// RCS-ID:      $Id: dragimag.h 45845 2007-05-05 19:00:35Z PC $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -81,7 +79,7 @@
     {
         m_dragImage->EndDrag(this);
         delete m_dragImage;
-        m_dragImage = NULL;
+        m_dragImage = nullptr;
     }
     ReleaseMouse();
  }
@@ -99,7 +97,7 @@
  * wxDragImage
  */
 
-class WXDLLEXPORT wxDragImage: public wxObject
+class WXDLLIMPEXP_CORE wxDragImage: public wxObject
 {
 public:
 
@@ -114,14 +112,6 @@ public:
         Create(image, cursor);
     }
 
-    // Deprecated form of the above
-    wxDragImage(const wxBitmap& image, const wxCursor& cursor, const wxPoint& cursorHotspot)
-    {
-        Init();
-
-        Create(image, cursor, cursorHotspot);
-    }
-
     wxDragImage(const wxIcon& image, const wxCursor& cursor = wxNullCursor)
     {
         Init();
@@ -129,27 +119,11 @@ public:
         Create(image, cursor);
     }
 
-    // Deprecated form of the above
-    wxDragImage(const wxIcon& image, const wxCursor& cursor, const wxPoint& cursorHotspot)
-    {
-        Init();
-
-        Create(image, cursor, cursorHotspot);
-    }
-
     wxDragImage(const wxString& str, const wxCursor& cursor = wxNullCursor)
     {
         Init();
 
         Create(str, cursor);
-    }
-
-    // Deprecated form of the above
-    wxDragImage(const wxString& str, const wxCursor& cursor, const wxPoint& cursorHotspot)
-    {
-        Init();
-
-        Create(str, cursor, cursorHotspot);
     }
 
 #if wxUSE_TREECTRL
@@ -180,27 +154,12 @@ public:
 
     // Create a drag image from a bitmap and optional cursor
     bool Create(const wxBitmap& image, const wxCursor& cursor = wxNullCursor);
-    bool Create(const wxBitmap& image, const wxCursor& cursor, const wxPoint& WXUNUSED(cursorHotspot))
-    {
-        wxLogDebug(wxT("wxDragImage::Create: use of a cursor hotspot is now deprecated. Please omit this argument."));
-        return Create(image, cursor);
-    }
 
     // Create a drag image from an icon and optional cursor
     bool Create(const wxIcon& image, const wxCursor& cursor = wxNullCursor);
-    bool Create(const wxIcon& image, const wxCursor& cursor, const wxPoint& WXUNUSED(cursorHotspot))
-    {
-        wxLogDebug(wxT("wxDragImage::Create: use of a cursor hotspot is now deprecated. Please omit this argument."));
-        return Create(image, cursor);
-    }
 
     // Create a drag image from a string and optional cursor
     bool Create(const wxString& str, const wxCursor& cursor = wxNullCursor);
-    bool Create(const wxString& str, const wxCursor& cursor, const wxPoint& WXUNUSED(cursorHotspot))
-    {
-        wxLogDebug(wxT("wxDragImage::Create: use of a cursor hotspot is now deprecated. Please omit this argument."));
-        return Create(str, cursor);
-    }
 
 #if wxUSE_TREECTRL
     // Create a drag image for the given tree control item
@@ -214,7 +173,7 @@ public:
 
     // Begin drag. hotspot is the location of the drag position relative to the upper-left
     // corner of the image.
-    bool BeginDrag(const wxPoint& hotspot, wxWindow* window, bool fullScreen = false, wxRect* rect = (wxRect*) NULL);
+    bool BeginDrag(const wxPoint& hotspot, wxWindow* window, bool fullScreen = false, wxRect* rect = nullptr);
 
     // Begin drag. hotspot is the location of the drag position relative to the upper-left
     // corner of the image. This is full screen only. fullScreenRect gives the
@@ -225,7 +184,7 @@ public:
     bool EndDrag();
 
     // Move the image: call from OnMouseMove. Pt is in window client coordinates if window
-    // is non-NULL, or in screen coordinates if NULL.
+    // is non-null, or in screen coordinates if null.
     bool Move(const wxPoint& pt);
 
     // Show the image
@@ -265,8 +224,8 @@ protected:
     bool            m_fullScreen;
 
 private:
-    DECLARE_DYNAMIC_CLASS(wxDragImage)
-    DECLARE_NO_COPY_CLASS(wxDragImage)
+    wxDECLARE_DYNAMIC_CLASS(wxDragImage);
+    wxDECLARE_NO_COPY_CLASS(wxDragImage);
 };
 
 #endif // wxUSE_DRAGIMAGE

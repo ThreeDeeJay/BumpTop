@@ -3,7 +3,6 @@
 // Purpose:     wxCursor declaration
 // Author:      Vaclav Slavik
 // Created:     2006-08-08
-// RCS-ID:      $Id: cursor.h 42752 2006-10-30 19:26:48Z VZ $
 // Copyright:   (c) 2006 REA Elektronik GmbH
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -11,39 +10,42 @@
 #ifndef _WX_DFB_CURSOR_H_
 #define _WX_DFB_CURSOR_H_
 
-#include "wx/object.h"
-#include "wx/gdicmn.h"
-
-class WXDLLIMPEXP_CORE wxBitmap;
+class WXDLLIMPEXP_FWD_CORE wxBitmap;
+class WXDLLIMPEXP_FWD_CORE wxImage;
 
 //-----------------------------------------------------------------------------
 // wxCursor
 //-----------------------------------------------------------------------------
 
-class WXDLLIMPEXP_CORE wxCursor: public wxObject
+class WXDLLIMPEXP_CORE wxCursor : public wxCursorBase
 {
 public:
-    wxCursor() {}
-    wxCursor(int cursorId);
-    wxCursor(const char bits[], int width, int  height,
-              int hotSpotX=-1, int hotSpotY=-1,
-              const char maskBits[]=0, wxColour *fg=0, wxColour *bg=0);
+    wxCursor() = default;
+    wxCursor(wxStockCursor id) { InitFromStock(id); }
+    wxCursor(const wxBitmap& bitmap, const wxPoint& hotSpot)
+        : wxCursor(bitmap, hotSpot.x, hotSpot.y) { }
+    wxCursor(const wxBitmap& bitmap, int hotSpotX = 0, int hotSpotY = 0);
+#if wxUSE_IMAGE
+    wxCursor(const wxImage& image);
+    wxCursor(const char* const* xpmData);
+#endif // wxUSE_IMAGE
+    wxCursor(const wxString& name, wxBitmapType type, const wxPoint& hotSpot)
+        : wxCursor(name, type, hotSpot.x, hotSpot.y) { }
     wxCursor(const wxString& name,
-             long flags = wxBITMAP_TYPE_CUR_RESOURCE,
+             wxBitmapType type = wxCURSOR_DEFAULT_TYPE,
              int hotSpotX = 0, int hotSpotY = 0);
-
-    bool Ok() const { return IsOk(); }
-    bool IsOk() const;
 
     // implementation
     wxBitmap GetBitmap() const;
 
 protected:
-    // ref counting code
-    virtual wxObjectRefData *CreateRefData() const;
-    virtual wxObjectRefData *CloneRefData(const wxObjectRefData *data) const;
+    void InitFromStock(wxStockCursor);
 
-    DECLARE_DYNAMIC_CLASS(wxCursor)
+    // ref counting code
+    virtual wxGDIRefData *CreateGDIRefData() const;
+    wxNODISCARD virtual wxGDIRefData *CloneGDIRefData(const wxGDIRefData *data) const;
+
+    wxDECLARE_DYNAMIC_CLASS(wxCursor);
 };
 
 #endif // _WX_DFB_CURSOR_H_

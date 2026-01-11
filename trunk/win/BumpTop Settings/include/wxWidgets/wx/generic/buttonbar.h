@@ -2,11 +2,9 @@
 // Name:        wx/generic/buttonbar.h
 // Purpose:     wxButtonToolBar declaration
 // Author:      Julian Smart, after Robert Roebling, Vadim Zeitlin, SciTech
-// Modified by:
 // Created:     2006-04-13
-// Id:          $Id: buttonbar.h 38714 2006-04-14 15:49:57Z JS $
 // Copyright:   (c) Julian Smart, Robert Roebling, Vadim Zeitlin,
-//              SciTech Software, Inc. 
+//              SciTech Software, Inc.
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -16,14 +14,14 @@
 #include "wx/bmpbuttn.h"
 #include "wx/toolbar.h"
 
-class WXDLLEXPORT wxButtonToolBarTool;
+class WXDLLIMPEXP_FWD_CORE wxButtonToolBarTool;
 
 // ----------------------------------------------------------------------------
 // wxButtonToolBar
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxButtonToolBar : public wxToolBarBase
-{    
+class WXDLLIMPEXP_CORE wxButtonToolBar : public wxToolBarBase
+{
 public:
     // construction/destruction
     wxButtonToolBar() { Init(); }
@@ -32,7 +30,7 @@ public:
               const wxPoint& pos = wxDefaultPosition,
               const wxSize& size = wxDefaultSize,
               long style = 0,
-              const wxString& name = wxToolBarNameStr)
+              const wxString& name = wxASCII_STR(wxToolBarNameStr))
     {
         Init();
 
@@ -44,38 +42,39 @@ public:
                  const wxPoint& pos = wxDefaultPosition,
                  const wxSize& size = wxDefaultSize,
                  long style = 0,
-                 const wxString& name = wxToolBarNameStr );
-                 
+                 const wxString& name = wxASCII_STR(wxToolBarNameStr) );
+
     virtual ~wxButtonToolBar();
 
-    virtual bool Realize();
+    virtual bool Realize() override;
 
-    virtual void SetToolShortHelp(int id, const wxString& helpString);
-    virtual wxToolBarToolBase *FindToolForPosition(wxCoord x, wxCoord y) const;
+    virtual void SetToolShortHelp(int id, const wxString& helpString) override;
+    virtual wxToolBarToolBase *FindToolForPosition(wxCoord x, wxCoord y) const override;
 
 protected:
     // common part of all ctors
     void Init();
 
     // implement base class pure virtuals
-    virtual bool DoInsertTool(size_t pos, wxToolBarToolBase *tool);
-    virtual bool DoDeleteTool(size_t pos, wxToolBarToolBase *tool);
+    virtual bool DoInsertTool(size_t pos, wxToolBarToolBase *tool) override;
+    virtual bool DoDeleteTool(size_t pos, wxToolBarToolBase *tool) override;
 
-    virtual void DoEnableTool(wxToolBarToolBase *tool, bool enable);
-    virtual void DoToggleTool(wxToolBarToolBase *tool, bool toggle);
-    virtual void DoSetToggle(wxToolBarToolBase *tool, bool toggle);
+    virtual void DoEnableTool(wxToolBarToolBase *tool, bool enable) override;
+    virtual void DoToggleTool(wxToolBarToolBase *tool, bool toggle) override;
+    virtual void DoSetToggle(wxToolBarToolBase *tool, bool toggle) override;
 
     virtual wxToolBarToolBase *CreateTool(int id,
                                           const wxString& label,
-                                          const wxBitmap& bmpNormal,
-                                          const wxBitmap& bmpDisabled,
+                                          const wxBitmapBundle& bmpNormal,
+                                          const wxBitmapBundle& bmpDisabled,
                                           wxItemKind kind,
                                           wxObject *clientData,
                                           const wxString& shortHelp,
-                                          const wxString& longHelp);
-    virtual wxToolBarToolBase *CreateTool(wxControl *control);
+                                          const wxString& longHelp) override;
+    virtual wxToolBarToolBase *CreateTool(wxControl *control,
+                                          const wxString& label) override;
 
-    virtual wxSize DoGetBestClientSize() const;
+    virtual wxSize DoGetBestClientSize() const override;
 
     // calculate layout
     void DoLayout();
@@ -114,8 +113,8 @@ private:
     int m_labelMargin;
 
 private:
-    DECLARE_DYNAMIC_CLASS(wxButtonToolBar)
-    DECLARE_EVENT_TABLE()
+    wxDECLARE_DYNAMIC_CLASS(wxButtonToolBar);
+    wxDECLARE_EVENT_TABLE();
 };
 
 #endif
