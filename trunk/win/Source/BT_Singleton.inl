@@ -22,15 +22,16 @@ T *Singleton<T>::getInstance()
 }
 
 template <class T>
-shared_ptr<T> Singleton<T>::getSharedInstance()
+boost::shared_ptr<T> Singleton<T>::getSharedInstance()
 {
 	// XXX: is this threadsafe?
-	static shared_ptr<T> sharedInstance(new T);
+	static boost::shared_ptr<T> sharedInstance(new T);
 
 #if BTDEBUG
-	static shared_ptr<T> prevSharedInstance(sharedInstance);
+	static boost::shared_ptr<T> prevSharedInstance(sharedInstance);
 	assert(sharedInstance == prevSharedInstance);
 #endif
 
 	return sharedInstance;
+
 }
