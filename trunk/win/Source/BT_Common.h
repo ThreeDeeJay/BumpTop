@@ -20,6 +20,8 @@
 #pragma warning(disable : 4985)
 #pragma warning(disable : 4800)
 
+#define _SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS
+
 // Win32 Headers
 #ifdef WIN32
 	#define WIN32_LEAN_AND_MEAN

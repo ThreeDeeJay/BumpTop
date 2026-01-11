@@ -269,7 +269,8 @@ jobs:
       run: |
         python --version
         echo "C:\Python26;$env:GITHUB_PATH" >> $env:GITHUB_PATH
-        msbuild /m "${{env.Solution}}" /p:Configuration="${{env.Configuration}}" /p:PlatformToolset="v142" /p:_SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS=1 #/p:ContinueOnError="WarnAndContinue" /p:AdditionalDependencies="legacy_stdio_definitions.lib" /p:Platform="${{env.Platform}}" /p:IncludePath="C:\Path\to\Include" /p:LibPath="C:\Path\to\Lib" /p:AdditionalIncludePaths="C:\Path\to\external\include" /p:AdditionalLibraryDirectories="C:\Path\to\external\lib" /p:LanguageStandard="stdcpp17"
+        python --version
+        msbuild /m "${{env.Solution}}" /p:Configuration="${{env.Configuration}}" /p:PlatformToolset="v142" #/p:ContinueOnError="WarnAndContinue" /p:AdditionalDependencies="legacy_stdio_definitions.lib" /p:Platform="${{env.Platform}}" /p:IncludePath="C:\Path\to\Include" /p:LibPath="C:\Path\to\Lib" /p:AdditionalIncludePaths="C:\Path\to\external\include" /p:AdditionalLibraryDirectories="C:\Path\to\external\lib" /p:LanguageStandard="stdcpp17"
 
     - name: Upload Installer Artifact to GitHub
       uses: actions/upload-artifact@v4
