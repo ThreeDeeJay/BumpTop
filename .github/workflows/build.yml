@@ -49,14 +49,20 @@ jobs:
     - name: Set DXSDK_DIR
       run: echo "DXSDK_DIR=C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\" >> $env:GITHUB_ENV
 
-#    - name: Install Python 2.6
-#      shell: powershell
-#      run: |
-#        Invoke-WebRequest -Method Get -Uri https://www.python.org/ftp/python/2.6.6/python-2.6.6.msi -OutFile python-2.6.6.msi -UseBasicParsing
-#        Start-Process -Wait ./python-2.6.6.msi -ArgumentList "/quiet", "InstallAllUsers=1", "PrependPath=1" 
-    - uses: actions/setup-python@v6
-      with:
-        python-version: '2.6.9' 
+    - name: Install Python 2.6
+      shell: powershell
+      run: |
+        Invoke-WebRequest -Method Get -Uri https://www.python.org/ftp/python/2.6.6/python-2.6.6.msi -OutFile python-2.6.6.msi -UseBasicParsing
+        Start-Process -Wait ./python-2.6.6.msi -ArgumentList "/quiet", "InstallAllUsers=1", "PrependPath=1"
+
+    - name: Check Python 2.6
+      shell: powershell
+      run: |
+        python
+        python --version
+#    - uses: actions/setup-python@v6
+#      with:
+#        python-version: '2.6.9' 
 
 
 
