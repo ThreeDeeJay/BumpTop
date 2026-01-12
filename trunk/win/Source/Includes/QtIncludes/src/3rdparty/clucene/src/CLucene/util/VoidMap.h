@@ -173,7 +173,7 @@ public:
 	}
 };
 #elif defined(_CL_HAVE_EXT_HASH_MAP)
- //ext/hash_map syntax
+ //ext/unordered_map syntax
 //HashMap  class is roughly equivalent to Hashtable, except that it is unsynchronized
 template<typename _kt, typename _vt,
 	typename _Hasher,
@@ -181,10 +181,10 @@ template<typename _kt, typename _vt,
 	typename _KeyDeletor=CL_NS(util)::Deletor::Dummy,
 	typename _ValueDeletor=CL_NS(util)::Deletor::Dummy>
 class CLHashMap:public __CLMap<_kt,_vt,
-	CL_NS_HASHING(hash_map)<_kt,_vt, _Hasher,_Equals>,
+	CL_NS_HASHING(unordered_map)<_kt,_vt, _Hasher,_Equals>,
 	_KeyDeletor,_ValueDeletor>
 {
-	typedef __CLMap<_kt,_vt, CL_NS_HASHING(hash_map)<_kt,_vt, _Hasher,_Equals>,
+	typedef __CLMap<_kt,_vt, CL_NS_HASHING(unordered_map)<_kt,_vt, _Hasher,_Equals>,
 		_KeyDeletor,_ValueDeletor> _this;
 public:
 	CLHashMap ( const bool deleteKey=false, const bool deleteValue=false )
@@ -202,10 +202,10 @@ template<typename _kt, typename _vt,
 	typename _KeyDeletor=CL_NS(util)::Deletor::Dummy,
 	typename _ValueDeletor=CL_NS(util)::Deletor::Dummy>
 class CLHashMap:public __CLMap<_kt,_vt,
-	CL_NS_HASHING(hash_map)<_kt,_vt, _Hasher>,
+	CL_NS_HASHING(unordered_map)<_kt,_vt, _Hasher>,
 	_KeyDeletor,_ValueDeletor>
 {
-	typedef __CLMap<_kt,_vt, CL_NS_HASHING(hash_map)<_kt,_vt, _Hasher>,
+	typedef __CLMap<_kt,_vt, CL_NS_HASHING(unordered_map)<_kt,_vt, _Hasher>,
 		_KeyDeletor,_ValueDeletor> _this;
 public:
 	CLHashMap ( const bool deleteKey=false, const bool deleteValue=false )

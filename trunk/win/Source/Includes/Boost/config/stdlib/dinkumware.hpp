@@ -42,7 +42,7 @@
 #  if !defined(_LONGLONG) && (_CPPLIB_VER <= 310)
 #     define BOOST_NO_MS_INT64_NUMERIC_LIMITS
 #  endif
-// 3.06 appears to have (non-sgi versions of) <hash_set> & <hash_map>,
+// 3.06 appears to have (non-sgi versions of) <hash_set> & <unordered_map>,
 // and no <slist> at all
 #else
 #  define BOOST_MSVC_STD_ITERATOR 1

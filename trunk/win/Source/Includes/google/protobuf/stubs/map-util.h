@@ -39,7 +39,7 @@
 namespace google {
 namespace protobuf {
 
-// Perform a lookup in a map or hash_map.
+// Perform a lookup in a map or unordered_map.
 // If the key is present in the map then the value associated with that
 // key is returned, otherwise the value passed as a default is returned.
 template <class Collection>
@@ -54,7 +54,7 @@ FindWithDefault(const Collection& collection,
   return it->second;
 }
 
-// Perform a lookup in a map or hash_map.
+// Perform a lookup in a map or unordered_map.
 // If the key is present a const pointer to the associated value is returned,
 // otherwise a NULL pointer is returned.
 template <class Collection>
@@ -68,7 +68,7 @@ FindOrNull(const Collection& collection,
   return &it->second;
 }
 
-// Perform a lookup in a map or hash_map whose values are pointers.
+// Perform a lookup in a map or unordered_map whose values are pointers.
 // If the key is present a const pointer to the associated value is returned,
 // otherwise a NULL pointer is returned.
 // This function does not distinguish between a missing key and a key mapped
@@ -84,7 +84,7 @@ FindPtrOrNull(const Collection& collection,
   return it->second;
 }
 
-// Change the value associated with a particular key in a map or hash_map.
+// Change the value associated with a particular key in a map or unordered_map.
 // If the key is not present in the map the key and value are inserted,
 // otherwise the value is updated to be a copy of the value provided.
 // True indicates that an insert took place, false indicates an update.
@@ -101,7 +101,7 @@ bool InsertOrUpdate(Collection * const collection,
   return true;
 }
 
-// Insert a new key and value into a map or hash_map.
+// Insert a new key and value into a map or unordered_map.
 // If the key is not present in the map the key and value are
 // inserted, otherwise nothing happens. True indicates that an insert
 // took place, false indicates the key was already present.

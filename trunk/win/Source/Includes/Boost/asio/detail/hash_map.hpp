@@ -1,5 +1,5 @@
 //
-// detail/hash_map.hpp
+// detail/unordered_map.hpp
 // ~~~~~~~~~~~~~~~~~~~
 //
 // Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
@@ -51,7 +51,7 @@ inline std::size_t calculate_hash_value(SOCKET s)
 
 // Note: assumes K and V are POD types.
 template <typename K, typename V>
-class hash_map
+class unordered_map
   : private noncopyable
 {
 public:
@@ -65,7 +65,7 @@ public:
   typedef typename std::list<value_type>::const_iterator const_iterator;
 
   // Constructor.
-  hash_map()
+  unordered_map()
     : size_(0),
       buckets_(0),
       num_buckets_(0)
@@ -73,7 +73,7 @@ public:
   }
 
   // Destructor.
-  ~hash_map()
+  ~unordered_map()
   {
     delete[] buckets_;
   }

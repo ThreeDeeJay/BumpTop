@@ -30,7 +30,7 @@
 
 // Author: kenton@google.com (Kenton Varda)
 //
-// Deals with the fact that hash_map is not defined everywhere.
+// Deals with the fact that unordered_map is not defined everywhere.
 
 #ifndef GOOGLE_PROTOBUF_STUBS_HASH_H__
 #define GOOGLE_PROTOBUF_STUBS_HASH_H__
@@ -53,7 +53,7 @@ namespace protobuf {
 
 #ifdef MISSING_HASH
 
-// This system doesn't have hash_map or hash_set.  Emulate them using map and
+// This system doesn't have unordered_map or hash_set.  Emulate them using map and
 // set.
 
 // Make hash<T> be the same as less<T>.  Note that everywhere where custom
@@ -89,7 +89,7 @@ struct hash<const char*> {
 template <typename Key, typename Data,
           typename HashFcn = hash<Key>,
           typename EqualKey = int >
-class hash_map : public std::map<Key, Data, HashFcn> {
+class unordered_map : public std::map<Key, Data, HashFcn> {
 };
 
 template <typename Key,
@@ -121,7 +121,7 @@ struct hash<const char*>
 template <typename Key, typename Data,
           typename HashFcn = hash<Key>,
           typename EqualKey = int >
-class hash_map : public HASH_NAMESPACE::hash_map<
+class unordered_map : public HASH_NAMESPACE::unordered_map<
     Key, Data, HashFcn> {
 };
 
@@ -161,7 +161,7 @@ struct hash<const char*> {
 template <typename Key, typename Data,
           typename HashFcn = hash<Key>,
           typename EqualKey = std::equal_to<Key> >
-class hash_map : public HASH_NAMESPACE::HASH_MAP_CLASS<
+class unordered_map : public HASH_NAMESPACE::HASH_MAP_CLASS<
     Key, Data, HashFcn, EqualKey> {
 };
 

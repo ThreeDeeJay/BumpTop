@@ -268,7 +268,7 @@ class StatsManager : public FileTransferEventHandler
 
 	// stats data
 	StatsPersistentData _statsData;
-	hash_map<int, StopwatchInSeconds> _timers;
+	unordered_map<int, StopwatchInSeconds> _timers;
 	QString _statFileName;
 	tm *_statFileDate;
 	QString _statFileDirHash;

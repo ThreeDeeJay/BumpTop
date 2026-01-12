@@ -182,7 +182,7 @@ _ERROR_CATEGORIES = '''\
 # Headers that we consider STL headers.
 _STL_HEADERS = frozenset([
     'algobase.h', 'algorithm', 'alloc.h', 'bitset', 'deque', 'exception',
-    'function.h', 'functional', 'hash_map', 'hash_map.h', 'hash_set',
+    'function.h', 'functional', 'unordered_map', 'unordered_map.h', 'hash_set',
     'hash_set.h', 'iterator', 'list', 'list.h', 'map', 'memory', 'pair.h',
     'pthread_alloc', 'queue', 'set', 'set.h', 'sstream', 'stack',
     'stl_alloc.h', 'stl_relops.h', 'type_traits.h',
@@ -2449,14 +2449,14 @@ _HEADERS_CONTAINING_TEMPLATES = (
 
     # gcc extensions.
     # Note: std::hash is their hash, ::hash is our hash
-    ('<hash_map>', ('hash_map', 'hash_multimap',)),
+    ('<unordered_map>', ('unordered_map', 'hash_multimap',)),
     ('<hash_set>', ('hash_set', 'hash_multiset',)),
     ('<slist>', ('slist',)),
     )
 
 _HEADERS_ACCEPTED_BUT_NOT_PROMOTED = {
     # We can trust with reasonable confidence that map gives us pair<>, too.
-    'pair<>': ('map', 'multimap', 'hash_map', 'hash_multimap')
+    'pair<>': ('map', 'multimap', 'unordered_map', 'hash_multimap')
 }
 
 _RE_PATTERN_STRING = re.compile(r'\bstring\b')

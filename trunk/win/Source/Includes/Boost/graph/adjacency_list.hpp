@@ -68,7 +68,7 @@ namespace boost {
   struct multisetS { };
   struct multimapS { };
   struct hash_setS { };
-  struct hash_mapS { };
+  struct unordered_mapS { };
   struct hash_multisetS { };
   struct hash_multimapS { };
 
@@ -116,7 +116,7 @@ namespace boost {
   };
 
   template <class ValueType>
-  struct container_gen<hash_mapS, ValueType> {
+  struct container_gen<unordered_mapS, ValueType> {
     typedef boost::unordered_set<ValueType> type;
   };
 
@@ -175,7 +175,7 @@ namespace boost {
     struct bind_ { typedef boost::unordered_set<T> type; };
   };
 
-  struct hash_mapS {
+  struct unordered_mapS {
     template <class T>
     struct bind_ { typedef boost::unordered_set<T> type; };
   };
@@ -204,7 +204,7 @@ namespace boost {
   BOOST_CONTAINER_SELECTOR(mapS);
   BOOST_CONTAINER_SELECTOR(setS);
   BOOST_CONTAINER_SELECTOR(multisetS);
-  BOOST_CONTAINER_SELECTOR(hash_mapS);
+  BOOST_CONTAINER_SELECTOR(unordered_mapS);
 #if !defined BOOST_NO_SLIST
   BOOST_CONTAINER_SELECTOR(slistS);
 #endif
@@ -253,7 +253,7 @@ namespace boost {
     typedef disallow_parallel_edge_tag type; };
 
   template <>
-  struct parallel_edge_traits<hash_mapS> {
+  struct parallel_edge_traits<unordered_mapS> {
     typedef disallow_parallel_edge_tag type;
   };
 

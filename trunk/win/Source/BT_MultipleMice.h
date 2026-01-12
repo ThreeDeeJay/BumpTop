@@ -20,7 +20,7 @@
 
 class MultipleMice
 {
-	hash_map<HANDLE,MousePointer*> hDevice_to_mousePointer;
+	unordered_map<HANDLE,MousePointer*> hDevice_to_mousePointer;
 
 	friend class Singleton<MultipleMice>;
 	MultipleMice();

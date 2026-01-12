@@ -262,7 +262,7 @@ namespace boost { namespace graph_detail {
   { return stable_tag(); }
 
 
- // hash_set, hash_map
+ // hash_set, unordered_map
 
   struct unordered_set_tag :
     virtual public simple_associative_container_tag,

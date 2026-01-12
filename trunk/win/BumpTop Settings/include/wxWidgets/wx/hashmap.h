@@ -15,12 +15,12 @@
 #include "wx/string.h"
 
 // In wxUSE_STL build we prefer to use the standard hash map class but it can
-// be either in non-standard hash_map header (old g++ and some other STL
+// be either in non-standard unordered_map header (old g++ and some other STL
 // implementations) or in C++0x standard unordered_map which can in turn be
 // available either in std::tr1 or std namespace itself
 //
 // To summarize: if std::unordered_map is available use it, otherwise use tr1
-// and finally fall back to non-standard hash_map
+// and finally fall back to non-standard unordered_map
 
 #if (defined(HAVE_EXT_HASH_MAP) || defined(HAVE_HASH_MAP)) \
     && (defined(HAVE_GNU_CXX_HASH_MAP) || defined(HAVE_STD_HASH_MAP))
@@ -44,9 +44,9 @@
 #elif wxUSE_STL && defined(HAVE_STL_HASH_MAP)
 
 #if defined(HAVE_EXT_HASH_MAP)
-    #include <ext/hash_map>
+    #include <ext/unordered_map>
 #elif defined(HAVE_HASH_MAP)
-    #include <hash_map>
+    #include <unordered_map>
 #endif
 
 #if defined(HAVE_GNU_CXX_HASH_MAP)
@@ -56,7 +56,7 @@
 #endif
 
 #define _WX_DECLARE_HASH_MAP( KEY_T, VALUE_T, HASH_T, KEY_EQ_T, CLASSNAME, CLASSEXP ) \
-    typedef WX_HASH_MAP_NAMESPACE::hash_map< KEY_T, VALUE_T, HASH_T, KEY_EQ_T > CLASSNAME
+    typedef WX_HASH_MAP_NAMESPACE::unordered_map< KEY_T, VALUE_T, HASH_T, KEY_EQ_T > CLASSNAME
 
 #else // !wxUSE_STL || no std::{hash,unordered}_map class available
 

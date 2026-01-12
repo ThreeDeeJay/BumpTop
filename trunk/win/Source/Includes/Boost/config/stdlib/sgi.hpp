@@ -83,7 +83,7 @@
 #endif
 
 //
-// We always have SGI style hash_set, hash_map, and slist:
+// We always have SGI style hash_set, unordered_map, and slist:
 //
 #define BOOST_HAS_HASH
 #define BOOST_HAS_SLIST

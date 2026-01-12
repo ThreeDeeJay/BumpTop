@@ -7219,7 +7219,7 @@ void orderSpatially2D(vector<BumpObject *> & objectsInOut, bool groupPileItems)
 	// then using the x sorted list, we will iterate the objects in line and 
 	// place them in the ordered set
 
-	hash_map<BumpObject *, vector<BumpObject *>> pileItems;
+	unordered_map<BumpObject *, vector<BumpObject *>> pileItems;
 	if (groupPileItems)
 	{
 		// If the item belongs to a pile, add pile to the sort vector and remove the item itself
@@ -7232,7 +7232,7 @@ void orderSpatially2D(vector<BumpObject *> & objectsInOut, bool groupPileItems)
 				i--;
 			}
 		}
-		hash_map<BumpObject *, vector<BumpObject *>>::iterator pileItmesIt = pileItems.begin();
+		unordered_map<BumpObject *, vector<BumpObject *>>::iterator pileItmesIt = pileItems.begin();
 		while (pileItmesIt != pileItems.end())
 		{
 			objectsInOut.push_back((*pileItmesIt).first);

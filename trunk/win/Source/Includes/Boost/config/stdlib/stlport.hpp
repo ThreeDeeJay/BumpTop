@@ -114,7 +114,7 @@
 #endif
 
 //
-// We always have SGI style hash_set, hash_map, and slist:
+// We always have SGI style hash_set, unordered_map, and slist:
 //
 #ifndef _STLP_NO_EXTENSIONS
 #define BOOST_HAS_HASH

@@ -124,10 +124,10 @@ extern int _lucene_counter_break; //can set a watch on this
 
 #if !defined(LUCENE_DISABLE_HASHING) && defined(_CL_HAVE_HASH_MAP) && defined(_CL_HAVE_HASH_SET)
 	//hashing is all or nothing!
-	#include <hash_map>
+	#include <unordered_map>
 	#include <hash_set>
 #elif !defined(LUCENE_DISABLE_HASHING) && defined(_CL_HAVE_EXT_HASH_MAP) && defined(_CL_HAVE_EXT_HASH_SET)
-	#include <ext/hash_map>
+	#include <ext/unordered_map>
 	#include <ext/hash_set>
 #elif !defined(LUCENE_DISABLE_HASHING)
 	#define LUCENE_DISABLE_HASHING

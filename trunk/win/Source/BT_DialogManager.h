@@ -118,7 +118,7 @@ class DialogManager
 	TaskDialogIndirect _pTaskDialogIndirect;
 
 	// set of active complex win32 dialogs (can only have one of each active)
-	typedef hash_map<DialogType, Win32Dialog *> ComplexDialogsContainer;
+	typedef unordered_map<DialogType, Win32Dialog *> ComplexDialogsContainer;
 	ComplexDialogsContainer complexDialogs;
 
 	// Singleton

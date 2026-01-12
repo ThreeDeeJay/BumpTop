@@ -8,7 +8,7 @@
 // Modeled after range_ex, Copyright 2004 Eric Niebler
 ///////////////////////////////////////////////////////////////////////////////
 //
-// is_std_hash_map.hpp
+// is_std_unordered_map.hpp
 //
 /////////////////////////////////////////////////////////////////////////////
 
@@ -20,12 +20,12 @@
 #define IS_STD_HASH_MAP_EN_16_12_2004
 
 #include <boost/mpl/bool.hpp>
-#include "./std_hash_map_fwd.hpp"
+#include "./std_unordered_map_fwd.hpp"
 
 namespace boost
 {
     template<class T>
-    struct is_std_hash_map
+    struct is_std_unordered_map
         : boost::mpl::false_
     {};
 
@@ -43,7 +43,7 @@ namespace boost
       , class Cmp
       , class Alloc
     >
-    struct is_std_hash_map< ::BOOST_STD_EXTENSION_NAMESPACE::hash_map<Kty,Ty,Hash,Cmp,Alloc> >
+    struct is_std_unordered_map< ::BOOST_STD_EXTENSION_NAMESPACE::unordered_map<Kty,Ty,Hash,Cmp,Alloc> >
         : boost::mpl::true_
     {};
 
@@ -66,7 +66,7 @@ namespace boost
       , class Tr
       , class Alloc
     >
-    struct is_std_hash_map< ::BOOST_STD_EXTENSION_NAMESPACE::hash_map<Kty,Ty,Tr,Alloc> >
+    struct is_std_unordered_map< ::BOOST_STD_EXTENSION_NAMESPACE::unordered_map<Kty,Ty,Tr,Alloc> >
         : boost::mpl::true_
     {};
 

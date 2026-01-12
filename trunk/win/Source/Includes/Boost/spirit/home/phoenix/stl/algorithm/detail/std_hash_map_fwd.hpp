@@ -8,7 +8,7 @@
 // Modeled after range_ex, Copyright 2004 Eric Niebler
 ///////////////////////////////////////////////////////////////////////////////
 //
-// std_hash_map_fwd.hpp
+// std_unordered_map_fwd.hpp
 //
 /////////////////////////////////////////////////////////////////////////////
 
@@ -32,7 +32,7 @@ namespace BOOST_STD_EXTENSION_NAMESPACE
       , class Cmp
       , class Alloc
     >
-    class hash_map;
+    class unordered_map;
 
     template<
         class Kty
@@ -54,7 +54,7 @@ namespace BOOST_STD_EXTENSION_NAMESPACE
       , class Tr
       , class Alloc
     >
-    class hash_map;
+    class unordered_map;
 
     template<
         class Kty

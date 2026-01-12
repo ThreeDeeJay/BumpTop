@@ -38,7 +38,7 @@ class ContextMenu
 	Q_DECLARE_TR_FUNCTIONS(ContextMenu)
 
 		// BumpTop Functionality
-	hash_map<uint, MenuAction *> actionList;
+	unordered_map<uint, MenuAction *> actionList;
 
 	// Explorer Functionality
 	IContextMenu *	contextMenu;

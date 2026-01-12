@@ -479,7 +479,7 @@ namespace boost {
 
   //=========================================================================
   // An adaptor to turn a Unique Pair Associative Container like std::map or
-  // std::hash_map into an Lvalue Property Map.
+  // std::unordered_map into an Lvalue Property Map.
 
   template <typename UniquePairAssociativeContainer>
   class associative_property_map

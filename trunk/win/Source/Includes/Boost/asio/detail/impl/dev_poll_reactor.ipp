@@ -418,7 +418,7 @@ void dev_poll_reactor::cancel_ops_unlocked(socket_type descriptor,
 
 ::pollfd& dev_poll_reactor::add_pending_event_change(int descriptor)
 {
-  hash_map<int, std::size_t>::iterator iter
+  unordered_map<int, std::size_t>::iterator iter
     = pending_event_change_index_.find(descriptor);
   if (iter == pending_event_change_index_.end())
   {

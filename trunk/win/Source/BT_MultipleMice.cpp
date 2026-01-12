@@ -128,7 +128,7 @@ void MultipleMice::onRender()
 
 		glMatrixMode(GL_MODELVIEW);
 
-		for (hash_map<HANDLE,MousePointer*>::iterator it = hDevice_to_mousePointer.begin();
+		for (unordered_map<HANDLE,MousePointer*>::iterator it = hDevice_to_mousePointer.begin();
 			it != hDevice_to_mousePointer.end();
 			it++)
 		{

@@ -117,7 +117,7 @@ void StatsManager::startTimer( float& persistentData )
 
 	// check if we are already timing this value, if so, then we should throw an error
 	// XXX: currently we don't allow hierarchical timing
-	hash_map<int, StopwatchInSeconds>::const_iterator iter = _timers.find(addrKey);
+	unordered_map<int, StopwatchInSeconds>::const_iterator iter = _timers.find(addrKey);
 	if (iter == _timers.end())
 	{
 		// start the timer otherwise
@@ -130,7 +130,7 @@ void StatsManager::finishTimer( float& persistentData )
 	int addrKey = (int)&persistentData;
 
 	// check if we were timing this value at all, if not, then throw an error
-	hash_map<int, StopwatchInSeconds>::iterator iter = _timers.find(addrKey);
+	unordered_map<int, StopwatchInSeconds>::iterator iter = _timers.find(addrKey);
 	if (iter != _timers.end())
 	{
 		// add the elapsed time to the persistent data

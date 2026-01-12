@@ -148,18 +148,18 @@ protected:
 	Vec3 phOldCent;
 	Vec3 phOldDims;
 	Vec3 phLastPos;
-	hash_map<uint, Vec3> relPosToPhantomCentroid;
+	unordered_map<uint, Vec3> relPosToPhantomCentroid;
 	vector<BumpObject *> shuffleGroup;
 
 	// Pre-Pile States
-	hash_map<BumpObject *, Mat34> savedMessyPoses;
+	unordered_map<BumpObject *, Mat34> savedMessyPoses;
 	Vec3 savedStackPosition;
 
 	// Leafing a pile
 	int leafIndex;
 
 	// Grid
-	hash_map<BumpObject *, Vec3> itemDimsBeforeGrid; // For restoring item dims in case they get temporarily resized for grid
+	unordered_map<BumpObject *, Vec3> itemDimsBeforeGrid; // For restoring item dims in case they get temporarily resized for grid
 	float _gridItemsScale; //the scaling factor used to make items fit on grid
 	ContainerView<BumpObject *> gridView;
 	int animationStepOverride;
@@ -243,7 +243,7 @@ public:
 	
 	// Getters
 	Vec3				getDimsOfLargestPileItem();
-	hash_map<uint, Vec3>getRelPositions();
+	unordered_map<uint, Vec3>getRelPositions();
 	Bounds				getPileBounds(bool includeWidgets=false);
 	const vector<BumpObject *>& getPileItems();
 	inline Vec3			getPosBeforeLayout();

@@ -94,7 +94,7 @@ class MouseEventManager
 	// touch." Additional touches are much more limited; we handle them separately, and all they do 
 	// (for now) is drag the objects
 	MousePointer *primaryTouch;
-	hash_map<MousePointer*,Selection*> additionalTouches;
+	unordered_map<MousePointer*,Selection*> additionalTouches;
 
 	vector<MousePointer*> panTouches;
 	float initialPinchDist;

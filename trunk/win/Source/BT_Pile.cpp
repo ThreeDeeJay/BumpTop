@@ -1437,10 +1437,10 @@ bool Pile::grid(Vec3 gridCenter)
 		savedStackPosition = getGlobalPosition();
 	}
 	
-	const hash_map<BumpObject *, Vec3>::iterator & endIterator = itemDimsBeforeGrid.end();
+	const unordered_map<BumpObject *, Vec3>::iterator & endIterator = itemDimsBeforeGrid.end();
 	for (uint i = 0; i < pileItems.size(); i++)
 	{
-		const hash_map<BumpObject *, Vec3>::iterator & iterator = itemDimsBeforeGrid.find(pileItems[i]);
+		const unordered_map<BumpObject *, Vec3>::iterator & iterator = itemDimsBeforeGrid.find(pileItems[i]);
 		if (endIterator != iterator)
 		{
 			Vec3 newDim = (*iterator).second;
@@ -1650,10 +1650,10 @@ bool Pile::grid(Vec3 gridCenter)
 void Pile::restoreDimsBeforeGrid()
 {
 	_ASSERT(Grid == getPileState()); // Should only be called when exiting grid mode
-	const hash_map<BumpObject *, Vec3>::iterator & endIterator = itemDimsBeforeGrid.end();
+	const unordered_map<BumpObject *, Vec3>::iterator & endIterator = itemDimsBeforeGrid.end();
 	for (uint i = 0; i < pileItems.size(); i++)
 	{
-		const hash_map<BumpObject *, Vec3>::iterator & iterator = itemDimsBeforeGrid.find(pileItems[i]);
+		const unordered_map<BumpObject *, Vec3>::iterator & iterator = itemDimsBeforeGrid.find(pileItems[i]);
 		if (endIterator != iterator)
 			pileItems[i]->setDims((*iterator).second);
 		else
@@ -1937,7 +1937,7 @@ void Pile::updateCloseWidgetPos()
 	}
 }
 
-hash_map<uint, Vec3> Pile::getRelPositions()
+unordered_map<uint, Vec3> Pile::getRelPositions()
 {
 	return relPosToPhantomCentroid;
 }

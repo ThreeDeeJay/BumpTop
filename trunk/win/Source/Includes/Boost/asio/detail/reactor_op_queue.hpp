@@ -16,7 +16,7 @@
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
 #include <boost/asio/detail/config.hpp>
-#include <boost/asio/detail/hash_map.hpp>
+#include <boost/asio/detail/unordered_map.hpp>
 #include <boost/asio/detail/noncopyable.hpp>
 #include <boost/asio/detail/op_queue.hpp>
 #include <boost/asio/detail/reactor_op.hpp>
@@ -187,7 +187,7 @@ private:
   };
 
   // The type for a map of operations.
-  typedef hash_map<Descriptor, operations> operations_map;
+  typedef unordered_map<Descriptor, operations> operations_map;
 
   // The operations that are currently executing asynchronously.
   operations_map operations_;

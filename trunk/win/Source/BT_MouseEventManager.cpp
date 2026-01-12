@@ -518,7 +518,7 @@ void MouseEventManager::onAdditionalMouseMove(Vec2 &pt, MousePointer* pointer)
 
 void MouseEventManager::update()
 {
-	for (hash_map<MousePointer*,Selection*>::iterator it = mouseManager->additionalTouches.begin();
+	for (unordered_map<MousePointer*,Selection*>::iterator it = mouseManager->additionalTouches.begin();
 		it != mouseManager->additionalTouches.end();
 		it++)
 	{

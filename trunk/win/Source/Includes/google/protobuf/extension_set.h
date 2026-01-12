@@ -477,8 +477,8 @@ class LIBPROTOBUF_EXPORT ExtensionSet {
 
   // The Extension struct is small enough to be passed by value, so we use it
   // directly as the value type in the map rather than use pointers.  We use
-  // a map rather than hash_map here because we expect most ExtensionSets will
-  // only contain a small number of extensions whereas hash_map is optimized
+  // a map rather than unordered_map here because we expect most ExtensionSets will
+  // only contain a small number of extensions whereas unordered_map is optimized
   // for 100 elements or more.  Also, we want AppendToList() to order fields
   // by field number.
   map<int, Extension> extensions_;

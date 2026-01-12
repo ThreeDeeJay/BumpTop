@@ -24,7 +24,7 @@
 #include <vector>
 #include <sys/devpoll.h>
 #include <boost/asio/detail/dev_poll_reactor_fwd.hpp>
-#include <boost/asio/detail/hash_map.hpp>
+#include <boost/asio/detail/unordered_map.hpp>
 #include <boost/asio/detail/mutex.hpp>
 #include <boost/asio/detail/op_queue.hpp>
 #include <boost/asio/detail/reactor_op.hpp>
@@ -182,7 +182,7 @@ private:
   std::vector< ::pollfd> pending_event_changes_;
 
   // Hash map to associate a descriptor with a pending event change index.
-  hash_map<int, std::size_t> pending_event_change_index_;
+  unordered_map<int, std::size_t> pending_event_change_index_;
 
   // The interrupter is used to break a blocking DP_POLL operation.
   select_interrupter interrupter_;

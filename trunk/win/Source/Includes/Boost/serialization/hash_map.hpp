@@ -7,8 +7,8 @@
 #endif
 
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
-// serialization/hash_map.hpp:
-// serialization for stl hash_map templates
+// serialization/unordered_map.hpp:
+// serialization for stl unordered_map templates
 
 // (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
 // Use, modification and distribution is subject to the Boost Software
@@ -33,7 +33,7 @@ namespace stl {
 
 // map input
 template<class Archive, class Container>
-struct archive_input_hash_map
+struct archive_input_unordered_map
 {
     inline void operator()(
         Archive &ar, 
@@ -94,14 +94,14 @@ template<
 >
 inline void save(
     Archive & ar,
-    const BOOST_STD_EXTENSION_NAMESPACE::hash_map<
+    const BOOST_STD_EXTENSION_NAMESPACE::unordered_map<
         Key, HashFcn, EqualKey, Allocator
     > &t,
     const unsigned int file_version
 ){
     boost::serialization::stl::save_hash_collection<
         Archive, 
-        BOOST_STD_EXTENSION_NAMESPACE::hash_map<
+        BOOST_STD_EXTENSION_NAMESPACE::unordered_map<
             Key, HashFcn, EqualKey, Allocator
         >
     >(ar, t);
@@ -116,19 +116,19 @@ template<
 >
 inline void load(
     Archive & ar,
-    BOOST_STD_EXTENSION_NAMESPACE::hash_map<
+    BOOST_STD_EXTENSION_NAMESPACE::unordered_map<
         Key, HashFcn, EqualKey, Allocator
     > &t,
     const unsigned int file_version
 ){
     boost::serialization::stl::load_hash_collection<
         Archive,
-        BOOST_STD_EXTENSION_NAMESPACE::hash_map<
+        BOOST_STD_EXTENSION_NAMESPACE::unordered_map<
             Key, HashFcn, EqualKey, Allocator
         >,
-        boost::serialization::stl::archive_input_hash_map<
+        boost::serialization::stl::archive_input_unordered_map<
             Archive, 
-            BOOST_STD_EXTENSION_NAMESPACE::hash_map<
+            BOOST_STD_EXTENSION_NAMESPACE::unordered_map<
                 Key, HashFcn, EqualKey, Allocator
             >
         >
@@ -146,7 +146,7 @@ template<
 >
 inline void serialize(
     Archive & ar,
-    BOOST_STD_EXTENSION_NAMESPACE::hash_map<
+    BOOST_STD_EXTENSION_NAMESPACE::unordered_map<
         Key, HashFcn, EqualKey, Allocator
     > &t,
     const unsigned int file_version

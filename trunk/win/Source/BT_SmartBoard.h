@@ -34,7 +34,7 @@
 
 class SmartBoardHandler : public CSBSDK2EventHandler, public CSBSDK2AdvancedEventHandler
 {
-	hash_map<int,MousePointer*> iPointerID_to_mousePointer;
+	unordered_map<int,MousePointer*> iPointerID_to_mousePointer;
 
 	CSBSDK2 *smartBoard;
 	CSBSDK2Advanced *smartBoardAdv;

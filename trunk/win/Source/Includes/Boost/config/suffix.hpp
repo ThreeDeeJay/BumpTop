@@ -331,7 +331,7 @@
 // Set BOOST_HASH_MAP_HEADER if not set already:
 //
 #if defined(BOOST_HAS_HASH) && !defined(BOOST_HASH_MAP_HEADER)
-#  define BOOST_HASH_MAP_HEADER <hash_map>
+#  define BOOST_HASH_MAP_HEADER <unordered_map>
 #endif
 
 //

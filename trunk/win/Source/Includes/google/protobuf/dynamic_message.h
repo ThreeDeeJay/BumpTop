@@ -115,9 +115,9 @@ class LIBPROTOBUF_EXPORT DynamicMessageFactory : public MessageFactory {
   const DescriptorPool* pool_;
   bool delegate_to_generated_factory_;
 
-  // This struct just contains a hash_map.  We can't #include <google/protobuf/stubs/hash.h> from
-  // this header due to hacks needed for hash_map portability in the open source
-  // release.  Namely, stubs/hash.h, which defines hash_map portably, is not a
+  // This struct just contains a unordered_map.  We can't #include <google/protobuf/stubs/hash.h> from
+  // this header due to hacks needed for unordered_map portability in the open source
+  // release.  Namely, stubs/hash.h, which defines unordered_map portably, is not a
   // public header (for good reason), but dynamic_message.h is, and public
   // headers may only #include other public headers.
   struct PrototypeMap;
