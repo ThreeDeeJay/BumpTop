@@ -59,7 +59,7 @@ jobs:
       run: |
         curl http://download.qt-project.org/archive/qt/4.6/qt-everywhere-opensource-src-4.6.1.tar.gz -o "trunk/mac/Dependencies/qt-everywhere-opensource-src-4.6.1.tar.gz"
         curl https://raw.githubusercontent.com/avih/msvcrt-vs2008-src/refs/heads/master/src/crtassem.h -o "trunk/win/Source/crtassem.h"
-#        copy "trunk/win/Source/BT_SVNRevision.txt" "trunk/win/Source/BT_SVNRevision.h"
+        copy "trunk/win/Source/BT_SVNRevision.txt" "trunk/win/Source/BT_SVNRevision.h"
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
