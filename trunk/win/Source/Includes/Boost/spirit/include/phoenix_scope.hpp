@@ -8,11 +8,8 @@
 =============================================================================*/
 #ifndef BOOST_SPIRIT_INCLUDE_PHOENIX_SCOPE
 #define BOOST_SPIRIT_INCLUDE_PHOENIX_SCOPE
+#include <boost/config/header_deprecated.hpp>
+BOOST_HEADER_DEPRECATED("<boost/phoenix/scope.hpp>")
 
-#ifndef BOOST_SPIRIT_USE_PHOENIX_V3
-#include <boost/spirit/home/phoenix/scope.hpp>
-#else
 #include <boost/phoenix/scope.hpp>
-#endif
-
 #endif

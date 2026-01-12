@@ -1,6 +1,6 @@
 //  Copyright (c) 2001-2011 Hartmut Kaiser
-// 
-//  Distributed under the Boost Software License, Version 1.0. (See accompanying 
+//
+//  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #if !defined(BOOST_SPIRIT_LEX_PLAIN_RAW_TOKEN_JUN_03_2011_0853PM)
@@ -19,12 +19,13 @@
 #include <boost/spirit/home/qi/parser.hpp>
 #include <boost/spirit/home/qi/meta_compiler.hpp>
 #include <boost/spirit/home/qi/detail/assign_to.hpp>
-#include <boost/range/iterator_range.hpp>
 #include <boost/fusion/include/vector.hpp>
 #include <boost/fusion/include/at.hpp>
 #include <boost/mpl/or.hpp>
 #include <boost/type_traits/is_integral.hpp>
 #include <boost/type_traits/is_enum.hpp>
+#include <iterator> // for std::iterator_traits
+#include <sstream>
 
 namespace boost { namespace spirit
 {
@@ -59,7 +60,7 @@ namespace boost { namespace spirit { namespace qi
 
     ///////////////////////////////////////////////////////////////////////////
     template <typename TokenId>
-    struct plain_raw_token 
+    struct plain_raw_token
       : primitive_parser<plain_raw_token<TokenId> >
     {
         template <typename Context, typename Iterator>
@@ -80,16 +81,16 @@ namespace boost { namespace spirit { namespace qi
             qi::skip_over(first, last, skipper);   // always do a pre-skip
 
             if (first != last) {
-                // simply match the token id with the id this component has 
+                // simply match the token id with the id this component has
                 // been initialized with
 
-                typedef typename 
-                    boost::detail::iterator_traits<Iterator>::value_type 
+                typedef typename
+                    std::iterator_traits<Iterator>::value_type
                 token_type;
                 typedef typename token_type::id_type id_type;
 
                 token_type const& t = *first;
-                if (std::size_t(~0) == id || id_type(id) == t.id()) {
+                if (id_type(~0) == id_type(id) || id_type(id) == t.id()) {
                     spirit::traits::assign_to(t, attr);
                     ++first;
                     return true;
@@ -101,7 +102,9 @@ namespace boost { namespace spirit { namespace qi
         template <typename Context>
         info what(Context& /*context*/) const
         {
-            return info("token");
+            std::stringstream ss;
+            ss << "raw_token(" << id << ")";
+            return info("raw_token", ss.str());
         }
 
         TokenId id;

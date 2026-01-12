@@ -12,7 +12,7 @@
 #ifndef BOOST_BIMAP_RELATION_SUPPORT_MEMBER_WITH_TAG_HPP
 #define BOOST_BIMAP_RELATION_SUPPORT_MEMBER_WITH_TAG_HPP
 
-#if defined(_MSC_VER) && (_MSC_VER>=1200)
+#if defined(_MSC_VER)
 #pragma once
 #endif
 
@@ -20,7 +20,7 @@
 
 #include <boost/bimap/relation/member_at.hpp>
 #include <boost/bimap/detail/debug/static_error.hpp>
-#include <boost/utility/enable_if.hpp>
+#include <boost/core/enable_if.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/mpl/not.hpp>

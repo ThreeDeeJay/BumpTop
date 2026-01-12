@@ -29,6 +29,7 @@
 
 #include <boost/graph/graph_traits.hpp>
 #include <boost/property_map/property_map.hpp>
+#include <boost/property_map/parallel/parallel_property_maps.hpp>
 #include <vector>
 #include <boost/graph/parallel/algorithm.hpp>
 #include <boost/limits.hpp>
@@ -642,7 +643,6 @@ merge_local_minimum_spanning_trees(const Graph& g, WeightMap weight,
   BOOST_STATIC_ASSERT((is_convertible<traversal_category*,
                                       vertex_list_graph_tag*>::value));
 
-  typedef typename graph_traits<Graph>::vertex_descriptor vertex_descriptor;
   typedef typename graph_traits<Graph>::edge_descriptor edge_descriptor;
 
   // Don't throw away cached edge weights

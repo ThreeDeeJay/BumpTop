@@ -14,7 +14,6 @@
 #include <boost/variant/variant.hpp>
 #include <boost/variant/recursive_variant.hpp>
 #include <boost/variant/apply_visitor.hpp>
-#include <boost/foreach.hpp>
 #include <boost/spirit/home/support/utf8.hpp>
 #include <list>
 #include <iterator>
@@ -28,57 +27,61 @@ namespace boost { namespace spirit
     // for uniformity.
     struct info
     {
-        struct nil {};
+        struct nil_ {};
 
         typedef
             boost::variant<
-                nil
+                nil_
               , utf8_string
               , recursive_wrapper<info>
               , recursive_wrapper<std::pair<info, info> >
-              , std::list<info>
+              , recursive_wrapper<std::list<info> >
             >
         value_type;
 
-        explicit info(utf8_string const& tag)
-          : tag(tag), value(nil()) {}
+        explicit info(utf8_string const& tag_)
+          : tag(tag_), value(nil_()) {}
 
         template <typename T>
-        info(utf8_string const& tag, T const& value)
-          : tag(tag), value(value) {}
+        info(utf8_string const& tag_, T const& value_)
+          : tag(tag_), value(value_) {}
 
-        info(utf8_string const& tag, char value)
-          : tag(tag), value(utf8_string(1, value)) {}
+        info(utf8_string const& tag_, char value_)
+          : tag(tag_), value(utf8_string(1, value_)) {}
 
-        info(utf8_string const& tag, wchar_t value)
-          : tag(tag), value(to_utf8(value)) {}
+        info(utf8_string const& tag_, wchar_t value_)
+          : tag(tag_), value(to_utf8(value_)) {}
 
-        info(utf8_string const& tag, ucs4_char value)
-          : tag(tag), value(to_utf8(value)) {}
+        info(utf8_string const& tag_, ucs4_char value_)
+          : tag(tag_), value(to_utf8(value_)) {}
 
         template <typename Char>
-        info(utf8_string const& tag, Char const* str)
-          : tag(tag), value(to_utf8(str)) {}
+        info(utf8_string const& tag_, Char const* str)
+          : tag(tag_), value(to_utf8(str)) {}
 
         template <typename Char, typename Traits, typename Allocator>
-        info(utf8_string const& tag
+        info(utf8_string const& tag_
               , std::basic_string<Char, Traits, Allocator> const& str)
-          : tag(tag), value(to_utf8(str)) {}
+          : tag(tag_), value(to_utf8(str)) {}
 
         utf8_string tag;
         value_type value;
     };
 
+#ifdef _MSC_VER
+#  pragma warning(push)
+#  pragma warning(disable: 4512) // assignment operator could not be generated.
+#endif
     template <typename Callback>
     struct basic_info_walker
     {
         typedef void result_type;
         typedef basic_info_walker<Callback> this_type;
 
-        basic_info_walker(Callback& callback, utf8_string const& tag, int depth)
-          : callback(callback), tag(tag), depth(depth) {}
+        basic_info_walker(Callback& callback_, utf8_string const& tag_, int depth_)
+          : callback(callback_), tag(tag_), depth(depth_) {}
 
-        void operator()(info::nil) const
+        void operator()(info::nil_) const
         {
             callback.element(tag, "", depth);
         }
@@ -106,20 +109,17 @@ namespace boost { namespace spirit
         void operator()(std::list<info> const& l) const
         {
             callback.element(tag, "", depth);
-            BOOST_FOREACH(info const& what, l)
+            for (std::list<info>::const_iterator it = l.begin(),
+                                                 end = l.end(); it != end; ++it)
             {
                 boost::apply_visitor(
-                    this_type(callback, what.tag, depth+1), what.value);
+                    this_type(callback, it->tag, depth+1), it->value);
             }
         }
 
         Callback& callback;
         utf8_string const& tag;
         int depth;
-
-    private:
-        // silence MSVC warning C4512: assignment operator could not be generated
-        basic_info_walker& operator= (basic_info_walker const&);
     };
 
     // bare-bones print support
@@ -128,23 +128,22 @@ namespace boost { namespace spirit
     {
         typedef utf8_string string;
 
-        simple_printer(Out& out)
-          : out(out) {}
+        simple_printer(Out& out_)
+          : out(out_) {}
 
         void element(string const& tag, string const& value, int /*depth*/) const
         {
-            if (value == "")
+            if (value.empty())
                 out << '<' << tag << '>';
             else
                 out << '"' << value << '"';
         }
 
         Out& out;
-
-    private:
-        // silence MSVC warning C4512: assignment operator could not be generated
-        simple_printer& operator= (simple_printer const&);
     };
+#ifdef _MSC_VER
+#  pragma warning(pop)
+#endif
 
     template <typename Out>
     Out& operator<<(Out& out, info const& what)

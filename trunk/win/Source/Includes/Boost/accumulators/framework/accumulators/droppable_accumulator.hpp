@@ -34,6 +34,11 @@ namespace boost { namespace accumulators
             {
             }
 
+            add_ref_visitor(add_ref_visitor const &other)
+              : args_(other.args_)
+            {
+            }
+
             template<typename Accumulator>
             void operator ()(Accumulator &acc) const
             {
@@ -49,7 +54,7 @@ namespace boost { namespace accumulators
             }
 
         private:
-            add_ref_visitor &operator =(add_ref_visitor const &);
+            BOOST_DELETED_FUNCTION(add_ref_visitor &operator =(add_ref_visitor const &))
             Args const &args_;
         };
 
@@ -87,7 +92,7 @@ namespace boost { namespace accumulators
             }
 
         private:
-            drop_visitor &operator =(drop_visitor const &);
+            BOOST_DELETED_FUNCTION(drop_visitor &operator =(drop_visitor const &))
             Args const &args_;
         };
 
@@ -112,6 +117,12 @@ namespace boost { namespace accumulators
         droppable_accumulator_base(Args const &args)
           : Accumulator(args)
           , ref_count_(0)
+        {
+        }
+
+        droppable_accumulator_base(droppable_accumulator_base const &that)
+          : Accumulator(*static_cast<Accumulator const *>(&that))
+          , ref_count_(that.ref_count_)
         {
         }
 
@@ -162,6 +173,11 @@ namespace boost { namespace accumulators
           : droppable_accumulator::base(args)
         {
         }
+
+        droppable_accumulator(droppable_accumulator const &that)
+          : droppable_accumulator::base(*static_cast<typename droppable_accumulator::base const *>(&that))
+        {
+        }
     };
 
     //////////////////////////////////////////////////////////////////////////
@@ -204,7 +220,7 @@ namespace boost { namespace accumulators
         template<typename Args>
         void on_drop(Args const &args)
         {
-            // cache the result at the point this calcuation was dropped
+            // cache the result at the point this calculation was dropped
             BOOST_ASSERT(!this->has_result());
             this->set(this->Accumulator::result(args));
         }
@@ -216,7 +232,7 @@ namespace boost { namespace accumulators
         }
 
     private:
-        with_cached_result &operator =(with_cached_result const &);
+        BOOST_DELETED_FUNCTION(with_cached_result &operator =(with_cached_result const &))
 
         void set(result_type const &r)
         {

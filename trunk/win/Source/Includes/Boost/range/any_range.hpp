@@ -10,6 +10,8 @@
 #define BOOST_RANGE_ANY_RANGE_HPP_INCLUDED
 
 #include <boost/config.hpp>
+#include <boost/mpl/eval_if.hpp>
+#include <boost/mpl/identity.hpp>
 #include <boost/iterator/iterator_categories.hpp>
 #include <boost/iterator/iterator_traits.hpp>
 #include <boost/iterator/iterator_facade.hpp>
@@ -19,7 +21,6 @@
 #include <boost/range/reference.hpp>
 #include <boost/range/value_type.hpp>
 #include <boost/range/iterator_range_core.hpp>
-#include <boost/cast.hpp>
 
 namespace boost
 {
@@ -75,8 +76,8 @@ namespace boost
         template<
             class Value
           , class Traversal
-          , class Reference
-          , class Difference
+          , class Reference = Value&
+          , class Difference = std::ptrdiff_t
           , class Buffer = use_default
         >
         class any_range

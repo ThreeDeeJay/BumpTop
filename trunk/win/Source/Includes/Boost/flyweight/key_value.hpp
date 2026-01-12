@@ -1,4 +1,4 @@
-/* Copyright 2006-2008 Joaquin M Lopez Munoz.
+/* Copyright 2006-2024 Joaquin M Lopez Munoz.
  * Distributed under the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at
  * http://www.boost.org/LICENSE_1_0.txt)
@@ -9,16 +9,20 @@
 #ifndef BOOST_FLYWEIGHT_KEY_VALUE_HPP
 #define BOOST_FLYWEIGHT_KEY_VALUE_HPP
 
-#if defined(_MSC_VER)&&(_MSC_VER>=1200)
+#if defined(_MSC_VER)
 #pragma once
 #endif
 
+#include <boost/config.hpp> /* keep it first to prevent nasty warns in MSVC */
+#include <boost/assert.hpp>
+#include <boost/config/workaround.hpp>
+#include <boost/flyweight/detail/perfect_fwd.hpp>
 #include <boost/flyweight/detail/value_tag.hpp>
 #include <boost/flyweight/key_value_fwd.hpp>
 #include <boost/mpl/assert.hpp>
-#include <boost/preprocessor/repetition/enum_params.hpp>
 #include <boost/type_traits/aligned_storage.hpp>
 #include <boost/type_traits/alignment_of.hpp> 
+#include <boost/type_traits/declval.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <new>
 
@@ -44,7 +48,7 @@ namespace flyweights{
 namespace detail{
 
 template<typename Key,typename Value,typename KeyFromValue>
-struct optimized_key_value:value_marker
+struct variant_key_value:value_marker
 {
   typedef Key   key_type;
   typedef Value value_type;
@@ -54,52 +58,73 @@ struct optimized_key_value:value_marker
   public:
     /* template ctors */
 
-#define BOOST_FLYWEIGHT_PERFECT_FWD_NAME explicit rep_type
-#define BOOST_FLYWEIGHT_PERFECT_FWD_BODY(n)          \
-  :value_ptr(0)                                      \
-{                                                    \
-  new(spc_ptr())key_type(BOOST_PP_ENUM_PARAMS(n,t)); \
+#define BOOST_FLYWEIGHT_PERFECT_FWD_CTR_BODY(args)       \
+  :value_cted(false)                                     \
+{                                                        \
+  new(key_ptr())key_type(BOOST_FLYWEIGHT_FORWARD(args)); \
 }
-#include <boost/flyweight/detail/perfect_fwd.hpp>
 
-    rep_type(const value_type& x):value_ptr(&x){}
+  BOOST_FLYWEIGHT_PERFECT_FWD(
+    explicit rep_type,
+    BOOST_FLYWEIGHT_PERFECT_FWD_CTR_BODY)
 
-    rep_type(const rep_type& x):value_ptr(x.value_ptr)
+#undef BOOST_FLYWEIGHT_PERFECT_FWD_CTR_BODY
+
+    rep_type(const rep_type& x):value_cted(false)
     {
-      if(!x.value_ptr)new(key_ptr())key_type(*x.key_ptr());
+      if(!x.value_cted)new(key_ptr())key_type(*x.key_ptr());
+      else            new(key_ptr())key_type(key_from_value(*x.value_ptr()));
     }
+
+    rep_type(const value_type& x):value_cted(false)
+    {
+      new(key_ptr())key_type(key_from_value(x));
+    }
+
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+    rep_type(rep_type&& x):value_cted(false)
+    {
+      if(!x.value_cted)new(key_ptr())key_type(std::move(*x.key_ptr()));
+      else             new(key_ptr())key_type(key_from_value(*x.value_ptr()));
+    }
+
+    rep_type(value_type&& x):value_cted(false)
+    {
+      new(key_ptr())key_type(key_from_value(x));
+    }
+#endif
 
     ~rep_type()
     {
-      if(!value_ptr)       key_ptr()->~key_type();
-      else if(value_cted())value_ptr->~value_type();
+      if(value_cted)value_ptr()->~value_type();
+      else          key_ptr()->~key_type();
     }
 
     operator const key_type&()const
+    BOOST_NOEXCEPT_IF(noexcept(
+      boost::declval<KeyFromValue>()(boost::declval<const value_type&>())))
     {
-      if(value_ptr)return key_from_value(*value_ptr);
-      else         return *key_ptr();
+      if(value_cted)return key_from_value(*value_ptr());
+      else          return *key_ptr();
     }
 
     operator const value_type&()const
     {
-      /* This is always called after construct_value() or copy_value(),
-       * so we access spc directly rather than through value_ptr to
-       * save us an indirection.
-       */
-
-      return *static_cast<value_type*>(spc_ptr());
+      BOOST_ASSERT(value_cted);
+      return *value_ptr();
     }
 
   private:
-    friend struct optimized_key_value;
-
-    void* spc_ptr()const{return static_cast<void*>(&spc);}
-    bool  value_cted()const{return value_ptr==spc_ptr();}
+    friend struct variant_key_value;
 
     key_type* key_ptr()const
     {
-      return static_cast<key_type*>(static_cast<void*>(&spc));
+      return static_cast<key_type*>(static_cast<void*>(&key_spc));
+    }
+
+    value_type* value_ptr()const
+    {
+      return static_cast<value_type*>(static_cast<void*>(&value_spc));
     }
 
     static const key_type& key_from_value(const value_type& x)
@@ -108,48 +133,66 @@ struct optimized_key_value:value_marker
       return k(x);
     }
 
-    void construct_value()const
+    void key_construct_value()const
     {
-      if(!value_cted()){
-        /* value_ptr must be ==0, oherwise copy_value would have been called */
-
-        key_type k(*key_ptr());
+      if(!value_cted){
+        new(value_ptr())value_type(*key_ptr());
         key_ptr()->~key_type();
-        value_ptr= /* guarantees key won't be re-dted at ~rep_type if the */
-          static_cast<value_type*>(spc_ptr())+1; /* next statement throws */
-        value_ptr=new(spc_ptr())value_type(k);
+        value_cted=true;
       }
     }
 
-    void copy_value()const
+    void copy_construct_value(const value_type& x)const
     {
-      if(!value_cted())value_ptr=new(spc_ptr())value_type(*value_ptr);
+      if(!value_cted){
+        new(value_ptr())value_type(x);
+        key_ptr()->~key_type();
+        value_cted=true;
+      }
     }
 
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+    void move_construct_value(value_type&& x)const
+    {
+      if(!value_cted){
+        new(value_ptr())value_type(std::move(x));
+        key_ptr()->~key_type();
+        value_cted=true;
+      }
+    }
+#endif
+
     mutable typename boost::aligned_storage<
-      (sizeof(key_type)>sizeof(value_type))?
-        sizeof(key_type):sizeof(value_type),
-      (boost::alignment_of<key_type>::value >
-       boost::alignment_of<value_type>::value)?
-        boost::alignment_of<key_type>::value:
-        boost::alignment_of<value_type>::value
-    >::type                                    spc;
-    mutable const value_type*                  value_ptr;
+      sizeof(key_type),
+      boost::alignment_of<key_type>::value
+    >::type                                    key_spc;
+    mutable typename boost::aligned_storage<
+      sizeof(value_type),
+      boost::alignment_of<value_type>::value
+    >::type                                    value_spc;
+    mutable bool                               value_cted;
   };
 
-  static void construct_value(const rep_type& r)
+  static void key_construct_value(const rep_type& r)
   {
-    r.construct_value();
+    r.key_construct_value();
   }
 
-  static void copy_value(const rep_type& r)
+  static void copy_construct_value(const rep_type& r,const value_type& x)
   {
-    r.copy_value();
+    r.copy_construct_value(x);
   }
+
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+  static void move_construct_value(const rep_type& r,value_type&& x)
+  {
+    r.move_construct_value(std::move(x));
+  }
+#endif
 };
 
 template<typename Key,typename Value>
-struct regular_key_value:value_marker
+struct product_key_value:value_marker
 {
   typedef Key   key_type;
   typedef Value value_type;
@@ -159,35 +202,54 @@ struct regular_key_value:value_marker
   public:
     /* template ctors */
 
-#define BOOST_FLYWEIGHT_PERFECT_FWD_NAME explicit rep_type
-#define BOOST_FLYWEIGHT_PERFECT_FWD_BODY(n) \
-  :key(BOOST_PP_ENUM_PARAMS(n,t)),value_ptr(0){}
-#include <boost/flyweight/detail/perfect_fwd.hpp>
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)&&\
+    !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)&&\
+    BOOST_WORKAROUND(__GNUC__,<=4)&&(__GNUC__<4||__GNUC_MINOR__<=4)
 
-    rep_type(const value_type& x):key(no_key_from_value_failure()){}
+/* GCC 4.4.2 (and probably prior) bug: the default ctor generated by the
+ * variadic temmplate ctor below fails to value-initialize key.
+ */
 
-    rep_type(const rep_type& x):key(x.key),value_ptr(0){}
+    rep_type():key(),value_cted(false){}
+#endif
+
+#define BOOST_FLYWEIGHT_PERFECT_FWD_CTR_BODY(args) \
+  :key(BOOST_FLYWEIGHT_FORWARD(args)),value_cted(false){}
+
+  BOOST_FLYWEIGHT_PERFECT_FWD(
+    explicit rep_type,
+    BOOST_FLYWEIGHT_PERFECT_FWD_CTR_BODY)
+
+#undef BOOST_FLYWEIGHT_PERFECT_FWD_CTR_BODY
+
+    rep_type(const rep_type& x):key(x.key),value_cted(false){}
+    rep_type(const value_type&):key(no_key_from_value_failure()){}
+
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+    rep_type(rep_type&& x):key(std::move(x.key)),value_cted(false){}
+    rep_type(value_type&&):key(no_key_from_value_failure()){}
+#endif
 
     ~rep_type()
     {
-      if(value_ptr)value_ptr->~value_type();
+      if(value_cted)value_ptr()->~value_type();
     }
 
-    operator const key_type&()const{return key;}
+    operator const key_type&()const BOOST_NOEXCEPT{return key;}
 
     operator const value_type&()const
     {
-      /* This is always called after construct_value(),so we access spc
-       * directly rather than through value_ptr to save us an indirection.
-       */
-
-      return *static_cast<value_type*>(spc_ptr());
+      BOOST_ASSERT(value_cted);
+      return *value_ptr();
     }
 
   private:
-    friend struct regular_key_value;
+    friend struct product_key_value;
 
-    void* spc_ptr()const{return static_cast<void*>(&spc);}
+    value_type* value_ptr()const
+    {
+      return static_cast<value_type*>(static_cast<void*>(&value_spc));
+    }
 
     struct no_key_from_value_failure
     {
@@ -199,25 +261,37 @@ struct regular_key_value:value_marker
       operator const key_type&()const;
     };
 
-    void construct_value()const
+    void key_construct_value()const
     {
-      if(!value_ptr)value_ptr=new(spc_ptr())value_type(key);
+      if(!value_cted){
+        new(value_ptr())value_type(key);
+        value_cted=true;
+      }
     }
 
     key_type                                 key;
     mutable typename boost::aligned_storage<
       sizeof(value_type),
       boost::alignment_of<value_type>::value
-    >::type                                  spc;
-    mutable const value_type*                value_ptr;
+    >::type                                  value_spc;
+    mutable bool                             value_cted;
   };
 
-  static void construct_value(const rep_type& r)
+  static void key_construct_value(const rep_type& r)
   {
-    r.construct_value();
+    r.key_construct_value();
   }
 
-  static void copy_value(const rep_type&){}
+  /* [copy|move]_construct_value() can't really ever be called, provided to
+   * avoid compile errors (it is the no_key_from_value_failure compile error
+   * we want to appear in these cases).
+   */
+
+  static void copy_construct_value(const rep_type&,const value_type&){}
+
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+  static void move_construct_value(const rep_type&,value_type&&){}
+#endif
 };
 
 } /* namespace flyweights::detail */
@@ -226,8 +300,8 @@ template<typename Key,typename Value,typename KeyFromValue>
 struct key_value:
   mpl::if_<
     is_same<KeyFromValue,no_key_from_value>,
-    detail::regular_key_value<Key,Value>,
-    detail::optimized_key_value<Key,Value,KeyFromValue>
+    detail::product_key_value<Key,Value>,
+    detail::variant_key_value<Key,Value,KeyFromValue>
   >::type
 {};
 

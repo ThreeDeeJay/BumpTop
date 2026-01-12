@@ -2,7 +2,7 @@
 // detail/socket_select_interrupter.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2025 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,7 +17,9 @@
 
 #include <boost/asio/detail/config.hpp>
 
-#if defined(BOOST_WINDOWS) \
+#if !defined(BOOST_ASIO_WINDOWS_RUNTIME)
+
+#if defined(BOOST_ASIO_WINDOWS) \
   || defined(__CYGWIN__) \
   || defined(__SYMBIAN32__)
 
@@ -33,7 +35,7 @@ class socket_select_interrupter
 {
 public:
   // Constructor.
-  BOOST_ASIO_DECL socket_select_interrupter();
+  BOOST_ASIO_DECL explicit socket_select_interrupter(bool = true);
 
   // Destructor.
   BOOST_ASIO_DECL ~socket_select_interrupter();
@@ -44,7 +46,7 @@ public:
   // Interrupt the select call.
   BOOST_ASIO_DECL void interrupt();
 
-  // Reset the select interrupt. Returns true if the call was interrupted.
+  // Reset the select interrupter. Returns true if the reset was successful.
   BOOST_ASIO_DECL bool reset();
 
   // Get the read descriptor to be passed to select.
@@ -82,8 +84,10 @@ private:
 # include <boost/asio/detail/impl/socket_select_interrupter.ipp>
 #endif // defined(BOOST_ASIO_HEADER_ONLY)
 
-#endif // defined(BOOST_WINDOWS)
+#endif // defined(BOOST_ASIO_WINDOWS)
        // || defined(__CYGWIN__)
        // || defined(__SYMBIAN32__)
+
+#endif // !defined(BOOST_ASIO_WINDOWS_RUNTIME)
 
 #endif // BOOST_ASIO_DETAIL_SOCKET_SELECT_INTERRUPTER_HPP

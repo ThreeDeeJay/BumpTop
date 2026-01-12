@@ -8,11 +8,8 @@
 =============================================================================*/
 #ifndef BOOST_SPIRIT_INCLUDE_PHOENIX_ALGORITHM
 #define BOOST_SPIRIT_INCLUDE_PHOENIX_ALGORITHM
+#include <boost/config/header_deprecated.hpp>
+BOOST_HEADER_DEPRECATED("<boost/phoenix/stl/algorithm.hpp>")
 
-#ifndef BOOST_SPIRIT_USE_PHOENIX_V3
-#include <boost/spirit/home/phoenix/algorithm.hpp>
-#else
 #include <boost/phoenix/stl/algorithm.hpp>
-#endif
-
 #endif

@@ -11,7 +11,6 @@
 #endif
 
 #include <boost/config/no_tr1/cmath.hpp>
-#include <boost/math/special_functions/fpclassify.hpp>
 #include <boost/type_traits/remove_const.hpp>
 
 #include <boost/spirit/home/support/char_class.hpp>
@@ -162,8 +161,7 @@ namespace boost { namespace spirit { namespace karma
         //
         //  Note:     If the trailing_zeros flag is not in effect additional
         //            comments apply. See the comment for the fraction_part()
-        //            function below. Moreover, this precision will be limited
-        //            to the value of std::numeric_limits<T>::digits10 + 1
+        //            function below.
         ///////////////////////////////////////////////////////////////////////
         static unsigned precision(T)
         {
@@ -175,19 +173,20 @@ namespace boost { namespace spirit { namespace karma
         //  Generate the integer part of the number.
         //
         //      sink       The output iterator to use for generation
-        //      n          The absolute value of the integer part of the floating 
-        //                 point number to convert (always non-negative). 
-        //      sign       The sign of the overall floating point number to 
+        //      n          The absolute value of the integer part of the floating
+        //                 point number to convert (always non-negative).
+        //      sign       The sign of the overall floating point number to
         //                 convert.
-        //      force_sign Whether a sign has to be generated even for 
-        //                 non-negative numbers
+        //      force_sign Whether a sign has to be generated even for
+        //                 non-negative numbers. Note, that force_sign will be
+        //                 set to false for zero floating point values.
         ///////////////////////////////////////////////////////////////////////
         template <typename OutputIterator>
         static bool integer_part (OutputIterator& sink, T n, bool sign
           , bool force_sign)
         {
             return sign_inserter::call(
-                      sink, traits::test_zero(n), sign, force_sign) &&
+                      sink, traits::test_zero(n), sign, force_sign, force_sign) &&
                    int_inserter<10>::call(sink, n);
         }
 
@@ -258,8 +257,20 @@ namespace boost { namespace spirit { namespace karma
             //    generate(sink, right_align(precision, '0')[ulong], n);
             // but it's spelled out to avoid inter-modular dependencies.
 
-            typename remove_const<T>::type digits = 
-                (traits::test_zero(n) ? 0 : floor(log10(n))) + 1;
+	    unsigned int digits=1; //should be number of digits n(truncating any fraction)
+	    if(!boost::spirit::traits::test_zero(n)) {
+	      static constexpr uint64_t limit = UINT64_MAX / 10;
+	      const T num = floor(n);
+	      for (uint64_t x = 10u, i = 1u;; x *= 10, i++) {
+		if (num < x) {
+		  digits=i;break;
+		}
+		if (x > limit) {
+		  digits= i + 1;break;
+		}
+	      }
+	    }
+	    
             bool r = true;
             for (/**/; r && digits < precision_; digits = digits + 1)
                 r = char_inserter<>::call(sink, '0');

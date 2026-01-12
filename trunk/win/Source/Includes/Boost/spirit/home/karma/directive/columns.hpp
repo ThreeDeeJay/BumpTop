@@ -25,6 +25,7 @@
 #include <boost/spirit/home/support/info.hpp>
 #include <boost/fusion/include/at.hpp>
 #include <boost/fusion/include/vector.hpp>
+#include <boost/integer_traits.hpp>
 
 namespace boost { namespace spirit
 {
@@ -69,6 +70,10 @@ namespace boost { namespace spirit { namespace karma
 
     namespace detail
     {
+#ifdef _MSC_VER
+#  pragma warning(push)
+#  pragma warning(disable: 4512) // assignment operator could not be generated.
+#endif
         template <typename Delimiter, typename ColumnDelimiter>
         struct columns_delimiter 
         {
@@ -107,11 +112,10 @@ namespace boost { namespace spirit { namespace karma
             ColumnDelimiter const& column_delimiter;
             unsigned int const numcolumns;
             mutable unsigned int count;
-
-        private:
-            // silence MSVC warning C4512: assignment operator could not be generated
-            columns_delimiter& operator= (columns_delimiter const&);
         };
+#ifdef _MSC_VER
+#  pragma warning(pop)
+#endif
     }
 
     ///////////////////////////////////////////////////////////////////////////

@@ -5,12 +5,8 @@
   Distributed under the Boost Software License, Version 1.0. (See accompanying
   file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 ==============================================================================*/
-#ifndef PHOENIX_TUPLES_HPP
-#define PHOENIX_TUPLES_HPP
-
-#if defined(BOOST_MSVC) && (BOOST_MSVC <= 1300)
-#error "Sorry, Phoenix does not support VC6 and VC7. Please upgrade to at least VC7.1"
-#endif
+#ifndef BOOST_SPIRIT_CLASSIC_PHOENIX_TUPLES_HPP
+#define BOOST_SPIRIT_CLASSIC_PHOENIX_TUPLES_HPP
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -22,37 +18,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 #ifndef PHOENIX_LIMIT
-#define PHOENIX_LIMIT 3
-#endif
-
-#if defined(__BORLANDC__) && (__BORLANDC__ <= 0x561)
-namespace phoenix { namespace borland_only
-{
-    namespace ftors
-    {
-        //  We define these dummy template functions. Borland complains when
-        //  a template class has the same name as a template function,
-        //  regardless if they are in different namespaces.
-
-        template <typename T> void if_(T) {}
-        template <typename T> void for_(T) {}
-        template <typename T> void while_(T) {}
-        template <typename T> void do_(T) {}
-    }
-
-    namespace tmpls
-    {
-        //  We define these dummy template functions. Borland complains when
-        //  a template class has the same name as a template function,
-        //  regardless if they are in different namespaces.
-
-        template <typename T> struct if_ {};
-        template <typename T> struct for_ {};
-        template <typename T> struct while_ {};
-        template <typename T> struct do_ {};
-    }
-
-}} // namespace phoenix::borland_only
+#define PHOENIX_LIMIT 6
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -63,6 +29,8 @@ namespace phoenix { namespace borland_only
 #if BOOST_WORKAROUND(BOOST_MSVC, >= 1400)
 #pragma warning(push)
 #pragma warning(disable:4512) //assignment operator could not be generated
+// bogus https://developercommunity.visualstudio.com/t/buggy-warning-c4709/471956
+#pragma warning(disable:4709) //comma operator within array index expression
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -211,7 +179,7 @@ struct tuple_element
     typedef nil_t& rtype;
     typedef nil_t const& crtype;
 
-    static nil_t    get(TupleT const& t)    { return nil_t(); }
+    static nil_t    get(TupleT const&)      { return nil_t(); }
 };
 
 //////////////////////////////////

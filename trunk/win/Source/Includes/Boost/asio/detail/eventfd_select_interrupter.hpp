@@ -2,7 +2,7 @@
 // detail/eventfd_select_interrupter.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2025 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 // Copyright (c) 2008 Roelof Naude (roelof.naude at gmail dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -30,7 +30,7 @@ class eventfd_select_interrupter
 {
 public:
   // Constructor.
-  BOOST_ASIO_DECL eventfd_select_interrupter();
+  BOOST_ASIO_DECL explicit eventfd_select_interrupter(bool use_eventfd = true);
 
   // Destructor.
   BOOST_ASIO_DECL ~eventfd_select_interrupter();
@@ -41,7 +41,7 @@ public:
   // Interrupt the select call.
   BOOST_ASIO_DECL void interrupt();
 
-  // Reset the select interrupt. Returns true if the call was interrupted.
+  // Reset the select interrupter. Returns true if the reset was successful.
   BOOST_ASIO_DECL bool reset();
 
   // Get the read descriptor to be passed to select.
@@ -52,7 +52,7 @@ public:
 
 private:
   // Open the descriptors. Throws on error.
-  BOOST_ASIO_DECL void open_descriptors();
+  BOOST_ASIO_DECL void open_descriptors(bool use_eventfd);
 
   // Close the descriptors.
   BOOST_ASIO_DECL void close_descriptors();

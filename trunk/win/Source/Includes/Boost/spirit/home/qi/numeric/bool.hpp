@@ -5,8 +5,8 @@
     Distributed under the Boost Software License, Version 1.0. (See accompanying
     file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 ==============================================================================*/
-#if !defined(SPIRIT_QI_BOOL_SEP_29_2009_0709AM)
-#define SPIRIT_QI_BOOL_SEP_29_2009_0709AM
+#ifndef BOOST_SPIRIT_QI_NUMERIC_BOOL_HPP
+#define BOOST_SPIRIT_QI_NUMERIC_BOOL_HPP
 
 #if defined(_MSC_VER)
 #pragma once
@@ -128,7 +128,7 @@ namespace boost { namespace spirit { namespace qi
                     return false;
 
 #if BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1600))
-                p; // suppresses warning: C4100: 'p' : unreferenced formal parameter
+                (void)p; // suppresses warning: C4100: 'p' : unreferenced formal parameter
 #endif
                 return (allow_true && p.parse_true(first, last, attr)) ||
                        (!disallow_false && p.parse_false(first, last, attr));
@@ -153,11 +153,11 @@ namespace boost { namespace spirit { namespace qi
           , typename Skipper, typename Attribute>
         bool parse(Iterator& first, Iterator const& last
           , Context& /*context*/, Skipper const& skipper
-          , Attribute& attr) const
+          , Attribute& attr_) const
         {
             typedef detail::bool_impl<T, BoolPolicies> extract;
             qi::skip_over(first, last, skipper);
-            return extract::parse(first, last, attr, BoolPolicies());
+            return extract::parse(first, last, attr_, BoolPolicies());
         }
 
         template <typename Context>
@@ -184,11 +184,11 @@ namespace boost { namespace spirit { namespace qi
           , typename Skipper, typename Attribute>
         bool parse(Iterator& first, Iterator const& last
           , Context& /*context*/, Skipper const& skipper
-          , Attribute& attr) const
+          , Attribute& attr_) const
         {
             typedef detail::bool_impl<T, BoolPolicies> extract;
             qi::skip_over(first, last, skipper);
-            return extract::parse(first, last, attr, BoolPolicies(), n_, n_);
+            return extract::parse(first, last, attr_, BoolPolicies(), n_, n_);
         }
 
         template <typename Context>

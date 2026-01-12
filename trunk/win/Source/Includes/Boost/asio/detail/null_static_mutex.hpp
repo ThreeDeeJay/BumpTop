@@ -2,7 +2,7 @@
 // detail/null_static_mutex.hpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2011 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2025 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,7 +17,7 @@
 
 #include <boost/asio/detail/config.hpp>
 
-#if !defined(BOOST_HAS_THREADS) || defined(BOOST_ASIO_DISABLE_THREADS)
+#if !defined(BOOST_ASIO_HAS_THREADS)
 
 #include <boost/asio/detail/scoped_lock.hpp>
 
@@ -34,6 +34,12 @@ struct null_static_mutex
   // Initialise the mutex.
   void init()
   {
+  }
+
+  // Try to lock the mutex without blocking.
+  bool try_lock()
+  {
+    return true;
   }
 
   // Lock the mutex.
@@ -57,6 +63,6 @@ struct null_static_mutex
 
 #include <boost/asio/detail/pop_options.hpp>
 
-#endif // !defined(BOOST_HAS_THREADS) || defined(BOOST_ASIO_DISABLE_THREADS)
+#endif // !defined(BOOST_ASIO_HAS_THREADS)
 
 #endif // BOOST_ASIO_DETAIL_NULL_STATIC_MUTEX_HPP

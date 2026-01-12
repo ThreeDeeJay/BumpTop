@@ -28,13 +28,14 @@
 #include <boost/function/function2.hpp>
 #include <boost/function/function0.hpp>
 #include <boost/mpi.hpp>
-#include <boost/graph/parallel/process_group.hpp>
+#include <boost/property_map/parallel/process_group.hpp>
+#include <boost/serialization/vector.hpp>
 #include <boost/utility/enable_if.hpp>
 
 namespace boost { namespace graph { namespace distributed {
 
 // Process group tags
-struct mpi_process_group_tag : virtual parallel::linear_process_group_tag { };
+struct mpi_process_group_tag : virtual boost::parallel::linear_process_group_tag { };
 
 class mpi_process_group
 {
@@ -75,7 +76,7 @@ class mpi_process_group
 
   /// Classification of the capabilities of this process group
   struct communication_category
-    : virtual parallel::bsp_process_group_tag, 
+    : virtual boost::parallel::bsp_process_group_tag, 
       virtual mpi_process_group_tag { };
 
   // TBD: We can eliminate the "source" field and possibly the
@@ -416,7 +417,7 @@ public:
 
   void synchronize() const;
 
-  operator bool() { return impl_; }
+  operator bool() { return bool(impl_); }
 
   mpi_process_group base() const;
 
@@ -613,8 +614,6 @@ public:
   int size;
 };
 
-
-
 inline mpi_process_group::process_id_type 
 process_id(const mpi_process_group& pg)
 { return pg.rank; }
@@ -685,6 +684,15 @@ template<typename T>
 void
 broadcast(const mpi_process_group& pg, T& val, 
           mpi_process_group::process_id_type root);
+
+
+/// optimized swap for outgoing messages
+inline void
+swap(mpi_process_group::outgoing_messages& x,
+     mpi_process_group::outgoing_messages& y)
+{
+  x.swap(y);
+}
 
 
 /*******************************************************************
@@ -788,18 +796,6 @@ namespace boost { namespace mpi {
     template<>
     struct is_mpi_datatype<boost::graph::distributed::mpi_process_group::message_header> : mpl::true_ { };
 } } // end namespace boost::mpi
-
-namespace std {
-/// optimized swap for outgoing messages
-inline void 
-swap(boost::graph::distributed::mpi_process_group::outgoing_messages& x,
-     boost::graph::distributed::mpi_process_group::outgoing_messages& y)
-{
-  x.swap(y);
-}
-
-
-}
 
 BOOST_CLASS_IMPLEMENTATION(boost::graph::distributed::mpi_process_group::outgoing_messages,object_serializable)
 BOOST_CLASS_TRACKING(boost::graph::distributed::mpi_process_group::outgoing_messages,track_never)

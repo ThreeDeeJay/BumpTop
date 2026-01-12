@@ -15,7 +15,7 @@
 #include <boost/iterator/iterator_facade.hpp>
 #include <boost/iterator/iterator_categories.hpp>
 
-#include <boost/range/iterator_range.hpp>
+#include <boost/range/iterator_range_core.hpp>
 #include <boost/range/begin.hpp>
 #include <boost/range/end.hpp>
 #include <boost/range/iterator.hpp>
@@ -74,7 +74,7 @@ namespace boost {
 
                 \post eof()==true
             */
-            find_iterator() {}
+            BOOST_DEFAULTED_FUNCTION(find_iterator(), {})
 
             //! Copy constructor
             /*!
@@ -84,6 +84,18 @@ namespace boost {
                 base_type(Other),
                 m_Match(Other.m_Match),
                 m_End(Other.m_End) {}
+
+            //! Copy assignment
+            /*!
+                Assigns a copy of the find_iterator
+            */
+            BOOST_DEFAULTED_FUNCTION(find_iterator& operator=( const find_iterator& Other ), {
+                if (this == &Other) return *this;
+                this->base_type::operator=(Other);
+                m_Match = Other.m_Match;
+                m_End = Other.m_End;
+                return *this;
+            })
 
             //! Constructor
             /*!
@@ -230,7 +242,12 @@ namespace boost {
     
                 \post eof()==true
             */
-            split_iterator() {}
+            split_iterator() :
+                m_Next(),
+                m_End(),
+                m_bEof(true)
+            {}
+
             //! Copy constructor
             /*!
                 Construct a copy of the split_iterator
@@ -242,6 +259,20 @@ namespace boost {
                 m_End(Other.m_End),
                 m_bEof(Other.m_bEof)
             {}
+
+            //! Assignment operator
+            /*!
+                Assigns a copy of the split_iterator
+            */
+            BOOST_DEFAULTED_FUNCTION(split_iterator& operator=( const split_iterator& Other ), {
+                if (this == &Other) return *this;
+                this->base_type::operator=(Other);
+                m_Match = Other.m_Match;
+                m_Next = Other.m_Next;
+                m_End = Other.m_End;
+                m_bEof = Other.m_bEof;
+                return *this;
+            })
 
             //! Constructor
             /*!
