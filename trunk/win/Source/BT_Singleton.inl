@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#define shared_ptr boost::shared_ptr
+#define exception std::exception
+
 template <class T>
 T *Singleton<T>::getInstance()
 {
