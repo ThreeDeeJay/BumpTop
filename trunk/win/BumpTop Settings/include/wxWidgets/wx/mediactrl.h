@@ -2,9 +2,7 @@
 // Name:        wx/mediactrl.h
 // Purpose:     wxMediaCtrl class
 // Author:      Ryan Norton <wxprojects@comcast.net>
-// Modified by:
 // Created:     11/07/04
-// RCS-ID:      $Id: mediactrl.h 41020 2006-09-05 20:47:48Z VZ $
 // Copyright:   (c) Ryan Norton
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -38,6 +36,8 @@
 #include "wx/control.h"
 #include "wx/uri.h"
 
+#define wxMC_NO_AUTORESIZE         0x0001
+
 // ============================================================================
 // Declarations
 // ============================================================================
@@ -58,7 +58,7 @@ enum wxMediaState
 enum wxMediaCtrlPlayerControls
 {
     wxMEDIACTRLPLAYERCONTROLS_NONE           =   0,
-    //Step controls like fastfoward, step one frame etc.
+    //Step controls like fastforward, step one frame etc.
     wxMEDIACTRLPLAYERCONTROLS_STEP           =   1 << 0,
     //Volume controls like the speaker icon, volume slider, etc.
     wxMEDIACTRLPLAYERCONTROLS_VOLUME         =   1 << 1,
@@ -107,12 +107,12 @@ public:
     // Allocates a copy of this object.
     // Required for wxEvtHandler::AddPendingEvent
     // ------------------------------------------------------------------------
-    virtual wxEvent *Clone() const
+    wxNODISCARD virtual wxEvent *Clone() const override
     {   return new wxMediaEvent(*this);     }
 
 
     // Put this class on wxWidget's RTTI table
-    DECLARE_DYNAMIC_CLASS(wxMediaEvent)
+    wxDECLARE_DYNAMIC_CLASS(wxMediaEvent);
 };
 
 // ----------------------------------------------------------------------------
@@ -124,7 +124,7 @@ public:
 class WXDLLIMPEXP_MEDIA wxMediaCtrl : public wxControl
 {
 public:
-    wxMediaCtrl() : m_imp(NULL), m_bLoaded(false)
+    wxMediaCtrl() : m_imp(nullptr), m_bLoaded(false)
     {                                                                   }
 
     wxMediaCtrl(wxWindow* parent, wxWindowID winid,
@@ -135,7 +135,7 @@ public:
                 const wxString& szBackend = wxEmptyString,
                 const wxValidator& validator = wxDefaultValidator,
                 const wxString& name = wxT("mediaCtrl"))
-                : m_imp(NULL), m_bLoaded(false)
+                : m_imp(nullptr), m_bLoaded(false)
     {   Create(parent, winid, fileName, pos, size, style,
                szBackend, validator, name);                             }
 
@@ -147,7 +147,7 @@ public:
                 const wxString& szBackend = wxEmptyString,
                 const wxValidator& validator = wxDefaultValidator,
                 const wxString& name = wxT("mediaCtrl"))
-                : m_imp(NULL), m_bLoaded(false)
+                : m_imp(nullptr), m_bLoaded(false)
     {   Create(parent, winid, location, pos, size, style,
                szBackend, validator, name);                             }
 
@@ -171,7 +171,7 @@ public:
                 const wxValidator& validator = wxDefaultValidator,
                 const wxString& name = wxT("mediaCtrl"));
 
-    bool DoCreate(wxClassInfo* instance,
+    bool DoCreate(const wxClassInfo* instance,
                 wxWindow* parent, wxWindowID winid,
                 const wxPoint& pos = wxDefaultPosition,
                 const wxSize& size = wxDefaultSize,
@@ -191,12 +191,9 @@ public:
     wxFileOffset Tell(); //FIXME: This should be const
     wxFileOffset Length(); //FIXME: This should be const
 
-#if wxABI_VERSION >= 20601 /* 2.6.1+ only */
     double GetPlaybackRate();           //All but MCI & GStreamer
     bool SetPlaybackRate(double dRate); //All but MCI & GStreamer
-#endif
 
-#if wxABI_VERSION >= 20602 /* 2.6.2+ only */
     bool Load(const wxURI& location);
     bool Load(const wxURI& location, const wxURI& proxy);
 
@@ -214,27 +211,18 @@ public:
     {   return Load(wxURI(fileName));       }
     bool LoadURIWithProxy(const wxString& fileName, const wxString& proxy)
     {   return Load(wxURI(fileName), wxURI(proxy));       }
-#endif
 
 protected:
-    static wxClassInfo* NextBackend();
+    static const wxClassInfo* NextBackend(wxClassInfo::const_iterator* it);
 
     void OnMediaFinished(wxMediaEvent& evt);
-    virtual void DoMoveWindow(int x, int y, int w, int h);
-    wxSize DoGetBestSize() const;
+    virtual void DoMoveWindow(int x, int y, int w, int h) override;
+    wxSize DoGetBestSize() const override;
 
-    //FIXME:  This is nasty... find a better way to work around
-    //inheritance issues
-#if defined(__WXMAC__)
-    virtual void MacVisibilityChanged();
-#endif
-#if defined(__WXMAC__) || defined(__WXCOCOA__)
-    friend class wxQTMediaBackend;
-#endif
     class wxMediaBackend* m_imp;
     bool m_bLoaded;
 
-    DECLARE_DYNAMIC_CLASS(wxMediaCtrl)
+    wxDECLARE_DYNAMIC_CLASS(wxMediaCtrl);
 };
 
 // ----------------------------------------------------------------------------
@@ -242,11 +230,11 @@ protected:
 // wxMediaBackend
 //
 // Derive from this and use standard wxWidgets RTTI
-// (DECLARE_DYNAMIC_CLASS and IMPLEMENT_CLASS) to make a backend
+// (wxDECLARE_DYNAMIC_CLASS and wxIMPLEMENT_CLASS) to make a backend
 // for wxMediaCtrl.  Backends are searched alphabetically -
 // the one with the earliest letter is tried first.
 //
-// Note that this is currently not API or ABI compatable -
+// Note that this is currently not API or ABI compatible -
 // so statically link or make the client compile on-site.
 //
 // ----------------------------------------------------------------------------
@@ -326,45 +314,33 @@ public:
     {                                   }
     virtual void RESERVED9() {}
 
-    DECLARE_DYNAMIC_CLASS(wxMediaBackend)
+    wxDECLARE_DYNAMIC_CLASS(wxMediaBackend);
 };
 
 
-//Event ID to give to our events
-#define wxMEDIA_FINISHED_ID    13000
-#define wxMEDIA_STOP_ID    13001
-
-//Define our event types - we need to call DEFINE_EVENT_TYPE(EVT) later
-DECLARE_EXPORTED_EVENT_TYPE(WXDLLIMPEXP_MEDIA, wxEVT_MEDIA_FINISHED, wxMEDIA_FINISHED_ID)
-DECLARE_EXPORTED_EVENT_TYPE(WXDLLIMPEXP_MEDIA, wxEVT_MEDIA_STOP,     wxMEDIA_STOP_ID)
+//Our events
+wxDECLARE_EXPORTED_EVENT( WXDLLIMPEXP_MEDIA, wxEVT_MEDIA_FINISHED, wxMediaEvent );
+wxDECLARE_EXPORTED_EVENT( WXDLLIMPEXP_MEDIA, wxEVT_MEDIA_STOP, wxMediaEvent );
 
 //Function type(s) our events need
 typedef void (wxEvtHandler::*wxMediaEventFunction)(wxMediaEvent&);
 
 #define wxMediaEventHandler(func) \
-    (wxObjectEventFunction)(wxEventFunction)wxStaticCastEvent(wxMediaEventFunction, &func)
+    wxEVENT_HANDLER_CAST(wxMediaEventFunction, func)
 
 //Macro for usage with message maps
-#define EVT_MEDIA_FINISHED(winid, fn) DECLARE_EVENT_TABLE_ENTRY( wxEVT_MEDIA_FINISHED, winid, wxID_ANY, wxMediaEventHandler(fn), (wxObject *) NULL ),
-#define EVT_MEDIA_STOP(winid, fn) DECLARE_EVENT_TABLE_ENTRY( wxEVT_MEDIA_STOP, winid, wxID_ANY, wxMediaEventHandler(fn), (wxObject *) NULL ),
+#define EVT_MEDIA_FINISHED(winid, fn)   wxDECLARE_EVENT_TABLE_ENTRY( wxEVT_MEDIA_FINISHED, winid, wxID_ANY, wxMediaEventHandler(fn), nullptr ),
+#define EVT_MEDIA_STOP(winid, fn)       wxDECLARE_EVENT_TABLE_ENTRY( wxEVT_MEDIA_STOP, winid, wxID_ANY, wxMediaEventHandler(fn), nullptr ),
 
-#if wxABI_VERSION >= 20602 /* 2.6.2+ only */
-#   define wxMEDIA_LOADED_ID      13002
-    DECLARE_EXPORTED_EVENT_TYPE(WXDLLIMPEXP_MEDIA, wxEVT_MEDIA_LOADED,     wxMEDIA_LOADED_ID)
-#   define EVT_MEDIA_LOADED(winid, fn) DECLARE_EVENT_TABLE_ENTRY( wxEVT_MEDIA_LOADED, winid, wxID_ANY, wxMediaEventHandler(fn), (wxObject *) NULL ),
-#endif
+wxDECLARE_EXPORTED_EVENT( WXDLLIMPEXP_MEDIA, wxEVT_MEDIA_LOADED, wxMediaEvent );
+#define EVT_MEDIA_LOADED(winid, fn)     wxDECLARE_EVENT_TABLE_ENTRY( wxEVT_MEDIA_LOADED, winid, wxID_ANY, wxMediaEventHandler(fn), nullptr ),
 
-#if wxABI_VERSION >= 20603 /* 2.6.3+ only */
-#   define wxMEDIA_STATECHANGED_ID      13003
-#   define wxMEDIA_PLAY_ID      13004
-#   define wxMEDIA_PAUSE_ID      13005
-    DECLARE_EXPORTED_EVENT_TYPE(WXDLLIMPEXP_MEDIA, wxEVT_MEDIA_STATECHANGED,     wxMEDIA_STATECHANGED_ID)
-    DECLARE_EXPORTED_EVENT_TYPE(WXDLLIMPEXP_MEDIA, wxEVT_MEDIA_PLAY,     wxMEDIA_PLAY_ID)
-    DECLARE_EXPORTED_EVENT_TYPE(WXDLLIMPEXP_MEDIA, wxEVT_MEDIA_PAUSE,     wxMEDIA_PAUSE_ID)
-#   define EVT_MEDIA_STATECHANGED(winid, fn) DECLARE_EVENT_TABLE_ENTRY( wxEVT_MEDIA_STATECHANGED, winid, wxID_ANY, wxMediaEventHandler(fn), (wxObject *) NULL ),
-#   define EVT_MEDIA_PLAY(winid, fn) DECLARE_EVENT_TABLE_ENTRY( wxEVT_MEDIA_PLAY, winid, wxID_ANY, wxMediaEventHandler(fn), (wxObject *) NULL ),
-#   define EVT_MEDIA_PAUSE(winid, fn) DECLARE_EVENT_TABLE_ENTRY( wxEVT_MEDIA_PAUSE, winid, wxID_ANY, wxMediaEventHandler(fn), (wxObject *) NULL ),
-#endif
+wxDECLARE_EXPORTED_EVENT( WXDLLIMPEXP_MEDIA, wxEVT_MEDIA_STATECHANGED, wxMediaEvent );
+wxDECLARE_EXPORTED_EVENT( WXDLLIMPEXP_MEDIA, wxEVT_MEDIA_PLAY, wxMediaEvent );
+wxDECLARE_EXPORTED_EVENT( WXDLLIMPEXP_MEDIA, wxEVT_MEDIA_PAUSE, wxMediaEvent );
+#define EVT_MEDIA_STATECHANGED(winid, fn)   wxDECLARE_EVENT_TABLE_ENTRY( wxEVT_MEDIA_STATECHANGED, winid, wxID_ANY, wxMediaEventHandler(fn), nullptr ),
+#define EVT_MEDIA_PLAY(winid, fn)           wxDECLARE_EVENT_TABLE_ENTRY( wxEVT_MEDIA_PLAY, winid, wxID_ANY, wxMediaEventHandler(fn), nullptr ),
+#define EVT_MEDIA_PAUSE(winid, fn)          wxDECLARE_EVENT_TABLE_ENTRY( wxEVT_MEDIA_PAUSE, winid, wxID_ANY, wxMediaEventHandler(fn), nullptr ),
 
 // ----------------------------------------------------------------------------
 // common backend base class used by many other backends
@@ -379,9 +355,7 @@ public:
     // notify that the movie playback is finished
     void QueueFinishEvent()
     {
-#if wxABI_VERSION >= 20603 /* 2.6.3+ only */
         QueueEvent(wxEVT_MEDIA_STATECHANGED);
-#endif
         QueueEvent(wxEVT_MEDIA_FINISHED);
     }
 
@@ -410,7 +384,7 @@ protected:
 };
 
 // ----------------------------------------------------------------------------
-// End compilation gaurd
+// End compilation guard
 // ----------------------------------------------------------------------------
 #endif // wxUSE_MEDIACTRL
 

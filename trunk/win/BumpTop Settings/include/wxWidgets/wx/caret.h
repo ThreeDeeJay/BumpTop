@@ -2,9 +2,7 @@
 // Name:        wx/caret.h
 // Purpose:     wxCaretBase class - the interface of wxCaret
 // Author:      Vadim Zeitlin
-// Modified by:
 // Created:     23.05.99
-// RCS-ID:      $Id: caret.h 49804 2007-11-10 01:09:42Z VZ $
 // Copyright:   (c) wxWidgets team
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -16,25 +14,19 @@
 
 #if wxUSE_CARET
 
-// ---------------------------------------------------------------------------
-// forward declarations
-// ---------------------------------------------------------------------------
-
-class WXDLLIMPEXP_FWD_CORE wxWindow;
-class WXDLLIMPEXP_FWD_CORE wxWindowBase;
-
 // ----------------------------------------------------------------------------
 // headers we have to include
 // ----------------------------------------------------------------------------
 
 #include "wx/gdicmn.h"  // for wxPoint, wxSize
+#include "wx/window.h"
 
 // ----------------------------------------------------------------------------
 // A caret is a blinking cursor showing the position where the typed text will
 // appear. It can be either a solid block or a custom bitmap (TODO)
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxCaretBase
+class WXDLLIMPEXP_CORE wxCaretBase
 {
 public:
     // ctors
@@ -58,7 +50,7 @@ public:
     }
 
     // a virtual dtor has been provided since this class has virtual members
-    virtual ~wxCaretBase() { }
+    virtual ~wxCaretBase() = default;
 
     // Create() functions - same as ctor but returns the success code
     // --------------------------------------------------------------
@@ -96,7 +88,7 @@ public:
     wxSize GetSize() const { return wxSize(m_width, m_height); }
 
         // get the window we're associated with
-    wxWindow *GetWindow() const { return (wxWindow *)m_window; }
+    wxWindow *GetWindow() const { return static_cast<wxWindow *>(m_window); }
 
         // change the size of the caret
     void SetSize(int width, int height) {
@@ -147,13 +139,14 @@ public:
     virtual void OnKillFocus() { }
 
 protected:
-    // these functions may be overriden in the derived classes, but they
+    // these functions may be overridden in the derived classes, but they
     // should call the base class version first
     virtual bool DoCreate(wxWindowBase *window, int width, int height)
     {
         m_window = window;
         m_width = width;
         m_height = height;
+        DoSize();
 
         return true;
     }
@@ -163,15 +156,6 @@ protected:
     virtual void DoHide() = 0;
     virtual void DoMove() = 0;
     virtual void DoSize() { }
-
-    // the common initialization
-    void Init()
-    {
-        m_window = (wxWindowBase *)NULL;
-        m_x = m_y = 0;
-        m_width = m_height = 0;
-        m_countVisible = 0;
-    }
 
     // the size of the caret
     int m_width, m_height;
@@ -186,7 +170,15 @@ protected:
     int m_countVisible;
 
 private:
-    DECLARE_NO_COPY_CLASS(wxCaretBase)
+    void Init()
+    {
+        m_window = nullptr;
+        m_x = m_y = 0;
+        m_width = m_height = 0;
+        m_countVisible = 0;
+    }
+
+    wxDECLARE_NO_COPY_CLASS(wxCaretBase);
 };
 
 // ---------------------------------------------------------------------------
@@ -208,17 +200,17 @@ private:
 #ifdef wxHAS_CARET_USING_OVERLAYS
 
 // we don't need to hide the caret if it's rendered using overlays
-class WXDLLEXPORT wxCaretSuspend
+class WXDLLIMPEXP_CORE wxCaretSuspend
 {
 public:
     wxCaretSuspend(wxWindow *WXUNUSED(win)) {}
 
-    DECLARE_NO_COPY_CLASS(wxCaretSuspend)
+    wxDECLARE_NO_COPY_CLASS(wxCaretSuspend);
 };
 
 #else // !wxHAS_CARET_USING_OVERLAYS
 
-class WXDLLEXPORT wxCaretSuspend
+class WXDLLIMPEXP_CORE wxCaretSuspend
 {
 public:
     wxCaretSuspend(wxWindow *win)
@@ -242,7 +234,7 @@ private:
     wxCaret *m_caret;
     bool     m_show;
 
-    DECLARE_NO_COPY_CLASS(wxCaretSuspend)
+    wxDECLARE_NO_COPY_CLASS(wxCaretSuspend);
 };
 
 #endif // wxHAS_CARET_USING_OVERLAYS/!wxHAS_CARET_USING_OVERLAYS

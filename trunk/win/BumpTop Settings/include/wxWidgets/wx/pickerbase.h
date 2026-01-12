@@ -2,10 +2,8 @@
 // Name:        wx/pickerbase.h
 // Purpose:     wxPickerBase definition
 // Author:      Francesco Montorsi (based on Vadim Zeitlin's code)
-// Modified by:
 // Created:     14/4/2006
 // Copyright:   (c) Vadim Zeitlin, Francesco Montorsi
-// RCS-ID:      $Id: pickerbase.h 49804 2007-11-10 01:09:42Z VZ $
 // Licence:     wxWindows Licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -19,7 +17,7 @@
 class WXDLLIMPEXP_FWD_CORE wxTextCtrl;
 class WXDLLIMPEXP_FWD_CORE wxToolTip;
 
-extern WXDLLEXPORT_DATA(const wxChar) wxButtonNameStr[];
+extern WXDLLIMPEXP_DATA_CORE(const char) wxButtonNameStr[];
 
 // ----------------------------------------------------------------------------
 // wxPickerBase is the base class for the picker controls which support
@@ -31,14 +29,13 @@ extern WXDLLEXPORT_DATA(const wxChar) wxButtonNameStr[];
 // ----------------------------------------------------------------------------
 
 #define wxPB_USE_TEXTCTRL           0x0002
+#define wxPB_SMALL                  0x8000
 
-class WXDLLIMPEXP_CORE wxPickerBase : public wxControl
+class WXDLLIMPEXP_CORE wxPickerBase : public wxNavigationEnabled<wxControl>
 {
 public:
-    // ctor: text is the associated text control
-    wxPickerBase() : m_text(NULL), m_picker(NULL), m_sizer(NULL)
-        { m_container.SetContainerWindow(this); }
-    virtual ~wxPickerBase() {}
+    wxPickerBase() = default;
+    virtual ~wxPickerBase() = default;
 
 
     // if present, intercepts wxPB_USE_TEXTCTRL style and creates the text control
@@ -50,7 +47,7 @@ public:
                     const wxSize& size = wxDefaultSize,
                     long style = 0,
                     const wxValidator& validator = wxDefaultValidator,
-                    const wxString& name = wxButtonNameStr);
+                    const wxString& name = wxASCII_STR(wxButtonNameStr));
 
 public:     // public API
 
@@ -76,34 +73,33 @@ public:     // public API
         { return (GetTextCtrlItem()->GetFlag() & wxGROW) != 0; }
     void SetTextCtrlGrowable(bool grow = true)
     {
-        int f = GetDefaultTextCtrlFlag();
-        if ( grow )
-            f |= wxGROW;
-        else
-            f &= ~wxGROW;
-
-        GetTextCtrlItem()->SetFlag(f);
+        DoSetGrowableFlagFor(GetTextCtrlItem(), grow);
     }
 
     bool IsPickerCtrlGrowable() const
         { return (GetPickerCtrlItem()->GetFlag() & wxGROW) != 0; }
     void SetPickerCtrlGrowable(bool grow = true)
     {
-        int f = GetDefaultPickerCtrlFlag();
-        if ( grow )
-            f |= wxGROW;
-        else
-            f &= ~wxGROW;
-
-        GetPickerCtrlItem()->SetFlag(f);
+        DoSetGrowableFlagFor(GetPickerCtrlItem(), grow);
     }
 
     bool HasTextCtrl() const
-        { return m_text != NULL; }
+        { return m_text != nullptr; }
     wxTextCtrl *GetTextCtrl()
         { return m_text; }
     wxControl *GetPickerCtrl()
         { return m_picker; }
+
+    // It's not clear why did these functions ever existed, but they can't be
+    // used, both controls are, and can be, managed only by the picker itself.
+#ifdef WXWIN_COMPATIBILITY_3_2
+    wxDEPRECATED_MSG("must not be used, text control is managed internally")
+    void SetTextCtrl(wxTextCtrl* text)
+        { m_text = text; }
+    wxDEPRECATED_MSG("must not be used, picker control is managed internally")
+    void SetPickerCtrl(wxControl* picker)
+        { m_picker = picker; }
+#endif // WXWIN_COMPATIBILITY_3_2
 
     // methods that derived class must/may override
     virtual void UpdatePickerFromTextCtrl() = 0;
@@ -112,16 +108,13 @@ public:     // public API
 protected:
     // overridden base class methods
 #if wxUSE_TOOLTIPS
-    virtual void DoSetToolTip(wxToolTip *tip);
+    virtual void DoSetToolTip(wxToolTip *tip) override;
 #endif // wxUSE_TOOLTIPS
 
 
     // event handlers
-    void OnTextCtrlDelete(wxWindowDestroyEvent &);
     void OnTextCtrlUpdate(wxCommandEvent &);
     void OnTextCtrlKillFocus(wxFocusEvent &);
-
-    void OnSize(wxSizeEvent &);
 
     // returns the set of styles for the attached wxTextCtrl
     // from given wxPickerBase's styles
@@ -146,42 +139,33 @@ protected:
         return m_sizer->GetItem((size_t)0);
     }
 
+#if WXWIN_COMPATIBILITY_3_0
+    wxDEPRECATED_MSG("useless and will be removed in the future")
     int GetDefaultPickerCtrlFlag() const
     {
-        // on macintosh, without additional borders
-        // there's not enough space for focus rect
-        return wxALIGN_CENTER_VERTICAL|wxGROW
-#ifdef __WXMAC__
-            | wxTOP | wxRIGHT | wxBOTTOM
-#endif
-            ;
+        return wxALIGN_CENTER_VERTICAL;
     }
 
+    wxDEPRECATED_MSG("useless and will be removed in the future")
     int GetDefaultTextCtrlFlag() const
     {
-        // on macintosh, without wxALL there's not enough space for focus rect
-        return wxALIGN_CENTER_VERTICAL
-#ifdef __WXMAC__
-            | wxALL
-#else
-            | wxRIGHT
-#endif
-            ;
+        // Cast to avoid warnings about mixing elements of different enums.
+        return wxALIGN_CENTER_VERTICAL | static_cast<int>(wxRIGHT);
     }
+#endif // WXWIN_COMPATIBILITY_3_0
 
     void PostCreation();
 
 protected:
-    wxTextCtrl *m_text;     // can be NULL
-    wxControl *m_picker;
-    wxBoxSizer *m_sizer;
+    wxTextCtrl *m_text = nullptr;     // can be null
+    wxControl *m_picker = nullptr;
+    wxBoxSizer *m_sizer = nullptr;
 
 private:
-    DECLARE_ABSTRACT_CLASS(wxPickerBase)
-    DECLARE_EVENT_TABLE()
+    // Common implementation of Set{Text,Picker}CtrlGrowable().
+    void DoSetGrowableFlagFor(wxSizerItem* item, bool grow);
 
-    // This class must be something just like a panel...
-    WX_DECLARE_CONTROL_CONTAINER();
+    wxDECLARE_ABSTRACT_CLASS(wxPickerBase);
 };
 
 

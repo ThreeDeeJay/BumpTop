@@ -4,7 +4,6 @@
 // Author:      Ron Lee <ron@debian.org>
 // Modified by: Vadim Zeitlin (refactored, added bg preservation)
 // Created:     16/03/02
-// RCS-ID:      $Id: dcbuffer.h 44609 2007-03-05 08:58:09Z VZ $
 // Copyright:   (c) Ron Lee
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -16,13 +15,8 @@
 #include "wx/dcclient.h"
 #include "wx/window.h"
 
-// Split platforms into two groups - those which have well-working
-// double-buffering by default, and those which do not.
-#if defined(__WXMAC__) || defined(__WXGTK20__) || defined(__WXDFB__)
-    #define wxALWAYS_NATIVE_DOUBLE_BUFFER       1
-#else
-    #define wxALWAYS_NATIVE_DOUBLE_BUFFER       0
-#endif
+// All current ports use double buffering.
+#define wxALWAYS_NATIVE_DOUBLE_BUFFER       1
 
 
 // ----------------------------------------------------------------------------
@@ -37,13 +31,17 @@
 // does not prepare the window DC
 #define wxBUFFER_CLIENT_AREA        0x02
 
-class WXDLLEXPORT wxBufferedDC : public wxMemoryDC
+// Set when not using specific buffer bitmap. Note that this
+// is private style and not returned by GetStyle.
+#define wxBUFFER_USES_SHARED_BUFFER 0x04
+
+class WXDLLIMPEXP_CORE wxBufferedDC : public wxMemoryDC
 {
 public:
     // Default ctor, must subsequently call Init for two stage construction.
     wxBufferedDC()
-        : m_dc(NULL),
-          m_buffer(NULL),
+        : m_dc(nullptr),
+          m_buffer(nullptr),
           m_style(0)
     {
     }
@@ -52,7 +50,7 @@ public:
     wxBufferedDC(wxDC *dc,
                  wxBitmap& buffer = wxNullBitmap,
                  int style = wxBUFFER_CLIENT_AREA)
-        : m_dc(NULL), m_buffer(NULL)
+        : m_dc(nullptr), m_buffer(nullptr)
     {
         Init(dc, buffer, style);
     }
@@ -61,7 +59,7 @@ public:
     // (where area is usually something like the size of the window
     // being buffered)
     wxBufferedDC(wxDC *dc, const wxSize& area, int style = wxBUFFER_CLIENT_AREA)
-        : m_dc(NULL), m_buffer(NULL)
+        : m_dc(nullptr), m_buffer(nullptr)
     {
         Init(dc, area, style);
     }
@@ -98,38 +96,20 @@ public:
     // Usually called in the dtor or by the dtor of derived classes if the
     // BufferedDC must blit before the derived class (which may own the dc it's
     // blitting to) is destroyed.
-    void UnMask()
-    {
-        wxCHECK_RET( m_dc, _T("no underlying wxDC?") );
-        wxASSERT_MSG( m_buffer && m_buffer->IsOk(), _T("invalid backing store") );
-
-        wxCoord x = 0,
-                y = 0;
-
-        if ( m_style & wxBUFFER_CLIENT_AREA )
-            GetDeviceOrigin(&x, &y);
-
-        m_dc->Blit(0, 0, m_buffer->GetWidth(), m_buffer->GetHeight(),
-                   this, -x, -y );
-        m_dc = NULL;
-    }
+    void UnMask();
 
     // Set and get the style
     void SetStyle(int style) { m_style = style; }
-    int GetStyle() const { return m_style; }
+    int GetStyle() const { return m_style & ~wxBUFFER_USES_SHARED_BUFFER; }
 
 private:
     // common part of Init()s
     void InitCommon(wxDC *dc, int style)
     {
-        wxASSERT_MSG( !m_dc, _T("wxBufferedDC already initialised") );
+        wxASSERT_MSG( !m_dc, wxT("wxBufferedDC already initialised") );
 
         m_dc = dc;
         m_style = style;
-
-        // inherit the same layout direction as the original DC
-        if (dc && dc->IsOk())
-            SetLayoutDirection(dc->GetLayoutDirection());
     }
 
     // check that the bitmap is valid and use it
@@ -148,8 +128,10 @@ private:
     // the buffering style
     int m_style;
 
-    DECLARE_DYNAMIC_CLASS(wxBufferedDC)
-    DECLARE_NO_COPY_CLASS(wxBufferedDC)
+    wxSize m_area;
+
+    wxDECLARE_DYNAMIC_CLASS(wxBufferedDC);
+    wxDECLARE_NO_COPY_CLASS(wxBufferedDC);
 };
 
 
@@ -159,32 +141,19 @@ private:
 
 // Creates a double buffered wxPaintDC, optionally allowing the
 // user to specify their own buffer to use.
-class WXDLLEXPORT wxBufferedPaintDC : public wxBufferedDC
+class WXDLLIMPEXP_CORE wxBufferedPaintDC : public wxBufferedDC
 {
 public:
     // If no bitmap is supplied by the user, a temporary one will be created.
     wxBufferedPaintDC(wxWindow *window, wxBitmap& buffer, int style = wxBUFFER_CLIENT_AREA)
-        : m_paintdc(window)
+        : wxBufferedPaintDC(window, &buffer, style)
     {
-        // If we're buffering the virtual window, scale the paint DC as well
-        if (style & wxBUFFER_VIRTUAL_AREA)
-            window->PrepareDC( m_paintdc );
-
-        if( buffer.IsOk() )
-            Init(&m_paintdc, buffer, style);
-        else
-            Init(&m_paintdc, GetBufferedSize(window, style), style);
     }
 
     // If no bitmap is supplied by the user, a temporary one will be created.
-    wxBufferedPaintDC(wxWindow *window, int style = wxBUFFER_CLIENT_AREA)
-        : m_paintdc(window)
+    explicit wxBufferedPaintDC(wxWindow *window, int style = wxBUFFER_CLIENT_AREA)
+        : wxBufferedPaintDC(window, nullptr, style)
     {
-        // If we're using the virtual window, scale the paint DC as well
-        if (style & wxBUFFER_VIRTUAL_AREA)
-            window->PrepareDC( m_paintdc );
-
-        Init(&m_paintdc, GetBufferedSize(window, style), style);
     }
 
     // default copy ctor ok.
@@ -206,10 +175,30 @@ protected:
     }
 
 private:
+    // If no bitmap is supplied, a temporary one will be created.
+    wxBufferedPaintDC(wxWindow *window, wxBitmap* buffer, int style)
+        : m_paintdc(window)
+    {
+        SetWindow(window);
+
+        // If we're buffering the virtual window, scale the paint DC as well
+        if (style & wxBUFFER_VIRTUAL_AREA)
+            window->PrepareDC( m_paintdc );
+
+        if ( buffer && buffer->IsOk() )
+            Init(&m_paintdc, *buffer, style);
+        else
+            Init(&m_paintdc, GetBufferedSize(window, style), style);
+
+        // This class should behave similarly to wxPaintDC, which inherits the
+        // font and colours of the associated window, so do it here as well.
+        GetImpl()->InheritAttributes(window);
+    }
+
     wxPaintDC m_paintdc;
 
-    DECLARE_ABSTRACT_CLASS(wxBufferedPaintDC)
-    DECLARE_NO_COPY_CLASS(wxBufferedPaintDC)
+    wxDECLARE_ABSTRACT_CLASS(wxBufferedPaintDC);
+    wxDECLARE_NO_COPY_CLASS(wxBufferedPaintDC);
 };
 
 
@@ -226,40 +215,25 @@ private:
     #define wxAutoBufferedPaintDCBase           wxBufferedPaintDC
 #endif
 
-
-#ifdef __WXDEBUG__
-
-class wxAutoBufferedPaintDC : public wxAutoBufferedPaintDCBase
+class WXDLLIMPEXP_CORE wxAutoBufferedPaintDC : public wxAutoBufferedPaintDCBase
 {
 public:
 
-    wxAutoBufferedPaintDC(wxWindow* win)
+    explicit wxAutoBufferedPaintDC(wxWindow* win)
         : wxAutoBufferedPaintDCBase(win)
     {
-        TestWinStyle(win);
+        wxASSERT_MSG( win->GetBackgroundStyle() == wxBG_STYLE_PAINT,
+            "You need to call SetBackgroundStyle(wxBG_STYLE_PAINT) in ctor, "
+            "and also, if needed, paint the background in wxEVT_PAINT handler."
+        );
     }
 
-    virtual ~wxAutoBufferedPaintDC() { }
+    virtual ~wxAutoBufferedPaintDC() = default;
 
 private:
-
-    void TestWinStyle(wxWindow* win)
-    {
-        // Help the user to get the double-buffering working properly.
-        wxASSERT_MSG( win->GetBackgroundStyle() == wxBG_STYLE_CUSTOM,
-                      wxT("In constructor, you need to call SetBackgroundStyle(wxBG_STYLE_CUSTOM), ")
-                      wxT("and also, if needed, paint the background manually in the paint event handler."));
-    }
-
-    DECLARE_NO_COPY_CLASS(wxAutoBufferedPaintDC)
+    wxDECLARE_NO_COPY_CLASS(wxAutoBufferedPaintDC);
 };
 
-#else // !__WXDEBUG__
-
-// In release builds, just use typedef
-typedef wxAutoBufferedPaintDCBase wxAutoBufferedPaintDC;
-
-#endif
 
 
 // Check if the window is natively double buffered and will return a wxPaintDC

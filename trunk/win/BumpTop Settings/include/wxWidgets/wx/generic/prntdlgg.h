@@ -1,11 +1,9 @@
 /////////////////////////////////////////////////////////////////////////////
-// Name:        prntdlgg.h
+// Name:        wx/generic/prntdlgg.h
 // Purpose:     wxGenericPrintDialog, wxGenericPrintSetupDialog,
 //              wxGenericPageSetupDialog
 // Author:      Julian Smart
-// Modified by:
 // Created:     01/02/97
-// RCS-ID:      $Id: prntdlgg.h 49804 2007-11-10 01:09:42Z VZ $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -23,6 +21,7 @@
 #include "wx/printdlg.h"
 #include "wx/listctrl.h"
 
+#include "wx/dc.h"
 #if wxUSE_POSTSCRIPT
     #include "wx/dcps.h"
 #endif
@@ -33,7 +32,7 @@ class WXDLLIMPEXP_FWD_CORE wxCheckBox;
 class WXDLLIMPEXP_FWD_CORE wxComboBox;
 class WXDLLIMPEXP_FWD_CORE wxStaticText;
 class WXDLLIMPEXP_FWD_CORE wxRadioBox;
-class WXDLLIMPEXP_FWD_CORE wxPageSetupData;
+class WXDLLIMPEXP_FWD_CORE wxPageSetupDialogData;
 
 // ----------------------------------------------------------------------------
 // constants
@@ -77,17 +76,17 @@ enum
 // wxPostScriptNativeData
 //----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxPostScriptPrintNativeData: public wxPrintNativeDataBase
+class WXDLLIMPEXP_CORE wxPostScriptPrintNativeData: public wxPrintNativeDataBase
 {
 public:
     wxPostScriptPrintNativeData();
     virtual ~wxPostScriptPrintNativeData();
 
-    virtual bool TransferTo( wxPrintData &data );
-    virtual bool TransferFrom( const wxPrintData &data );
+    virtual bool TransferTo( wxPrintData &data ) override;
+    virtual bool TransferFrom( const wxPrintData &data ) override;
 
-    virtual bool Ok() const { return IsOk(); }
-    virtual bool IsOk() const { return true; }
+    virtual bool Ok() const override { return IsOk(); }
+    virtual bool IsOk() const override { return true; }
 
     const wxString& GetPrinterCommand() const { return m_printerCommand; }
     const wxString& GetPrinterOptions() const { return m_printerOptions; }
@@ -128,7 +127,7 @@ private:
 #endif
 
 private:
-    DECLARE_DYNAMIC_CLASS(wxPostScriptPrintNativeData)
+    wxDECLARE_DYNAMIC_CLASS(wxPostScriptPrintNativeData);
 };
 
 // ----------------------------------------------------------------------------
@@ -136,11 +135,11 @@ private:
 // Windows using PostScript print/preview)
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxGenericPrintDialog : public wxPrintDialogBase
+class WXDLLIMPEXP_CORE wxGenericPrintDialog : public wxPrintDialogBase
 {
 public:
     wxGenericPrintDialog(wxWindow *parent,
-                         wxPrintDialogData* data = (wxPrintDialogData*)NULL);
+                         wxPrintDialogData* data = nullptr);
     wxGenericPrintDialog(wxWindow *parent, wxPrintData* data);
 
     virtual ~wxGenericPrintDialog();
@@ -149,16 +148,16 @@ public:
     void OnRange(wxCommandEvent& event);
     void OnOK(wxCommandEvent& event);
 
-    virtual bool TransferDataFromWindow();
-    virtual bool TransferDataToWindow();
+    virtual bool TransferDataFromWindow() override;
+    virtual bool TransferDataToWindow() override;
 
-    virtual int ShowModal();
+    virtual int ShowModal() override;
 
-    wxPrintData& GetPrintData()
+    wxPrintData& GetPrintData() override
         { return m_printDialogData.GetPrintData(); }
 
-    wxPrintDialogData& GetPrintDialogData() { return m_printDialogData; }
-    wxDC *GetPrintDC();
+    wxPrintDialogData& GetPrintDialogData() override { return m_printDialogData; }
+    wxDC *GetPrintDC() override;
 
 public:
 //    wxStaticText*       m_printerMessage;
@@ -177,11 +176,11 @@ protected:
     void Init(wxWindow *parent);
 
 private:
-    DECLARE_EVENT_TABLE()
-    DECLARE_DYNAMIC_CLASS(wxGenericPrintDialog)
+    wxDECLARE_EVENT_TABLE();
+    wxDECLARE_DYNAMIC_CLASS(wxGenericPrintDialog);
 };
 
-class WXDLLEXPORT wxGenericPrintSetupDialog : public wxDialog
+class WXDLLIMPEXP_CORE wxGenericPrintSetupDialog : public wxDialog
 {
 public:
     // There are no configuration options for the dialog, so we
@@ -193,8 +192,8 @@ public:
 
     void OnPrinter(wxListEvent& event);
 
-    virtual bool TransferDataFromWindow();
-    virtual bool TransferDataToWindow();
+    virtual bool TransferDataFromWindow() override;
+    virtual bool TransferDataToWindow() override;
 
     virtual wxComboBox *CreatePaperTypeChoice();
 
@@ -213,23 +212,23 @@ public:
     wxPrintData*        m_targetData;
 
 private:
-    DECLARE_EVENT_TABLE()
-    DECLARE_CLASS(wxGenericPrintSetupDialog)
+    wxDECLARE_EVENT_TABLE();
+    wxDECLARE_CLASS(wxGenericPrintSetupDialog);
 };
 #endif
     // wxUSE_POSTSCRIPT
 
-class WXDLLEXPORT wxGenericPageSetupDialog : public wxPageSetupDialogBase
+class WXDLLIMPEXP_CORE wxGenericPageSetupDialog : public wxPageSetupDialogBase
 {
 public:
-    wxGenericPageSetupDialog(wxWindow *parent = NULL,
-                             wxPageSetupDialogData* data = NULL);
+    wxGenericPageSetupDialog(wxWindow *parent = nullptr,
+                             wxPageSetupDialogData* data = nullptr);
     virtual ~wxGenericPageSetupDialog();
 
-    virtual bool TransferDataFromWindow();
-    virtual bool TransferDataToWindow();
+    virtual bool TransferDataFromWindow() override;
+    virtual bool TransferDataToWindow() override;
 
-    virtual wxPageSetupDialogData& GetPageSetupDialogData();
+    virtual wxPageSetupDialogData& GetPageSetupDialogData() override;
 
     void OnPrinter(wxCommandEvent& event);
     wxComboBox *CreatePaperTypeChoice(int* x, int* y);
@@ -246,8 +245,8 @@ public:
     wxPageSetupDialogData m_pageData;
 
 private:
-    DECLARE_EVENT_TABLE()
-    DECLARE_DYNAMIC_CLASS_NO_COPY(wxGenericPageSetupDialog)
+    wxDECLARE_EVENT_TABLE();
+    wxDECLARE_DYNAMIC_CLASS_NO_COPY(wxGenericPageSetupDialog);
 };
 
 #endif

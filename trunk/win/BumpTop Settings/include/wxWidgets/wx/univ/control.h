@@ -2,9 +2,7 @@
 // Name:        wx/univ/control.h
 // Purpose:     universal wxControl: adds handling of mnemonics
 // Author:      Vadim Zeitlin
-// Modified by:
 // Created:     14.08.00
-// RCS-ID:      $Id: control.h 35650 2005-09-23 12:56:45Z MR $
 // Copyright:   (c) 2000 SciTech Software, Inc. (www.scitechsoft.com)
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -12,9 +10,9 @@
 #ifndef _WX_UNIV_CONTROL_H_
 #define _WX_UNIV_CONTROL_H_
 
-class WXDLLEXPORT wxControlRenderer;
-class WXDLLEXPORT wxInputHandler;
-class WXDLLEXPORT wxRenderer;
+class WXDLLIMPEXP_FWD_CORE wxControlRenderer;
+class WXDLLIMPEXP_FWD_CORE wxInputHandler;
+class WXDLLIMPEXP_FWD_CORE wxRenderer;
 
 // we must include it as most/all control classes derive their handlers from
 // it
@@ -32,13 +30,14 @@ typedef wxString wxControlAction;
 // the list of actions which apply to all controls (other actions are defined
 // in the controls headers)
 
-#define wxACTION_NONE    _T("")           // no action to perform
+#define wxACTION_NONE    wxT("")           // no action to perform
+#define wxNO_ACCEL_CHAR    wxT('\0')
 
 // ----------------------------------------------------------------------------
 // wxControl: the base class for all GUI controls
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxControl : public wxControlBase, public wxInputConsumer
+class WXDLLIMPEXP_CORE wxControl : public wxControlBase, public wxInputConsumer
 {
 public:
     wxControl() { Init(); }
@@ -48,31 +47,33 @@ public:
               const wxPoint& pos = wxDefaultPosition,
               const wxSize& size = wxDefaultSize, long style = 0,
               const wxValidator& validator = wxDefaultValidator,
-              const wxString& name = wxControlNameStr)
+              const wxString& name = wxASCII_STR(wxControlNameStr))
     {
         Init();
 
         Create(parent, id, pos, size, style, validator, name);
     }
 
+    virtual ~wxControl();
+
     bool Create(wxWindow *parent,
                 wxWindowID id,
                 const wxPoint& pos = wxDefaultPosition,
                 const wxSize& size = wxDefaultSize, long style = 0,
                 const wxValidator& validator = wxDefaultValidator,
-                const wxString& name = wxControlNameStr);
+                const wxString& name = wxASCII_STR(wxControlNameStr));
 
     // this function will filter out '&' characters and will put the
     // accelerator char (the one immediately after '&') into m_chAccel
-    virtual void SetLabel(const wxString &label);
-    virtual wxString GetLabel() const;
+    virtual void SetLabel(const wxString& label) override;
+
+    // return the current label with mnemonics
+    virtual wxString GetLabel() const override { return wxControlBase::GetLabel(); }
+
+    // return the current label without mnemonics
+    virtual wxString GetLabelText() const override { return m_label; }
 
     // wxUniversal-specific methods
-
-    // return the accel index in the string or -1 if none and puts the modified
-    // string intosecond parameter if non NULL
-    static int FindAccelIndex(const wxString& label,
-                              wxString *labelOnly = NULL);
 
     // return the index of the accel char in the label or -1 if none
     int GetAccelIndex() const { return m_indexAccel; }
@@ -80,22 +81,30 @@ public:
     // return the accel char itself or 0 if none
     wxChar GetAccelChar() const
     {
-        return m_indexAccel == -1 ? _T('\0') : m_label[m_indexAccel];
+        return m_indexAccel == -1 ? wxNO_ACCEL_CHAR : (wxChar)m_label[m_indexAccel];
     }
 
-    virtual wxWindow *GetInputWindow() const { return (wxWindow*)this; }
+    virtual wxWindow *GetInputWindow() const override
+    {
+        return const_cast<wxControl*>(this);
+    }
 
 protected:
     // common part of all ctors
     void Init();
+
+    // set m_label and m_indexAccel and refresh the control to show the new
+    // label (but, unlike SetLabel(), don't call the base class SetLabel() thus
+    // avoiding to change wxControlBase::m_labelOrig)
+    void UnivDoSetLabel(const wxString& label);
 
 private:
     // label and accel info
     wxString   m_label;
     int        m_indexAccel;
 
-    DECLARE_DYNAMIC_CLASS(wxControl)
-    DECLARE_EVENT_TABLE()
+    wxDECLARE_DYNAMIC_CLASS(wxControl);
+    wxDECLARE_EVENT_TABLE();
     WX_DECLARE_INPUT_CONSUMER()
 };
 

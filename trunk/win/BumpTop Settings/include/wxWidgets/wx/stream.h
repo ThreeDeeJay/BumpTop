@@ -2,9 +2,7 @@
 // Name:        wx/stream.h
 // Purpose:     stream classes
 // Author:      Guilhem Lavaux, Guillermo Rodriguez Garcia, Vadim Zeitlin
-// Modified by:
 // Created:     11/07/98
-// RCS-ID:      $Id: stream.h 53135 2008-04-12 02:31:04Z VZ $
 // Copyright:   (c) Guilhem Lavaux
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -16,7 +14,6 @@
 
 #if wxUSE_STREAMS
 
-#include <stdio.h>
 #include "wx/object.h"
 #include "wx/string.h"
 #include "wx/filefn.h"  // for wxFileOffset, wxInvalidOffset and wxSeekMode
@@ -52,7 +49,7 @@ const int wxEOF = -1;
 // wxStreamBase: common (but non virtual!) base for all stream classes
 // ---------------------------------------------------------------------------
 
-class WXDLLIMPEXP_BASE wxStreamBase
+class WXDLLIMPEXP_BASE wxStreamBase : public wxObject
 {
 public:
     wxStreamBase();
@@ -64,7 +61,7 @@ public:
     bool operator!() const { return !IsOk(); }
 
     // reset the stream state
-    void Reset() { m_lasterror = wxSTREAM_NO_ERROR; }
+    void Reset(wxStreamError error = wxSTREAM_NO_ERROR) { m_lasterror = error; }
 
     // this doesn't make sense for all streams, always test its return value
     virtual size_t GetSize() const;
@@ -82,7 +79,8 @@ protected:
 
     friend class wxStreamBuffer;
 
-    DECLARE_NO_COPY_CLASS(wxStreamBase)
+    wxDECLARE_ABSTRACT_CLASS(wxStreamBase);
+    wxDECLARE_NO_COPY_CLASS(wxStreamBase);
 };
 
 // ----------------------------------------------------------------------------
@@ -126,6 +124,11 @@ public:
     // LastRead() value will be less than size but greater than 0. If it is 0,
     // it means that EOF has been reached.
     virtual wxInputStream& Read(void *buffer, size_t size);
+
+    // Read exactly the given number of bytes, unlike Read(), which may read
+    // less than the requested amount of data without returning an error, this
+    // method either reads all the data or returns false.
+    bool ReadAll(void *buffer, size_t size);
 
     // copy the entire contents of this stream into streamOut, stopping only
     // when EOF is reached or an error occurs
@@ -205,7 +208,7 @@ protected:
     // bytes read
     size_t GetWBack(void *buf, size_t size);
 
-    // write back buffer or NULL if none
+    // write back buffer or nullptr if none
     char *m_wback;
 
     // the size of the buffer
@@ -216,7 +219,8 @@ protected:
 
     friend class wxStreamBuffer;
 
-    DECLARE_NO_COPY_CLASS(wxInputStream)
+    wxDECLARE_ABSTRACT_CLASS(wxInputStream);
+    wxDECLARE_NO_COPY_CLASS(wxInputStream);
 };
 
 // ----------------------------------------------------------------------------
@@ -231,6 +235,12 @@ public:
 
     void PutC(char c);
     virtual wxOutputStream& Write(const void *buffer, size_t size);
+
+    // This is ReadAll() equivalent for Write(): it either writes exactly the
+    // given number of bytes or returns false, unlike Write() which can write
+    // less data than requested but still return without error.
+    bool WriteAll(const void *buffer, size_t size);
+
     wxOutputStream& Write(wxInputStream& stream_in);
 
     virtual wxFileOffset SeekO(wxFileOffset pos, wxSeekMode mode = wxFromStart);
@@ -251,7 +261,8 @@ protected:
 
     friend class wxStreamBuffer;
 
-    DECLARE_NO_COPY_CLASS(wxOutputStream)
+    wxDECLARE_ABSTRACT_CLASS(wxOutputStream);
+    wxDECLARE_NO_COPY_CLASS(wxOutputStream);
 };
 
 // ============================================================================
@@ -267,18 +278,20 @@ class WXDLLIMPEXP_BASE wxCountingOutputStream : public wxOutputStream
 public:
     wxCountingOutputStream();
 
-    wxFileOffset GetLength() const;
+    virtual wxFileOffset GetLength() const override;
     bool Ok() const { return IsOk(); }
-    bool IsOk() const { return true; }
+    virtual bool IsOk() const override { return true; }
 
 protected:
-    virtual size_t OnSysWrite(const void *buffer, size_t size);
-    virtual wxFileOffset OnSysSeek(wxFileOffset pos, wxSeekMode mode);
-    virtual wxFileOffset OnSysTell() const;
+    virtual size_t OnSysWrite(const void *buffer, size_t size) override;
+    virtual wxFileOffset OnSysSeek(wxFileOffset pos, wxSeekMode mode) override;
+    virtual wxFileOffset OnSysTell() const override;
 
-    size_t m_currentPos;
+    size_t m_currentPos,
+           m_lastPos;
 
-    DECLARE_NO_COPY_CLASS(wxCountingOutputStream)
+    wxDECLARE_DYNAMIC_CLASS(wxCountingOutputStream);
+    wxDECLARE_NO_COPY_CLASS(wxCountingOutputStream);
 };
 
 // ---------------------------------------------------------------------------
@@ -293,9 +306,9 @@ public:
     wxFilterInputStream(wxInputStream *stream);
     virtual ~wxFilterInputStream();
 
-    char Peek() { return m_parent_i_stream->Peek(); }
+    virtual char Peek() override { return m_parent_i_stream->Peek(); }
 
-    wxFileOffset GetLength() const { return m_parent_i_stream->GetLength(); }
+    virtual wxFileOffset GetLength() const override { return m_parent_i_stream->GetLength(); }
 
     wxInputStream *GetFilterInputStream() const { return m_parent_i_stream; }
 
@@ -303,7 +316,8 @@ protected:
     wxInputStream *m_parent_i_stream;
     bool m_owns;
 
-    DECLARE_NO_COPY_CLASS(wxFilterInputStream)
+    wxDECLARE_ABSTRACT_CLASS(wxFilterInputStream);
+    wxDECLARE_NO_COPY_CLASS(wxFilterInputStream);
 };
 
 class WXDLLIMPEXP_BASE wxFilterOutputStream : public wxOutputStream
@@ -314,17 +328,18 @@ public:
     wxFilterOutputStream(wxOutputStream *stream);
     virtual ~wxFilterOutputStream();
 
-    wxFileOffset GetLength() const { return m_parent_o_stream->GetLength(); }
+    virtual wxFileOffset GetLength() const override { return m_parent_o_stream->GetLength(); }
 
     wxOutputStream *GetFilterOutputStream() const { return m_parent_o_stream; }
 
-    bool Close();
+    bool Close() override;
 
 protected:
     wxOutputStream *m_parent_o_stream;
     bool m_owns;
 
-    DECLARE_NO_COPY_CLASS(wxFilterOutputStream)
+    wxDECLARE_ABSTRACT_CLASS(wxFilterOutputStream);
+    wxDECLARE_NO_COPY_CLASS(wxFilterOutputStream);
 };
 
 enum wxStreamProtocolType
@@ -340,7 +355,7 @@ void WXDLLIMPEXP_BASE wxUseFilterClasses();
 class WXDLLIMPEXP_BASE wxFilterClassFactoryBase : public wxObject
 {
 public:
-    virtual ~wxFilterClassFactoryBase() { }
+    virtual ~wxFilterClassFactoryBase() = default;
 
     wxString GetProtocol() const { return wxString(*GetProtocols()); }
     wxString PopExtension(const wxString& location) const;
@@ -348,27 +363,27 @@ public:
     virtual const wxChar * const *GetProtocols(wxStreamProtocolType type
                                                = wxSTREAM_PROTOCOL) const = 0;
 
-    bool CanHandle(const wxChar *protocol,
+    bool CanHandle(const wxString& protocol,
                    wxStreamProtocolType type
                    = wxSTREAM_PROTOCOL) const;
 
 protected:
-    wxString::size_type FindExtension(const wxChar *location) const;
+    wxString::size_type FindExtension(const wxString& location) const;
 
-    DECLARE_ABSTRACT_CLASS(wxFilterClassFactoryBase)
+    wxDECLARE_ABSTRACT_CLASS(wxFilterClassFactoryBase);
 };
 
 class WXDLLIMPEXP_BASE wxFilterClassFactory : public wxFilterClassFactoryBase
 {
 public:
-    virtual ~wxFilterClassFactory() { }
+    virtual ~wxFilterClassFactory() = default;
 
     virtual wxFilterInputStream  *NewStream(wxInputStream& stream)  const = 0;
     virtual wxFilterOutputStream *NewStream(wxOutputStream& stream) const = 0;
     virtual wxFilterInputStream  *NewStream(wxInputStream *stream)  const = 0;
     virtual wxFilterOutputStream *NewStream(wxOutputStream *stream) const = 0;
 
-    static const wxFilterClassFactory *Find(const wxChar *protocol,
+    static const wxFilterClassFactory *Find(const wxString& protocol,
                                             wxStreamProtocolType type
                                             = wxSTREAM_PROTOCOL);
 
@@ -388,7 +403,7 @@ private:
     static wxFilterClassFactory *sm_first;
     wxFilterClassFactory *m_next;
 
-    DECLARE_ABSTRACT_CLASS(wxFilterClassFactory)
+    wxDECLARE_ABSTRACT_CLASS(wxFilterClassFactory);
 };
 
 // ============================================================================
@@ -403,6 +418,9 @@ private:
 class WXDLLIMPEXP_BASE wxStreamBuffer
 {
 public:
+    // suppress Xcode 11 warning about shadowing global read() symbol
+    wxCLANG_WARNING_SUPPRESS(shadow)
+
     enum BufMode
     {
         read,
@@ -410,7 +428,25 @@ public:
         read_write
     };
 
-    wxStreamBuffer(wxStreamBase& stream, BufMode mode);
+    wxCLANG_WARNING_RESTORE(shadow)
+
+    wxStreamBuffer(wxStreamBase& stream, BufMode mode)
+    {
+        InitWithStream(stream, mode);
+    }
+
+    wxStreamBuffer(size_t bufsize, wxInputStream& stream)
+    {
+        InitWithStream(stream, read);
+        SetBufferIO(bufsize);
+    }
+
+    wxStreamBuffer(size_t bufsize, wxOutputStream& stream)
+    {
+        InitWithStream(stream, write);
+        SetBufferIO(bufsize);
+    }
+
     wxStreamBuffer(const wxStreamBuffer& buf);
     virtual ~wxStreamBuffer();
 
@@ -428,6 +464,7 @@ public:
 
     // Buffer control
     void ResetBuffer();
+    void Truncate();
 
     // NB: the buffer must always be allocated with malloc() if takeOwn is
     //     true as it will be deallocated by free()
@@ -437,7 +474,7 @@ public:
     void *GetBufferStart() const { return m_buffer_start; }
     void *GetBufferEnd() const { return m_buffer_end; }
     void *GetBufferPos() const { return m_buffer_pos; }
-    size_t GetBufferSize() const { return m_buffer_size; }
+    size_t GetBufferSize() const { return m_buffer_end - m_buffer_start; }
     size_t GetIntPosition() const { return m_buffer_pos - m_buffer_start; }
     void SetIntPosition(size_t pos) { m_buffer_pos = m_buffer_start + pos; }
     size_t GetLastAccess() const { return m_buffer_end - m_buffer_start; }
@@ -452,19 +489,14 @@ public:
 
     // misc accessors
     wxStreamBase *GetStream() const { return m_stream; }
-    bool HasBuffer() const { return m_buffer_size != 0; }
+    bool HasBuffer() const { return m_buffer_start != m_buffer_end; }
 
     bool IsFixed() const { return m_fixed; }
     bool IsFlushable() const { return m_flushable; }
 
-    // only for input/output buffers respectively, returns NULL otherwise
+    // only for input/output buffers respectively, returns nullptr otherwise
     wxInputStream *GetInputStream() const;
     wxOutputStream *GetOutputStream() const;
-
-#if WXWIN_COMPATIBILITY_2_6
-    // deprecated, for compatibility only
-    wxDEPRECATED( wxStreamBase *Stream() );
-#endif // WXWIN_COMPATIBILITY_2_6
 
     // this constructs a dummy wxStreamBuffer, used by (and exists for)
     // wxMemoryStreams only, don't use!
@@ -480,6 +512,9 @@ protected:
     // common part of several ctors
     void Init();
 
+    // common part of ctors taking wxStreamBase parameter
+    void InitWithStream(wxStreamBase& stream, BufMode mode);
+
     // init buffer variables to be empty
     void InitBuffer();
 
@@ -492,10 +527,6 @@ protected:
          *m_buffer_end,
          *m_buffer_pos;
 
-    // the buffer size
-    // FIXME: isn't it the same as m_buffer_end - m_buffer_start? (VZ)
-    size_t m_buffer_size;
-
     // the stream we're associated with
     wxStreamBase *m_stream;
 
@@ -507,13 +538,8 @@ protected:
          m_fixed,
          m_flushable;
 
-private:
-// Cannot use
-//  DECLARE_NO_COPY_CLASS(wxStreamBuffer)
-// because copy constructor is explicitly declared above;
-// but no copy assignment operator is defined, so declare
-// it private to prevent the compiler from defining it:
-    wxStreamBuffer& operator=(const wxStreamBuffer&);
+
+    wxDECLARE_NO_ASSIGN_CLASS(wxStreamBuffer);
 };
 
 // ---------------------------------------------------------------------------
@@ -523,36 +549,41 @@ private:
 class WXDLLIMPEXP_BASE wxBufferedInputStream : public wxFilterInputStream
 {
 public:
-    // if a non NULL buffer is given to the stream, it will be deleted by it
+    // create a buffered stream on top of the specified low-level stream
+    //
+    // if a non null buffer is given to the stream, it will be deleted by it,
+    // otherwise a default 1KB buffer will be used
     wxBufferedInputStream(wxInputStream& stream,
-                          wxStreamBuffer *buffer = NULL);
+                          wxStreamBuffer *buffer = nullptr);
+
+    // ctor allowing to specify the buffer size, it's just a more convenient
+    // alternative to creating wxStreamBuffer, calling its SetBufferIO(bufsize)
+    // and using the ctor above
+    wxBufferedInputStream(wxInputStream& stream, size_t bufsize);
+
+
     virtual ~wxBufferedInputStream();
 
-    char Peek();
-    wxInputStream& Read(void *buffer, size_t size);
+    virtual char Peek() override;
+    virtual wxInputStream& Read(void *buffer, size_t size) override;
 
     // Position functions
-    wxFileOffset SeekI(wxFileOffset pos, wxSeekMode mode = wxFromStart);
-    wxFileOffset TellI() const;
-    bool IsSeekable() const { return m_parent_i_stream->IsSeekable(); }
+    virtual wxFileOffset SeekI(wxFileOffset pos, wxSeekMode mode = wxFromStart) override;
+    virtual wxFileOffset TellI() const override;
+    virtual bool IsSeekable() const override { return m_parent_i_stream->IsSeekable(); }
 
     // the buffer given to the stream will be deleted by it
     void SetInputStreamBuffer(wxStreamBuffer *buffer);
     wxStreamBuffer *GetInputStreamBuffer() const { return m_i_streambuf; }
 
-#if WXWIN_COMPATIBILITY_2_6
-    // deprecated, for compatibility only
-    wxDEPRECATED( wxStreamBuffer *InputStreamBuffer() const );
-#endif // WXWIN_COMPATIBILITY_2_6
-
 protected:
-    virtual size_t OnSysRead(void *buffer, size_t bufsize);
-    virtual wxFileOffset OnSysSeek(wxFileOffset seek, wxSeekMode mode);
-    virtual wxFileOffset OnSysTell() const;
+    virtual size_t OnSysRead(void *buffer, size_t bufsize) override;
+    virtual wxFileOffset OnSysSeek(wxFileOffset seek, wxSeekMode mode) override;
+    virtual wxFileOffset OnSysTell() const override;
 
     wxStreamBuffer *m_i_streambuf;
 
-    DECLARE_NO_COPY_CLASS(wxBufferedInputStream)
+    wxDECLARE_NO_COPY_CLASS(wxBufferedInputStream);
 };
 
 // ----------------------------------------------------------------------------
@@ -562,47 +593,140 @@ protected:
 class WXDLLIMPEXP_BASE wxBufferedOutputStream : public wxFilterOutputStream
 {
 public:
-    // if a non NULL buffer is given to the stream, it will be deleted by it
+    // create a buffered stream on top of the specified low-level stream
+    //
+    // if a non null buffer is given to the stream, it will be deleted by it,
+    // otherwise a default 1KB buffer will be used
     wxBufferedOutputStream(wxOutputStream& stream,
-                           wxStreamBuffer *buffer = NULL);
+                           wxStreamBuffer *buffer = nullptr);
+
+    // ctor allowing to specify the buffer size, it's just a more convenient
+    // alternative to creating wxStreamBuffer, calling its SetBufferIO(bufsize)
+    // and using the ctor above
+    wxBufferedOutputStream(wxOutputStream& stream, size_t bufsize);
+
     virtual ~wxBufferedOutputStream();
 
-    wxOutputStream& Write(const void *buffer, size_t size);
+    virtual wxOutputStream& Write(const void *buffer, size_t size) override;
 
     // Position functions
-    wxFileOffset SeekO(wxFileOffset pos, wxSeekMode mode = wxFromStart);
-    wxFileOffset TellO() const;
-    bool IsSeekable() const { return m_parent_o_stream->IsSeekable(); }
+    virtual wxFileOffset SeekO(wxFileOffset pos, wxSeekMode mode = wxFromStart) override;
+    virtual wxFileOffset TellO() const override;
+    virtual bool IsSeekable() const override { return m_parent_o_stream->IsSeekable(); }
 
-    void Sync();
-    bool Close();
+    void Sync() override;
+    bool Close() override;
 
-    wxFileOffset GetLength() const;
+    virtual wxFileOffset GetLength() const override;
 
     // the buffer given to the stream will be deleted by it
     void SetOutputStreamBuffer(wxStreamBuffer *buffer);
     wxStreamBuffer *GetOutputStreamBuffer() const { return m_o_streambuf; }
 
-#if WXWIN_COMPATIBILITY_2_6
-    // deprecated, for compatibility only
-    wxDEPRECATED( wxStreamBuffer *OutputStreamBuffer() const );
-#endif // WXWIN_COMPATIBILITY_2_6
-
 protected:
-    virtual size_t OnSysWrite(const void *buffer, size_t bufsize);
-    virtual wxFileOffset OnSysSeek(wxFileOffset seek, wxSeekMode mode);
-    virtual wxFileOffset OnSysTell() const;
+    virtual size_t OnSysWrite(const void *buffer, size_t bufsize) override;
+    virtual wxFileOffset OnSysSeek(wxFileOffset seek, wxSeekMode mode) override;
+    virtual wxFileOffset OnSysTell() const override;
 
     wxStreamBuffer *m_o_streambuf;
 
-    DECLARE_NO_COPY_CLASS(wxBufferedOutputStream)
+    wxDECLARE_NO_COPY_CLASS(wxBufferedOutputStream);
 };
 
-#if WXWIN_COMPATIBILITY_2_6
-    inline wxStreamBase *wxStreamBuffer::Stream() { return m_stream; }
-    inline wxStreamBuffer *wxBufferedInputStream::InputStreamBuffer() const { return m_i_streambuf; }
-    inline wxStreamBuffer *wxBufferedOutputStream::OutputStreamBuffer() const { return m_o_streambuf; }
-#endif // WXWIN_COMPATIBILITY_2_6
+// ---------------------------------------------------------------------------
+// wxWrapperInputStream: forwards all IO to another stream.
+// ---------------------------------------------------------------------------
+
+class WXDLLIMPEXP_BASE wxWrapperInputStream : public wxFilterInputStream
+{
+public:
+    // Constructor fully initializing the stream. The overload taking pointer
+    // takes ownership of the parent stream, the one taking reference does not.
+    //
+    // Notice that this class also has a default ctor but it's protected as the
+    // derived class is supposed to take care of calling InitParentStream() if
+    // it's used.
+    wxWrapperInputStream(wxInputStream& stream);
+    wxWrapperInputStream(wxInputStream* stream);
+
+    // Override the base class methods to forward to the wrapped stream.
+    virtual wxFileOffset GetLength() const override;
+    virtual bool IsSeekable() const override;
+
+protected:
+    virtual size_t OnSysRead(void *buffer, size_t size) override;
+    virtual wxFileOffset OnSysSeek(wxFileOffset pos, wxSeekMode mode) override;
+    virtual wxFileOffset OnSysTell() const override;
+
+    // Ensure that our own last error is the same as that of the real stream.
+    //
+    // This method is const because the error must be updated even from const
+    // methods (in other words, it really should have been mutable in the first
+    // place).
+    void SynchronizeLastError() const
+    {
+        const_cast<wxWrapperInputStream*>(this)->
+            Reset(m_parent_i_stream->GetLastError());
+    }
+
+    // Default constructor, use InitParentStream() later.
+    wxWrapperInputStream();
+
+    // Set up the wrapped stream for an object initialized using the default
+    // constructor. The ownership logic is the same as above.
+    void InitParentStream(wxInputStream& stream);
+    void InitParentStream(wxInputStream* stream);
+
+    wxDECLARE_NO_COPY_CLASS(wxWrapperInputStream);
+};
+
+// ----------------------------------------------------------------------------
+// wxPeekInputStream(): read some data from a stream and then rewind it back
+// ----------------------------------------------------------------------------
+
+// This semi-private class is used in wx code to read some data, using the
+// provided method of the class T, from a stream if it's seekable and then
+// rewind it back.
+class wxInputStreamPeeker
+{
+public:
+    explicit wxInputStreamPeeker(wxInputStream& stream)
+        : m_stream(stream),
+          m_ofsOrig(stream.IsSeekable() ? stream.TellI() : wxInvalidOffset)
+    {
+    }
+
+    // Call the given function if the stream is seekable, otherwise return 0.
+    template <typename R, typename T>
+    R CallIfCanSeek(R (T::*func)(wxInputStream&), T* obj)
+    {
+        return RewindAndReturn(CanSeek() ? (obj->*func)(m_stream) : R(0));
+    }
+
+    // Overload for const methods.
+    template <typename R, typename T>
+    R CallIfCanSeek(R (T::*func)(wxInputStream&) const, const T* obj)
+    {
+        return RewindAndReturn(CanSeek() ? (obj->*func)(m_stream) : R(0));
+    }
+
+private:
+    bool CanSeek() const { return m_ofsOrig != wxInvalidOffset; }
+
+    template <typename R>
+    R RewindAndReturn(R retval)
+    {
+        if ( CanSeek() && m_stream.SeekI(m_ofsOrig) == wxInvalidOffset )
+            return R(0);
+
+        return retval;
+    }
+
+    wxInputStream& m_stream;
+    const wxFileOffset m_ofsOrig;
+
+    wxDECLARE_NO_COPY_CLASS(wxInputStreamPeeker);
+};
 
 #endif // wxUSE_STREAMS
 

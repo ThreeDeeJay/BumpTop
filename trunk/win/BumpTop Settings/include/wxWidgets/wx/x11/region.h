@@ -2,9 +2,7 @@
 // Name:        wx/x11/region.h
 // Purpose:     wxRegion class
 // Author:      Julian Smart
-// Modified by:
 // Created:     17/09/98
-// RCS-ID:      $Id: region.h 41429 2006-09-25 11:47:23Z VZ $
 // Copyright:   (c) Julian Smart, Robert Roebling
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -21,7 +19,7 @@
 class WXDLLIMPEXP_CORE wxRegion : public wxRegionBase
 {
 public:
-    wxRegion() { }
+    wxRegion() = default;
 
     wxRegion( wxCoord x, wxCoord y, wxCoord w, wxCoord h )
     {
@@ -39,7 +37,7 @@ public:
         InitRect(rect.x, rect.y, rect.width, rect.height);
     }
 
-    wxRegion( size_t n, const wxPoint *points, int fillStyle = wxODDEVEN_RULE );
+    wxRegion( size_t n, const wxPoint *points, wxPolygonFillMode fillStyle = wxODDEVEN_RULE );
 
     wxRegion( const wxBitmap& bmp)
     {
@@ -61,9 +59,8 @@ public:
     WXRegion *GetX11Region() const;
 
 protected:
-    // ref counting code
-    virtual wxObjectRefData *CreateRefData() const;
-    virtual wxObjectRefData *CloneRefData(const wxObjectRefData *data) const;
+    virtual wxGDIRefData *CreateGDIRefData() const;
+    wxNODISCARD virtual wxGDIRefData *CloneGDIRefData(const wxGDIRefData *data) const;
 
     // wxRegionBase pure virtuals
     virtual bool DoIsEqual(const wxRegion& region) const;
@@ -82,7 +79,7 @@ protected:
     void InitRect(wxCoord x, wxCoord y, wxCoord w, wxCoord h);
 
 private:
-    DECLARE_DYNAMIC_CLASS(wxRegion)
+    wxDECLARE_DYNAMIC_CLASS(wxRegion);
 };
 
 // ----------------------------------------------------------------------------
@@ -117,7 +114,7 @@ private:
     wxRegion m_region;
 
 private:
-    DECLARE_DYNAMIC_CLASS(wxRegionIterator)
+    wxDECLARE_DYNAMIC_CLASS(wxRegionIterator);
 };
 
 #endif

@@ -2,9 +2,7 @@
 // Name:        wx/msw/minifram.h
 // Purpose:     wxMiniFrame class
 // Author:      Julian Smart
-// Modified by:
 // Created:     01/02/97
-// RCS-ID:      $Id: minifram.h 35650 2005-09-23 12:56:45Z MR $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -14,10 +12,10 @@
 
 #include "wx/frame.h"
 
-class WXDLLEXPORT wxMiniFrame : public wxFrame
+class WXDLLIMPEXP_CORE wxMiniFrame : public wxFrame
 {
 public:
-  wxMiniFrame() { }
+  wxMiniFrame() = default;
 
   bool Create(wxWindow *parent,
               wxWindowID id,
@@ -25,7 +23,7 @@ public:
               const wxPoint& pos = wxDefaultPosition,
               const wxSize& size = wxDefaultSize,
               long style = wxCAPTION | wxCLIP_CHILDREN | wxRESIZE_BORDER,
-              const wxString& name = wxFrameNameStr)
+              const wxString& name = wxASCII_STR(wxFrameNameStr))
   {
       return wxFrame::Create(parent, id, title, pos, size,
                              style |
@@ -39,13 +37,13 @@ public:
               const wxPoint& pos = wxDefaultPosition,
               const wxSize& size = wxDefaultSize,
               long style = wxCAPTION | wxCLIP_CHILDREN | wxRESIZE_BORDER,
-              const wxString& name = wxFrameNameStr)
+              const wxString& name = wxASCII_STR(wxFrameNameStr))
   {
       Create(parent, id, title, pos, size, style, name);
   }
 
 protected:
-  DECLARE_DYNAMIC_CLASS_NO_COPY(wxMiniFrame)
+  wxDECLARE_DYNAMIC_CLASS_NO_COPY(wxMiniFrame);
 };
 
 #endif

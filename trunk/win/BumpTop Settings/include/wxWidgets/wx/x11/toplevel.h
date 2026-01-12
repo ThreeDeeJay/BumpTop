@@ -2,9 +2,7 @@
 // Name:        wx/x11/toplevel.h
 // Purpose:     wxTopLevelWindowX11 is the X11 implementation of wxTLW
 // Author:      Julian Smart
-// Modified by:
 // Created:     20.09.01
-// RCS-ID:      $Id: toplevel.h 37393 2006-02-08 21:47:09Z VZ $
 // Copyright:   (c) 2002 Julian Smart
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -16,7 +14,7 @@
 // wxTopLevelWindowX11
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxTopLevelWindowX11 : public wxTopLevelWindowBase
+class WXDLLIMPEXP_CORE wxTopLevelWindowX11 : public wxTopLevelWindowBase
 {
 public:
     // constructors and such
@@ -28,7 +26,7 @@ public:
                         const wxPoint& pos = wxDefaultPosition,
                         const wxSize& size = wxDefaultSize,
                         long style = wxDEFAULT_FRAME_STYLE,
-                        const wxString& name = wxFrameNameStr)
+                        const wxString& name = wxASCII_STR(wxFrameNameStr))
     {
         Init();
 
@@ -41,7 +39,7 @@ public:
                 const wxPoint& pos = wxDefaultPosition,
                 const wxSize& size = wxDefaultSize,
                 long style = wxDEFAULT_FRAME_STYLE,
-                const wxString& name = wxFrameNameStr);
+                const wxString& name = wxASCII_STR(wxFrameNameStr));
 
     virtual ~wxTopLevelWindowX11();
 
@@ -50,7 +48,6 @@ public:
     virtual bool IsMaximized() const;
     virtual void Iconize(bool iconize = true);
     virtual bool IsIconized() const;
-    virtual void SetIcon(const wxIcon& icon) { SetIcons( wxIconBundle( icon ) ); }
     virtual void SetIcons(const wxIconBundle& icons);
     virtual void Restore();
 
@@ -113,6 +110,6 @@ protected:
 };
 
 // list of all frames and modeless dialogs
-//extern WXDLLEXPORT_DATA(wxWindowList) wxModelessWindows;
+//extern WXDLLIMPEXP_DATA_CORE(wxWindowList) wxModelessWindows;
 
 #endif // _WX_X11_TOPLEVEL_H_

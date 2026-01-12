@@ -2,7 +2,6 @@
 // Name:        wx/gtk/colour.h
 // Purpose:
 // Author:      Robert Roebling
-// Id:          $Id: colour.h 41751 2006-10-08 21:56:55Z VZ $
 // Copyright:   (c) 1998 Robert Roebling
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -10,53 +9,47 @@
 #ifndef _WX_GTK_COLOUR_H_
 #define _WX_GTK_COLOUR_H_
 
+#ifdef __WXGTK3__
+typedef struct _GdkRGBA GdkRGBA;
+#endif
+
 //-----------------------------------------------------------------------------
 // wxColour
 //-----------------------------------------------------------------------------
 
-class WXDLLIMPEXP_CORE wxColour : public wxColourBase
+class WXDLLIMPEXP_CORE wxWARN_UNUSED wxColour : public wxColourBase
 {
 public:
     // constructors
     // ------------
-
-    // default
-    wxColour() {}
     DEFINE_STD_WXCOLOUR_CONSTRUCTORS
     wxColour(const GdkColor& gdkColor);
+#ifdef __WXGTK3__
+    wxColour(const GdkRGBA& gdkRGBA);
+#endif
 
-    virtual ~wxColour();
+    bool operator==(const wxColour& col) const;
+    bool operator!=(const wxColour& col) const { return !(*this == col); }
 
-    bool Ok() const { return IsOk(); }
-    bool IsOk() const { return m_refData != NULL; }
-
-    bool operator == ( const wxColour& col ) const;
-    bool operator != ( const wxColour& col ) const { return !(*this == col); }
-
-    unsigned char Red() const;
-    unsigned char Green() const;
-    unsigned char Blue() const;
-    unsigned char Alpha() const;
+    unsigned char Red() const override;
+    unsigned char Green() const override;
+    unsigned char Blue() const override;
+    unsigned char Alpha() const override;
 
     // Implementation part
+#ifdef __WXGTK3__
+    operator const GdkRGBA*() const;
+#else
     void CalcPixel( GdkColormap *cmap );
     int GetPixel() const;
-#ifdef __WXGTK24__
-    const GdkColor *GetColor() const;
-#else
-    // GDK functions from old gtk2 versions take non-const color parameters,
-    // too many uses to deal with individually
-    GdkColor *GetColor() const;
 #endif
+    const GdkColor *GetColor() const;
 
 protected:
     virtual void
-    InitRGBA(unsigned char r, unsigned char g, unsigned char b, unsigned char a);
+    InitRGBA(unsigned char r, unsigned char g, unsigned char b, unsigned char a) override;
 
-    virtual bool FromString(const wxChar *str);
-
-private:
-    DECLARE_DYNAMIC_CLASS(wxColour)
+    wxDECLARE_DYNAMIC_CLASS(wxColour);
 };
 
 #endif // _WX_GTK_COLOUR_H_

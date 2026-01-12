@@ -1,58 +1,64 @@
 /////////////////////////////////////////////////////////////////////////////
-// Name:        dirdlg.h
+// Name:        wx/gtk/dirdlg.h
 // Purpose:     wxDirDialog
 // Author:      Francesco Montorsi
-// Id:          $Id: dirdlg.h 39402 2006-05-28 23:32:12Z VZ $
 // Copyright:   (c) 2006 Francesco Montorsi
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
-#ifndef __GTKDIRDLGH__
-#define __GTKDIRDLGH__
+#ifndef _WX_GTKDIRDLG_H_
+#define _WX_GTKDIRDLG_H_
 
-#include "wx/generic/dirdlgg.h"
+typedef struct _GtkFileChooser GtkFileChooser;
 
 //-------------------------------------------------------------------------
 // wxDirDialog
 //-------------------------------------------------------------------------
 
-class WXDLLIMPEXP_CORE wxDirDialog : public wxGenericDirDialog
+class WXDLLIMPEXP_CORE wxDirDialog : public wxDirDialogBase
 {
+    typedef wxDirDialogBase BaseType;
 public:
-    wxDirDialog() { }
+    wxDirDialog() = default;
 
     wxDirDialog(wxWindow *parent,
-                const wxString& message = wxDirSelectorPromptStr,
+                const wxString& message = wxASCII_STR(wxDirSelectorPromptStr),
                 const wxString& defaultPath = wxEmptyString,
                 long style = wxDD_DEFAULT_STYLE,
                 const wxPoint& pos = wxDefaultPosition,
                 const wxSize& size = wxDefaultSize,
-                const wxString& name = wxDirDialogNameStr);
+                const wxString& name = wxASCII_STR(wxDirDialogNameStr));
+    bool Create(wxWindow *parent,
+                const wxString& message = wxASCII_STR(wxDirSelectorPromptStr),
+                const wxString& defaultPath = wxEmptyString,
+                long style = wxDD_DEFAULT_STYLE,
+                const wxPoint& pos = wxDefaultPosition,
+                const wxSize& size = wxDefaultSize,
+                const wxString& name = wxASCII_STR(wxDirDialogNameStr));
+    ~wxDirDialog();
 
-    virtual ~wxDirDialog() { }
+    virtual int ShowModal() override;
+    virtual void EndModal(int retCode) override;
+    void SetPath(const wxString& path) override;
 
+    // Implementation only.
 
-public:     // overrides from wxGenericDirDialog
-
-    wxString GetPath() const;
-    void SetPath(const wxString& path);
-
-    virtual int ShowModal();
-    virtual bool Show( bool show = true );
-
+    void GTKOnAccept();
+    void GTKOnCancel();
 
 protected:
     // override this from wxTLW since the native
     // form doesn't have any m_wxwindow
     virtual void DoSetSize(int x, int y,
                            int width, int height,
-                           int sizeFlags = wxSIZE_AUTO);
+                           int sizeFlags = wxSIZE_AUTO) override;
 
 
 private:
-    DECLARE_DYNAMIC_CLASS(wxDirDialog)
-    DECLARE_EVENT_TABLE()
-    void OnFakeOk( wxCommandEvent &event );
+    void GTKAccept();
+    GtkFileChooser* m_fileChooser = nullptr;
+
+    wxDECLARE_DYNAMIC_CLASS(wxDirDialog);
 };
 
-#endif // __GTKDIRDLGH__
+#endif // _WX_GTKDIRDLG_H_

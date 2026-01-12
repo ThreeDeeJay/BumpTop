@@ -4,9 +4,7 @@
 //              application including the look (wxRenderer), feel
 //              (wxInputHandler) and the colours (wxColourScheme)
 // Author:      Vadim Zeitlin
-// Modified by:
 // Created:     06.08.00
-// RCS-ID:      $Id: theme.h 42455 2006-10-26 15:33:10Z VS $
 // Copyright:   (c) 2000 SciTech Software, Inc. (www.scitechsoft.com)
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,14 +18,14 @@
 // wxTheme
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxArtProvider;
-class WXDLLEXPORT wxColourScheme;
-class WXDLLEXPORT wxInputConsumer;
-class WXDLLEXPORT wxInputHandler;
-class WXDLLEXPORT wxRenderer;
-struct WXDLLEXPORT wxThemeInfo;
+class WXDLLIMPEXP_FWD_CORE wxArtProvider;
+class WXDLLIMPEXP_FWD_CORE wxColourScheme;
+class WXDLLIMPEXP_FWD_CORE wxInputConsumer;
+class WXDLLIMPEXP_FWD_CORE wxInputHandler;
+class WXDLLIMPEXP_FWD_CORE wxRenderer;
+struct WXDLLIMPEXP_FWD_CORE wxThemeInfo;
 
-class WXDLLEXPORT wxTheme
+class WXDLLIMPEXP_CORE wxTheme
 {
 public:
     // static methods
@@ -36,13 +34,13 @@ public:
     // create the default theme
     static bool CreateDefault();
 
-    // create the theme by name (will return NULL if not found)
+    // create the theme by name (will return nullptr if not found)
     static wxTheme *Create(const wxString& name);
 
     // change the current scheme
     static wxTheme *Set(wxTheme *theme);
 
-    // get the current theme (never NULL)
+    // get the current theme (never null)
     static wxTheme *Get() { return ms_theme; }
 
     // the theme methods
@@ -73,7 +71,7 @@ private:
 
     // the current theme
     static wxTheme *ms_theme;
-    friend struct WXDLLEXPORT wxThemeInfo;
+    friend struct wxThemeInfo;
 };
 
 // ----------------------------------------------------------------------------
@@ -83,10 +81,10 @@ private:
 // will be left to the original theme
 // ----------------------------------------------------------------------------
 
-class wxDelegateTheme : public wxTheme
+class WXDLLIMPEXP_CORE wxDelegateTheme : public wxTheme
 {
 public:
-    wxDelegateTheme(const wxChar *theme);
+    wxDelegateTheme(const wxString& theme);
     virtual ~wxDelegateTheme();
 
     virtual wxRenderer *GetRenderer();
@@ -108,7 +106,7 @@ protected:
 // dynamic theme creation helpers
 // ----------------------------------------------------------------------------
 
-struct WXDLLEXPORT wxThemeInfo
+struct WXDLLIMPEXP_CORE wxThemeInfo
 {
     typedef wxTheme *(*Constructor)();
 
@@ -118,11 +116,11 @@ struct WXDLLEXPORT wxThemeInfo
     // the function to create a theme object
     Constructor ctor;
 
-    // next node in the linked list or NULL
+    // next node in the linked list or nullptr
     wxThemeInfo *next;
 
     // constructor for the struct itself
-    wxThemeInfo(Constructor ctor, const wxChar *name, const wxChar *desc);
+    wxThemeInfo(Constructor ctor, const wxString& name, const wxString& desc);
 };
 
 // ----------------------------------------------------------------------------
@@ -137,7 +135,7 @@ struct WXDLLEXPORT wxThemeInfo
     WX_USE_THEME_IMPL(themename)
 
 #define WX_USE_THEME_IMPL(themename)                                        \
-    extern WXDLLEXPORT_DATA(bool) wxThemeUse##themename;                    \
+    extern WXDLLIMPEXP_DATA_CORE(bool) wxThemeUse##themename;                    \
     static struct wxThemeUserFor##themename                                 \
     {                                                                       \
         wxThemeUserFor##themename() { wxThemeUse##themename = true; }       \
@@ -153,7 +151,7 @@ struct WXDLLEXPORT wxThemeInfo
 
 // and this one must be inserted in the source file
 #define WX_IMPLEMENT_THEME(classname, themename, themedesc)                 \
-    WXDLLEXPORT_DATA(bool) wxThemeUse##themename = true;                    \
+    WXDLLIMPEXP_DATA_CORE(bool) wxThemeUse##themename = true;                    \
     wxTheme *wxCtorFor##themename() { return new classname; }               \
     wxThemeInfo classname::ms_info##themename(wxCtorFor##themename,         \
                                               wxT( #themename ), themedesc)
@@ -178,17 +176,17 @@ struct WXDLLEXPORT wxThemeInfo
     #define wxUNIV_DEFAULT_THEME gtk
 #elif defined(__WXDFB__) && wxUSE_THEME_MONO
     // use mono theme for DirectFB port because it cannot correctly
-    // render neither win32 nor gtk themes yet:
+    // render either win32 or gtk themes yet:
     #define wxUNIV_DEFAULT_THEME mono
 #endif
 
 // if no theme was picked, get any theme compiled in (sorted by
 // quality/completeness of the theme):
 #ifndef wxUNIV_DEFAULT_THEME
-    #if wxUSE_THEME_WIN32
-        #define wxUNIV_DEFAULT_THEME win32
-    #elif wxUSE_THEME_GTK
+    #if wxUSE_THEME_GTK
         #define wxUNIV_DEFAULT_THEME gtk
+    #elif wxUSE_THEME_WIN32
+        #define wxUNIV_DEFAULT_THEME win32
     #elif wxUSE_THEME_MONO
         #define wxUNIV_DEFAULT_THEME mono
     #endif

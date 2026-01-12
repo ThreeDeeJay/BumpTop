@@ -3,7 +3,6 @@
 // Purpose:     wxOverlayImpl declaration
 // Author:      Vaclav Slavik
 // Created:     2006-10-20
-// RCS-ID:      $Id: overlay.h 42340 2006-10-24 12:29:14Z VS $
 // Copyright:   (c) wxWidgets team
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -12,24 +11,26 @@
 #define _WX_DFB_PRIVATE_OVERLAY_H_
 
 #include "wx/dfb/dfbptr.h"
+#include "wx/gdicmn.h"
+#include "wx/private/overlay.h"
 
 wxDFB_DECLARE_INTERFACE(IDirectFBSurface);
 
-class WXDLLEXPORT wxWindow;
+class WXDLLIMPEXP_FWD_CORE wxWindow;
+class WXDLLIMPEXP_FWD_CORE wxDC;
 
-
-class wxOverlayImpl
+class wxOverlayImpl: public wxOverlay::Impl
 {
 public:
     wxOverlayImpl();
     ~wxOverlayImpl();
 
-    void Reset();
-    bool IsOk();
-    void Init(wxWindowDC* dc, int x , int y , int width , int height);
-    void BeginDrawing(wxWindowDC* dc);
-    void EndDrawing(wxWindowDC* dc);
-    void Clear(wxWindowDC* dc);
+    virtual void Reset() override;
+    virtual bool IsOk() override;
+    virtual void Init(wxDC* dc, int x, int y, int width, int height) override;
+    virtual void BeginDrawing(wxDC* dc) override;
+    virtual void EndDrawing(wxDC* dc) override;
+    virtual void Clear(wxDC* dc) override;
 
     // wxDFB specific methods:
     bool IsEmpty() const { return m_isEmpty; }

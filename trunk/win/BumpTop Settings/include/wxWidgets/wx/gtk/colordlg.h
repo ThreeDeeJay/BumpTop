@@ -2,9 +2,7 @@
 // Name:        wx/gtk/colordlg.h
 // Purpose:     wxColourDialog
 // Author:      Vaclav Slavik
-// Modified by:
 // Created:     2004/06/04
-// RCS-ID:      $Id: colordlg.h 40923 2006-08-30 05:55:56Z PC $
 // Copyright:   (c) Vaclav Slavik, 2004
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -13,30 +11,29 @@
 #define _WX_GTK_COLORDLG_H_
 
 #include "wx/dialog.h"
-#include "wx/cmndata.h"
 
-class WXDLLEXPORT wxColourDialog : public wxDialog
+class WXDLLIMPEXP_CORE wxColourDialog : public wxDialog
 {
 public:
-    wxColourDialog() {}
+    wxColourDialog() = default;
     wxColourDialog(wxWindow *parent,
-                   wxColourData *data = (wxColourData *)NULL);
-    virtual ~wxColourDialog() {}
+                   const wxColourData *data = nullptr);
+    virtual ~wxColourDialog() = default;
 
-    bool Create(wxWindow *parent, wxColourData *data = (wxColourData *)NULL);
+    bool Create(wxWindow *parent, const wxColourData *data = nullptr);
 
     wxColourData &GetColourData() { return m_data; }
 
-    virtual int ShowModal();
+    virtual int ShowModal() override;
 
 protected:
     // implement some base class methods to do nothing to avoid asserts and
     // GTK warnings, since this is not a real wxDialog.
     virtual void DoSetSize(int WXUNUSED(x), int WXUNUSED(y),
                            int WXUNUSED(width), int WXUNUSED(height),
-                           int WXUNUSED(sizeFlags) = wxSIZE_AUTO) {}
+                           int WXUNUSED(sizeFlags) = wxSIZE_AUTO) override {}
     virtual void DoMoveWindow(int WXUNUSED(x), int WXUNUSED(y),
-                              int WXUNUSED(width), int WXUNUSED(height)) {}
+                              int WXUNUSED(width), int WXUNUSED(height)) override {}
 
     // copy data between the dialog and m_colourData:
     void ColourDataToDialog();
@@ -44,7 +41,7 @@ protected:
 
     wxColourData m_data;
 
-    DECLARE_DYNAMIC_CLASS(wxColourDialog)
+    wxDECLARE_DYNAMIC_CLASS(wxColourDialog);
 };
 
 #endif

@@ -2,9 +2,7 @@
 // Name:        wx/msw/filedlg.h
 // Purpose:     wxFileDialog class
 // Author:      Julian Smart
-// Modified by:
 // Created:     01/02/97
-// RCS-ID:      $Id: filedlg.h 39402 2006-05-28 23:32:12Z VZ $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -12,43 +10,88 @@
 #ifndef _WX_FILEDLG_H_
 #define _WX_FILEDLG_H_
 
+class wxFileDialogMSWData;
+
 //-------------------------------------------------------------------------
 // wxFileDialog
 //-------------------------------------------------------------------------
 
-class WXDLLEXPORT wxFileDialog: public wxFileDialogBase
+class WXDLLIMPEXP_CORE wxFileDialog: public wxFileDialogBase
 {
 public:
+    wxFileDialog() = default;
     wxFileDialog(wxWindow *parent,
-                 const wxString& message = wxFileSelectorPromptStr,
+                 const wxString& message = wxASCII_STR(wxFileSelectorPromptStr),
                  const wxString& defaultDir = wxEmptyString,
                  const wxString& defaultFile = wxEmptyString,
-                 const wxString& wildCard = wxFileSelectorDefaultWildcardStr,
+                 const wxString& wildCard = wxASCII_STR(wxFileSelectorDefaultWildcardStr),
                  long style = wxFD_DEFAULT_STYLE,
                  const wxPoint& pos = wxDefaultPosition,
                  const wxSize& sz = wxDefaultSize,
-                 const wxString& name = wxFileDialogNameStr);
+                 const wxString& name = wxASCII_STR(wxFileDialogNameStr));
+    virtual ~wxFileDialog();
 
-    virtual void SetPath(const wxString& path);
-    virtual void GetPaths(wxArrayString& paths) const;
-    virtual void GetFilenames(wxArrayString& files) const;
+    virtual void GetPaths(wxArrayString& paths) const override;
+    virtual void GetFilenames(wxArrayString& files) const override;
+    virtual bool AddShortcut(const wxString& directory, int flags = 0) override;
+    virtual bool SupportsExtraControl() const override { return true; }
 
-    virtual int ShowModal();
+    virtual int ShowModal() override;
 
 protected:
 
-#if !(defined(__SMARTPHONE__) && defined(__WXWINCE__))
-    virtual void DoMoveWindow(int x, int y, int width, int height);
-    virtual void DoGetSize( int *width, int *height ) const;
-    virtual void DoGetPosition( int *x, int *y ) const;
-#endif // !(__SMARTPHONE__ && __WXWINCE__)
+    virtual void DoMoveWindow(int x, int y, int width, int height) override;
+    virtual void DoCentre(int dir) override;
+    virtual void DoGetSize( int *width, int *height ) const override;
+    virtual void DoGetPosition( int *x, int *y ) const override;
 
 private:
-    wxArrayString m_fileNames;
-    bool m_bMovedWindow;
+    // Allow it to call MSWOnXXX() functions below.
+    friend class wxFileDialogMSWData;
 
-    DECLARE_DYNAMIC_CLASS(wxFileDialog)
-    DECLARE_NO_COPY_CLASS(wxFileDialog)
+    // called when the dialog is created
+    void MSWOnInitDialogHook(WXHWND hwnd);
+
+    // called when the dialog initialization is fully done
+    void MSWOnInitDone(WXHWND hDlg);
+
+    // called when the currently selected file changes in the dialog
+    void MSWOnSelChange(const wxString& selectedFilename);
+
+    // called when the currently selected type of files changes in the dialog
+    void MSWOnTypeChange(int nFilterIndex);
+
+    // called when the dialog is accepted, i.e. a file is chosen in it
+    void MSWOnFileOK();
+
+    // The real implementation of ShowModal() using traditional common dialog
+    // functions.
+    int ShowCommFileDialog(WXHWND owner);
+
+    // And another one using IFileDialog.
+    int ShowIFileDialog(WXHWND owner);
+
+    // Get the data object, allocating it if necessary.
+    wxFileDialogMSWData& MSWData();
+
+
+    wxArrayString m_fileNames;
+
+    // Extra data, possibly null if not needed, use MSWData() to access it if
+    // it should be created on demand.
+    wxFileDialogMSWData* m_data = nullptr;
+
+    // This class is also used as part of wxQt, provide the functions normally
+    // defined in the base wxWindow in wxMSW port in this case.
+#if defined(__WXQT__)
+    WXHWND GetHWND() const { return m_hWnd; }
+    void SetHWND(WXHWND hwnd) { m_hWnd = hwnd; }
+
+    WXHWND m_hWnd = nullptr;
+#endif // __WXQT__
+
+    wxDECLARE_DYNAMIC_CLASS(wxFileDialog);
+    wxDECLARE_NO_COPY_CLASS(wxFileDialog);
 };
 
 #endif // _WX_FILEDLG_H_

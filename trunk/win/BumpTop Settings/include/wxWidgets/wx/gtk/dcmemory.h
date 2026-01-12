@@ -1,8 +1,7 @@
 /////////////////////////////////////////////////////////////////////////////
-// Name:        dcmemory.h
+// Name:        wx/gtk/dcmemory.h
 // Purpose:
 // Author:      Robert Roebling
-// RCS-ID:      $Id: dcmemory.h 43843 2006-12-07 05:44:44Z PC $
 // Copyright:   (c) 1998 Robert Roebling
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -10,44 +9,51 @@
 #ifndef _WX_GTK_DCMEMORY_H_
 #define _WX_GTK_DCMEMORY_H_
 
-#include "wx/dcclient.h"
+#include "wx/dcmemory.h"
+#include "wx/gtk/dcclient.h"
 
 //-----------------------------------------------------------------------------
-// wxMemoryDC
+// wxMemoryDCImpl
 //-----------------------------------------------------------------------------
 
-class WXDLLIMPEXP_CORE wxMemoryDC : public wxWindowDC, public wxMemoryDCBase
+class WXDLLIMPEXP_CORE wxMemoryDCImpl : public wxWindowDCImpl
 {
 public:
-    wxMemoryDC() : wxWindowDC() { Init(); }
-    wxMemoryDC(wxBitmap& bitmap) : wxWindowDC() { Init(); SelectObject(bitmap); }
-    wxMemoryDC( wxDC *dc ); // Create compatible DC
-    virtual ~wxMemoryDC();
+    wxMemoryDCImpl( wxMemoryDC *owner );
+    wxMemoryDCImpl( wxMemoryDC *owner, wxBitmap& bitmap );
+    wxMemoryDCImpl( wxMemoryDC *owner, wxDC *dc );
+
+    virtual ~wxMemoryDCImpl();
 
     // these get reimplemented for mono-bitmaps to behave
-    // more like their Win32 couterparts. They now interpret
+    // more like their Win32 counterparts. They now interpret
     // wxWHITE, wxWHITE_BRUSH and wxWHITE_PEN as drawing 0
     // and everything else as drawing 1.
-    virtual void SetPen( const wxPen &pen );
-    virtual void SetBrush( const wxBrush &brush );
-    virtual void SetBackground( const wxBrush &brush );
-    virtual void SetTextForeground( const wxColour &col );
-    virtual void SetTextBackground( const wxColour &col );
+    virtual void SetPen( const wxPen &pen ) override;
+    virtual void SetBrush( const wxBrush &brush ) override;
+    virtual void SetBackground( const wxBrush &brush ) override;
+    virtual void SetTextForeground( const wxColour &col ) override;
+    virtual void SetTextBackground( const wxColour &col ) override;
 
-    // implementation
-    virtual wxBitmap GetSelectedBitmap() const { return m_selected; }        
-    wxBitmap  m_selected;
+    // overridden from wxDCImpl
+    virtual void DoGetSize( int *width, int *height ) const override;
+    virtual wxBitmap DoGetAsBitmap(const wxRect *subrect) const override;
+    virtual void* GetHandle() const override;
 
-protected:
-    void DoGetSize( int *width, int *height ) const;
-    virtual void DoSelect(const wxBitmap& bitmap);
-    virtual wxBitmap DoGetAsBitmap(const wxRect *subrect) const 
-    { return subrect == NULL ? GetSelectedBitmap() : GetSelectedBitmap().GetSubBitmap(*subrect); }
+    // overridden for wxMemoryDC Impl
+    virtual void DoSelect(const wxBitmap& bitmap) override;
+
+    virtual const wxBitmap& GetSelectedBitmap() const override;
+    virtual wxBitmap& GetSelectedBitmap() override;
 
 private:
+    wxBitmap  m_selected;
+
     void Init();
 
-    DECLARE_DYNAMIC_CLASS(wxMemoryDC)
+    wxDECLARE_ABSTRACT_CLASS(wxMemoryDCImpl);
 };
 
-#endif // _WX_GTK_DCMEMORY_H_
+#endif
+    // _WX_GTK_DCMEMORY_H_
+

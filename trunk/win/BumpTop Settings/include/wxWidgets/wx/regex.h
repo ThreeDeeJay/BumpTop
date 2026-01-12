@@ -4,7 +4,6 @@
 // Author:      Karsten Ballueder
 // Modified by: VZ at 13.07.01 (integrated to wxWin)
 // Created:     05.02.2000
-// RCS-ID:      $Id: regex.h 57779 2009-01-02 17:35:16Z PC $
 // Copyright:   (c) 2000 Karsten Ballueder <ballueder@gmx.net>
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -17,6 +16,7 @@
 #if wxUSE_REGEX
 
 #include "wx/string.h"
+#include "wx/versioninfo.h"
 
 // ----------------------------------------------------------------------------
 // constants
@@ -28,10 +28,8 @@ enum
     // use extended regex syntax
     wxRE_EXTENDED = 0,
 
-    // use advanced RE syntax (built-in regex only)
-#ifdef wxHAS_REGEX_ADVANCED
+    // use advanced RE syntax (deprecated, same as wxRE_EXTENDED now)
     wxRE_ADVANCED = 1,
-#endif
 
     // use basic RE syntax
     wxRE_BASIC    = 2,
@@ -61,7 +59,10 @@ enum
     wxRE_NOTBOL = 32,
 
     // '$' doesn't match at the end of line
-    wxRE_NOTEOL = 64
+    wxRE_NOTEOL = 64,
+
+    // don't accept empty string as valid match, try alternatives or fail
+    wxRE_NOTEMPTY = 128
 };
 
 // ----------------------------------------------------------------------------
@@ -84,7 +85,7 @@ public:
     }
 
     // return true if this is a valid compiled regular expression
-    bool IsValid() const { return m_impl != NULL; }
+    bool IsValid() const { return m_impl != nullptr; }
 
     // compile the string into regular expression, return true if ok or false
     // if string has a syntax error
@@ -97,10 +98,9 @@ public:
     // len may be the length of text (ignored by most system regex libs)
     //
     // may only be called after successful call to Compile()
-    bool Matches(const wxChar *text, int flags = 0) const;
-    bool Matches(const wxChar *text, int flags, size_t len) const;
-    bool Matches(const wxString& text, int flags = 0) const
-        { return Matches(text.c_str(), flags, text.length()); }
+    bool Matches(const wxString& text, int flags = 0) const;
+    bool Matches(const wxChar *text, int flags, size_t len) const
+        { return Matches(wxString(text, len), flags); }
 
     // get the start index and the length of the match of the expression
     // (index 0) or a bracketed subexpression (index != 0)
@@ -131,18 +131,26 @@ public:
     // pattern match
     //
     // maxMatches may be used to limit the number of replacements made, setting
-    // it to 1, for example, will only replace first occurence (if any) of the
+    // it to 1, for example, will only replace first occurrence (if any) of the
     // pattern in the text while default value of 0 means replace all
     int Replace(wxString *text, const wxString& replacement,
                 size_t maxMatches = 0) const;
 
-    // replace the first occurence
+    // replace the first occurrence
     int ReplaceFirst(wxString *text, const wxString& replacement) const
         { return Replace(text, replacement, 1); }
 
-    // replace all occurences: this is actually a synonym for Replace()
+    // replace all occurrences: this is actually a synonym for Replace()
     int ReplaceAll(wxString *text, const wxString& replacement) const
         { return Replace(text, replacement, 0); }
+
+    static wxString QuoteMeta(const wxString& str);
+
+    // return the extended RE corresponding to the given basic RE
+    static wxString ConvertFromBasic(const wxString& bre);
+
+    // return version information for the underlying regex library
+    static wxVersionInfo GetLibraryVersionInfo();
 
     // dtor not virtual, don't derive from this class
     ~wxRegEx();

@@ -2,7 +2,6 @@
 // Name:        wx/imagbmp.h
 // Purpose:     wxImage BMP, ICO, CUR and ANI handlers
 // Author:      Robert Roebling, Chris Elliott
-// RCS-ID:      $Id: imagbmp.h 45498 2007-04-16 13:03:05Z VZ $
 // Copyright:   (c) Robert Roebling, Chris Elliott
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -14,19 +13,12 @@
 
 // defines for saving the BMP file in different formats, Bits Per Pixel
 // USE: wximage.SetOption( wxIMAGE_OPTION_BMP_FORMAT, wxBMP_xBPP );
-#define wxIMAGE_OPTION_BMP_FORMAT wxString(_T("wxBMP_FORMAT"))
+#define wxIMAGE_OPTION_BMP_FORMAT wxString(wxT("wxBMP_FORMAT"))
 
 // These two options are filled in upon reading CUR file and can (should) be
 // specified when saving a CUR file - they define the hotspot of the cursor:
 #define wxIMAGE_OPTION_CUR_HOTSPOT_X  wxT("HotSpotX")
 #define wxIMAGE_OPTION_CUR_HOTSPOT_Y  wxT("HotSpotY")
-
-#if WXWIN_COMPATIBILITY_2_4
-    // Do not use these macros, they are deprecated
-    #define wxBMP_FORMAT    wxIMAGE_OPTION_BMP_FORMAT
-    #define wxCUR_HOTSPOT_X wxIMAGE_OPTION_CUR_HOTSPOT_X
-    #define wxCUR_HOTSPOT_Y wxIMAGE_OPTION_CUR_HOTSPOT_Y
-#endif
 
 
 enum
@@ -47,33 +39,30 @@ enum
 // wxBMPHandler
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxBMPHandler : public wxImageHandler
+class WXDLLIMPEXP_CORE wxBMPHandler : public wxImageHandler
 {
 public:
     wxBMPHandler()
     {
-        m_name = _T("Windows bitmap file");
-        m_extension = _T("bmp");
+        m_name = wxT("Windows bitmap file");
+        m_extension = wxT("bmp");
         m_type = wxBITMAP_TYPE_BMP;
-        m_mime = _T("image/x-bmp");
+        m_mime = wxT("image/x-bmp");
     }
 
 #if wxUSE_STREAMS
-    virtual bool SaveFile( wxImage *image, wxOutputStream& stream, bool verbose=true );
-    virtual bool LoadFile( wxImage *image, wxInputStream& stream, bool verbose=true, int index=-1 );
+    virtual bool SaveFile( wxImage *image, wxOutputStream& stream, bool verbose=true ) override;
+    virtual bool LoadFile( wxImage *image, wxInputStream& stream, bool verbose=true, int index=-1 ) override;
 
 protected:
-    virtual bool DoCanRead( wxInputStream& stream );
+    virtual bool DoCanRead( wxInputStream& stream ) override;
     bool SaveDib(wxImage *image, wxOutputStream& stream, bool verbose,
                  bool IsBmp, bool IsMask);
-    bool DoLoadDib(wxImage *image, int width, int height, int bpp, int ncolors,
-                   int comp, wxFileOffset bmpOffset, wxInputStream& stream,
-                   bool verbose, bool IsBmp, bool hasPalette);
     bool LoadDib(wxImage *image, wxInputStream& stream, bool verbose, bool IsBmp);
 #endif // wxUSE_STREAMS
 
 private:
-     DECLARE_DYNAMIC_CLASS(wxBMPHandler)
+    wxDECLARE_DYNAMIC_CLASS(wxBMPHandler);
 };
 
 #if wxUSE_ICO_CUR
@@ -81,28 +70,29 @@ private:
 // wxICOHandler
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxICOHandler : public wxBMPHandler
+class WXDLLIMPEXP_CORE wxICOHandler : public wxBMPHandler
 {
 public:
     wxICOHandler()
     {
-        m_name = _T("Windows icon file");
-        m_extension = _T("ico");
+        m_name = wxT("Windows icon file");
+        m_extension = wxT("ico");
         m_type = wxBITMAP_TYPE_ICO;
-        m_mime = _T("image/x-ico");
+        m_mime = wxT("image/x-ico");
     }
 
 #if wxUSE_STREAMS
-    virtual bool SaveFile( wxImage *image, wxOutputStream& stream, bool verbose=true );
-    virtual bool LoadFile( wxImage *image, wxInputStream& stream, bool verbose=true, int index=-1 );
+    virtual bool SaveFile( wxImage *image, wxOutputStream& stream, bool verbose=true ) override;
+    virtual bool LoadFile( wxImage *image, wxInputStream& stream, bool verbose=true, int index=-1 ) override;
     virtual bool DoLoadFile( wxImage *image, wxInputStream& stream, bool verbose, int index );
-    virtual int GetImageCount( wxInputStream& stream );
+
 protected:
-    virtual bool DoCanRead( wxInputStream& stream );
+    virtual int DoGetImageCount( wxInputStream& stream ) override;
+    virtual bool DoCanRead( wxInputStream& stream ) override;
 #endif // wxUSE_STREAMS
 
 private:
-    DECLARE_DYNAMIC_CLASS(wxICOHandler)
+    wxDECLARE_DYNAMIC_CLASS(wxICOHandler);
 };
 
 
@@ -110,15 +100,15 @@ private:
 // wxCURHandler
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxCURHandler : public wxICOHandler
+class WXDLLIMPEXP_CORE wxCURHandler : public wxICOHandler
 {
 public:
     wxCURHandler()
     {
-        m_name = _T("Windows cursor file");
-        m_extension = _T("cur");
+        m_name = wxT("Windows cursor file");
+        m_extension = wxT("cur");
         m_type = wxBITMAP_TYPE_CUR;
-        m_mime = _T("image/x-cur");
+        m_mime = wxT("image/x-cur");
     }
 
     // VS: This handler's meat is implemented inside wxICOHandler (the two
@@ -127,38 +117,39 @@ public:
 
 protected:
 #if wxUSE_STREAMS
-    virtual bool DoCanRead( wxInputStream& stream );
+    virtual bool DoCanRead( wxInputStream& stream ) override;
 #endif // wxUSE_STREAMS
 
 private:
-    DECLARE_DYNAMIC_CLASS(wxCURHandler)
+    wxDECLARE_DYNAMIC_CLASS(wxCURHandler);
 };
 // ----------------------------------------------------------------------------
 // wxANIHandler
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxANIHandler : public wxCURHandler
+class WXDLLIMPEXP_CORE wxANIHandler : public wxCURHandler
 {
 public:
     wxANIHandler()
     {
-        m_name = _T("Windows animated cursor file");
-        m_extension = _T("ani");
+        m_name = wxT("Windows animated cursor file");
+        m_extension = wxT("ani");
         m_type = wxBITMAP_TYPE_ANI;
-        m_mime = _T("image/x-ani");
+        m_mime = wxT("image/x-ani");
     }
 
 
 #if wxUSE_STREAMS
-    virtual bool SaveFile( wxImage *WXUNUSED(image), wxOutputStream& WXUNUSED(stream), bool WXUNUSED(verbose=true) ){return false ;}
-    virtual bool LoadFile( wxImage *image, wxInputStream& stream, bool verbose=true, int index=-1 );
-    virtual int GetImageCount( wxInputStream& stream );
+    virtual bool SaveFile( wxImage *WXUNUSED(image), wxOutputStream& WXUNUSED(stream), bool WXUNUSED(verbose=true) ) override{return false ;}
+    virtual bool LoadFile( wxImage *image, wxInputStream& stream, bool verbose=true, int index=-1 ) override;
+
 protected:
-    virtual bool DoCanRead( wxInputStream& stream );
+    virtual int DoGetImageCount( wxInputStream& stream ) override;
+    virtual bool DoCanRead( wxInputStream& stream ) override;
 #endif // wxUSE_STREAMS
 
 private:
-    DECLARE_DYNAMIC_CLASS(wxANIHandler)
+    wxDECLARE_DYNAMIC_CLASS(wxANIHandler);
 };
 
 #endif // wxUSE_ICO_CUR

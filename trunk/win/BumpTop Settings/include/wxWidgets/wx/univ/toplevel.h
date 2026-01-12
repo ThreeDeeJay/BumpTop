@@ -1,8 +1,7 @@
 /////////////////////////////////////////////////////////////////////////////
-// Name:        wx/toplevel.h
+// Name:        wx/univ/toplevel.h
 // Purpose:     Top level window, abstraction of wxFrame and wxDialog
 // Author:      Vaclav Slavik
-// Id:          $Id: toplevel.h 42664 2006-10-29 20:39:31Z VZ $
 // Copyright:   (c) 2001-2002 SciTech Software, Inc. (www.scitechsoft.com)
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -77,18 +76,18 @@ enum
 // the actions supported by this control
 // ----------------------------------------------------------------------------
 
-#define wxACTION_TOPLEVEL_ACTIVATE       _T("activate")   // (de)activate the frame
-#define wxACTION_TOPLEVEL_BUTTON_PRESS   _T("pressbtn")   // press titlebar btn
-#define wxACTION_TOPLEVEL_BUTTON_RELEASE _T("releasebtn") // press titlebar btn
-#define wxACTION_TOPLEVEL_BUTTON_CLICK   _T("clickbtn")   // press titlebar btn
-#define wxACTION_TOPLEVEL_MOVE           _T("move")       // move the frame
-#define wxACTION_TOPLEVEL_RESIZE         _T("resize")     // resize the frame
+#define wxACTION_TOPLEVEL_ACTIVATE       wxT("activate")   // (de)activate the frame
+#define wxACTION_TOPLEVEL_BUTTON_PRESS   wxT("pressbtn")   // press titlebar btn
+#define wxACTION_TOPLEVEL_BUTTON_RELEASE wxT("releasebtn") // press titlebar btn
+#define wxACTION_TOPLEVEL_BUTTON_CLICK   wxT("clickbtn")   // press titlebar btn
+#define wxACTION_TOPLEVEL_MOVE           wxT("move")       // move the frame
+#define wxACTION_TOPLEVEL_RESIZE         wxT("resize")     // resize the frame
 
 //-----------------------------------------------------------------------------
 // wxTopLevelWindow
 //-----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxTopLevelWindow : public wxTopLevelWindowNative,
+class WXDLLIMPEXP_CORE wxTopLevelWindow : public wxTopLevelWindowNative,
                                      public wxInputConsumer
 {
 public:
@@ -100,7 +99,7 @@ public:
                      const wxPoint& pos = wxDefaultPosition,
                      const wxSize& size = wxDefaultSize,
                      long style = wxDEFAULT_FRAME_STYLE,
-                     const wxString& name = wxFrameNameStr)
+                     const wxString& name = wxASCII_STR(wxFrameNameStr))
     {
         Init();
 
@@ -113,7 +112,7 @@ public:
                 const wxPoint& pos = wxDefaultPosition,
                 const wxSize& size = wxDefaultSize,
                 long style = wxDEFAULT_FRAME_STYLE,
-                const wxString& name = wxFrameNameStr);
+                const wxString& name = wxASCII_STR(wxFrameNameStr));
 
     // wxUniv-specific methods: do [not] use native decorations for this (or
     // all) window(s)
@@ -128,10 +127,9 @@ public:
 
 
     // implement base class pure virtuals
-    virtual bool ShowFullScreen(bool show, long style = wxFULLSCREEN_ALL);
-    virtual wxPoint GetClientAreaOrigin() const;
-    virtual void SetIcon(const wxIcon& icon) { SetIcons( wxIconBundle( icon ) ); }
-    virtual void SetIcons(const wxIconBundle& icons);
+    virtual bool ShowFullScreen(bool show, long style = wxFULLSCREEN_ALL) override;
+    virtual wxPoint GetClientAreaOrigin() const override;
+    virtual void SetIcons(const wxIconBundle& icons) override;
 
     // implementation from now on
     // --------------------------
@@ -141,10 +139,10 @@ public:
 
     virtual bool PerformAction(const wxControlAction& action,
                                long numArg = -1,
-                               const wxString& strArg = wxEmptyString);
+                               const wxString& strArg = wxEmptyString) override;
 
     static wxInputHandler *GetStdInputHandler(wxInputHandler *handlerDef);
-    virtual wxInputHandler *DoGetStdInputHandler(wxInputHandler *handlerDef)
+    virtual wxInputHandler *DoGetStdInputHandler(wxInputHandler *handlerDef) override
     {
         return GetStdInputHandler(handlerDef);
     }
@@ -152,13 +150,13 @@ public:
     // move/resize the frame interactively, i.e. let the user do it
     virtual void InteractiveMove(int flags = wxINTERACTIVE_MOVE);
 
-    virtual wxSize GetMinSize() const;
+    virtual wxSize GetMinSize() const override;
 
-    virtual wxWindow *GetInputWindow() const { return wx_const_cast(wxTopLevelWindow*, this); }
+    virtual wxWindow *GetInputWindow() const override { return const_cast<wxTopLevelWindow*>(this); }
 
 protected:
-    virtual void DoGetClientSize(int *width, int *height) const;
-    virtual void DoSetClientSize(int width, int height);
+    virtual void DoGetClientSize(int *width, int *height) const override;
+    virtual void DoSetClientSize(int width, int height) override;
 
     // handle titlebar button click event
     virtual void ClickTitleBarButton(long button);
@@ -189,8 +187,8 @@ protected:
     // currently pressed titlebar button
     long m_pressedButton;
 
-    DECLARE_DYNAMIC_CLASS(wxTopLevelWindow)
-    DECLARE_EVENT_TABLE()
+    wxDECLARE_DYNAMIC_CLASS(wxTopLevelWindow);
+    wxDECLARE_EVENT_TABLE();
     WX_DECLARE_INPUT_CONSUMER()
 };
 

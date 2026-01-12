@@ -1,10 +1,8 @@
 /////////////////////////////////////////////////////////////////////////////
-// Name:        radiobut.h
+// Name:        wx/msw/radiobut.h
 // Purpose:     wxRadioButton class
 // Author:      Julian Smart
-// Modified by:
 // Created:     01/02/97
-// RCS-ID:      $Id: radiobut.h 41144 2006-09-10 23:08:13Z VZ $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -12,7 +10,9 @@
 #ifndef _WX_RADIOBUT_H_
 #define _WX_RADIOBUT_H_
 
-class WXDLLEXPORT wxRadioButton: public wxControl
+#include "wx/msw/ownerdrawnbutton.h"
+
+class WXDLLIMPEXP_CORE wxRadioButton : public wxMSWOwnerDrawnButton<wxRadioButtonBase>
 {
 public:
     // ctors and creation functions
@@ -25,7 +25,7 @@ public:
                   const wxSize& size = wxDefaultSize,
                   long style = 0,
                   const wxValidator& validator = wxDefaultValidator,
-                  const wxString& name = wxRadioButtonNameStr)
+                  const wxString& name = wxASCII_STR(wxRadioButtonNameStr))
     {
         Init();
 
@@ -39,32 +39,44 @@ public:
                 const wxSize& size = wxDefaultSize,
                 long style = 0,
                 const wxValidator& validator = wxDefaultValidator,
-                const wxString& name = wxRadioButtonNameStr);
+                const wxString& name = wxASCII_STR(wxRadioButtonNameStr));
 
     // implement the radio button interface
-    virtual void SetValue(bool value);
-    virtual bool GetValue() const;
+    virtual void SetValue(bool value) override;
+    virtual bool GetValue() const override;
 
     // implementation only from now on
-    virtual bool MSWCommand(WXUINT param, WXWORD id);
-    virtual void Command(wxCommandEvent& event);
-    virtual bool HasTransparentBackground() { return true; }
+    virtual bool MSWCommand(WXUINT param, WXWORD id) override;
+    virtual void Command(wxCommandEvent& event) override;
 
-    virtual WXDWORD MSWGetStyle(long style, WXDWORD *exstyle) const;
+    virtual bool HasTransparentBackground() override { return true; }
+
+    virtual WXDWORD MSWGetStyle(long style, WXDWORD *exstyle) const override;
 
 protected:
-    virtual wxSize DoGetBestSize() const;
+    virtual wxBorder GetDefaultBorder() const override { return wxBORDER_NONE; }
+    virtual wxSize DoGetBestSize() const override;
+
+    virtual bool MSWGetDarkModeSupport(MSWDarkModeSupport& support) const override;
+
+    // Implement wxMSWOwnerDrawnButtonBase methods.
+    virtual int MSWGetButtonStyle() const override;
+    virtual void MSWOnButtonResetOwnerDrawn() override;
+    virtual int MSWGetButtonCheckedFlag() const override;
+    virtual void
+        MSWDrawButtonBitmap(wxDC& dc, const wxRect& rect, int flags) override;
+
 
 private:
     // common part of all ctors
     void Init();
 
+
     // we need to store the state internally as the result of GetValue()
     // sometimes gets out of sync in WM_COMMAND handler
     bool m_isChecked;
 
-    DECLARE_DYNAMIC_CLASS_NO_COPY(wxRadioButton)
+    wxDECLARE_DYNAMIC_CLASS_NO_COPY(wxRadioButton);
 };
 
-#endif
-    // _WX_RADIOBUT_H_
+#endif // _WX_RADIOBUT_H_

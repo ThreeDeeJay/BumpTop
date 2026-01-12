@@ -2,29 +2,25 @@
 // Name:        wx/gtk/fontpicker.h
 // Purpose:     wxFontButton header
 // Author:      Francesco Montorsi
-// Modified by:
 // Created:     14/4/2006
 // Copyright:   (c) Francesco Montorsi
-// RCS-ID:      $Id: fontpicker.h 42999 2006-11-03 21:54:13Z VZ $
 // Licence:     wxWindows Licence
 /////////////////////////////////////////////////////////////////////////////
 
 #ifndef _WX_GTK_FONTPICKER_H_
 #define _WX_GTK_FONTPICKER_H_
 
-// since GtkFontButton is available only for GTK+ >= 2.4,
-// we need to use generic version if we detect (at runtime)
-// that GTK+ < 2.4
-#include "wx/generic/fontpickerg.h"
+#include "wx/button.h"
 
 //-----------------------------------------------------------------------------
 // wxFontButton
 //-----------------------------------------------------------------------------
 
-class WXDLLIMPEXP_CORE wxFontButton : public wxGenericFontButton
+class WXDLLIMPEXP_CORE wxFontButton : public wxButton,
+                                      public wxFontPickerWidgetBase
 {
 public:
-    wxFontButton() {}
+    wxFontButton() { Init(); }
     wxFontButton(wxWindow *parent,
                  wxWindowID id,
                  const wxFont& initial = wxNullFont,
@@ -32,15 +28,12 @@ public:
                  const wxSize& size = wxDefaultSize,
                  long style = wxFONTBTN_DEFAULT_STYLE,
                  const wxValidator& validator = wxDefaultValidator,
-                 const wxString& name = wxFontPickerWidgetNameStr)
+                 const wxString& name = wxASCII_STR(wxFontPickerWidgetNameStr))
     {
-       Create(parent, id, initial, pos, size, style, validator, name);
+        Init();
+
+        Create(parent, id, initial, pos, size, style, validator, name);
     }
-
-    virtual ~wxFontButton();
-
-
-public:     // overrides
 
     bool Create(wxWindow *parent,
                 wxWindowID id,
@@ -49,19 +42,35 @@ public:     // overrides
                 const wxSize& size = wxDefaultSize,
                 long style = wxFONTBTN_DEFAULT_STYLE,
                 const wxValidator& validator = wxDefaultValidator,
-                const wxString& name = wxFontPickerWidgetNameStr);
+                const wxString& name = wxASCII_STR(wxFontPickerWidgetNameStr));
+
+    virtual wxColour GetSelectedColour() const override
+        { return m_selectedColour; }
+
+    void SetSelectedColour(const wxColour &colour) override
+        { m_selectedColour = colour; }
+
+    virtual ~wxFontButton();
 
 protected:
-    void UpdateFont();
+    void UpdateFont() override;
 
 
 public:     // used by the GTK callback only
-
-    void SetNativeFontInfo(const gchar *gtkdescription)
-        { m_selectedFont.SetNativeFontInfo(wxString::FromAscii(gtkdescription)); }
+    void SetNativeFontInfo(const char* gtkdescription);
 
 private:
-    DECLARE_DYNAMIC_CLASS(wxFontButton)
+    // Common part of both ctors.
+    void Init()
+    {
+        m_selectedColour = *wxBLACK;
+    }
+
+    // This can't be changed by the user, but is provided to
+    // satisfy the wxFontPickerWidgetBase interface.
+    wxColour m_selectedColour;
+
+    wxDECLARE_DYNAMIC_CLASS(wxFontButton);
 };
 
 #endif // _WX_GTK_FONTPICKER_H_

@@ -2,9 +2,7 @@
 // Name:        wx/statusbr.h
 // Purpose:     wxStatusBar class interface
 // Author:      Vadim Zeitlin
-// Modified by:
 // Created:     05.02.00
-// RCS-ID:      $Id: statusbr.h 41035 2006-09-06 17:36:22Z PC $
 // Copyright:   (c) Vadim Zeitlin
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -16,28 +14,108 @@
 
 #if wxUSE_STATUSBAR
 
-#include "wx/window.h"
-#include "wx/list.h"
+#include "wx/control.h"
 #include "wx/dynarray.h"
+#include "wx/weakref.h"
 
-extern WXDLLIMPEXP_DATA_CORE(const wxChar) wxStatusBarNameStr[];
-
-WX_DECLARE_LIST(wxString, wxListString);
+extern WXDLLIMPEXP_DATA_CORE(const char) wxStatusBarNameStr[];
 
 // ----------------------------------------------------------------------------
 // wxStatusBar constants
 // ----------------------------------------------------------------------------
 
-// style flags for fields
+// wxStatusBar styles
+#define wxSTB_SIZEGRIP         0x0010
+#define wxSTB_SHOW_TIPS        0x0020
+
+#define wxSTB_ELLIPSIZE_START   0x0040
+#define wxSTB_ELLIPSIZE_MIDDLE  0x0080
+#define wxSTB_ELLIPSIZE_END     0x0100
+
+#define wxSTB_DEFAULT_STYLE    (wxSTB_SIZEGRIP|wxSTB_ELLIPSIZE_END|wxSTB_SHOW_TIPS|wxFULL_REPAINT_ON_RESIZE)
+
+
+// old compat style name:
+#define wxST_SIZEGRIP    wxSTB_SIZEGRIP
+
+
+// style flags for wxStatusBar fields
 #define wxSB_NORMAL    0x0000
 #define wxSB_FLAT      0x0001
 #define wxSB_RAISED    0x0002
+#define wxSB_SUNKEN    0x0003
+
+// ----------------------------------------------------------------------------
+// wxStatusBarPane: an helper for wxStatusBar
+// ----------------------------------------------------------------------------
+
+class WXDLLIMPEXP_CORE wxStatusBarPane
+{
+public:
+    wxStatusBarPane(int style = wxSB_NORMAL, int width = 0)
+        : m_nStyle(style), m_nWidth(width)
+        { m_bEllipsized = false; }
+
+    int GetWidth() const { return m_nWidth; }
+    int GetStyle() const { return m_nStyle; }
+    wxString GetText() const { return m_text; }
+
+
+    // implementation-only from now on
+    // -------------------------------
+
+    bool IsEllipsized() const
+        { return m_bEllipsized; }
+    void SetIsEllipsized(bool isEllipsized) { m_bEllipsized = isEllipsized; }
+
+    void SetWidth(int width) { m_nWidth = width; }
+    void SetStyle(int style) { m_nStyle = style; }
+
+    // set text, return true if it changed or false if it was already set to
+    // this value
+    bool SetText(const wxString& text);
+
+    // save the existing text on top of our stack and make the new text
+    // current; return true if the text really changed
+    bool PushText(const wxString& text);
+
+    // restore the message saved by the last call to Push() (unless it was
+    // changed by an intervening call to SetText()) and return true if we
+    // really restored anything
+    bool PopText();
+
+    // set/get the control (child of the wxStatusBar) that will be shown in
+    // this pane.
+    void SetFieldControl(wxWindow* win) { m_control = win; }
+    wxWindow* GetFieldControl() const { return m_control; }
+
+private:
+    int m_nStyle;
+    int m_nWidth;     // may be negative, indicating a variable-width field
+    wxString m_text;
+
+    // the array used to keep the previous values of this pane after a
+    // PushStatusText() call, its top element is the value to restore after the
+    // next PopStatusText() call while the currently shown value is always in
+    // m_text
+    wxArrayString m_arrStack;
+
+    // is the currently shown value shown with ellipsis in the status bar?
+    bool m_bEllipsized;
+
+    // remember the control that will be shown in this pane. Updated by SetFieldControl().
+    wxWindowRef m_control;
+};
+
+// This is preserved for compatibility, but is not supposed to be used by the
+// application code, consider wxStatusBar::m_panes to be a std::vector instead.
+using wxStatusBarPaneArray = wxBaseArray<wxStatusBarPane>;
 
 // ----------------------------------------------------------------------------
 // wxStatusBar: a window near the bottom of the frame used for status info
 // ----------------------------------------------------------------------------
 
-class WXDLLEXPORT wxStatusBarBase : public wxWindow
+class WXDLLIMPEXP_CORE wxStatusBarBase : public wxControl
 {
 public:
     wxStatusBarBase();
@@ -49,15 +127,18 @@ public:
 
     // set the number of fields and call SetStatusWidths(widths) if widths are
     // given
-    virtual void SetFieldsCount(int number = 1, const int *widths = NULL);
-    int GetFieldsCount() const { return m_nFields; }
+    virtual void SetFieldsCount(int number = 1, const int *widths = nullptr);
+    int GetFieldsCount() const { return wxSsize(m_panes); }
 
     // field text
     // ----------
 
-    virtual void SetStatusText(const wxString& text, int number = 0) = 0;
-    virtual wxString GetStatusText(int number = 0) const = 0;
+    // just change or get the currently shown text
+    void SetStatusText(const wxString& text, int number = 0);
+    wxString GetStatusText(int number = 0) const;
 
+    // change the currently shown text to the new one and save the current
+    // value to be restored by the next call to PopStatusText()
     void PushStatusText(const wxString& text, int number = 0);
     void PopStatusText(int number = 0);
 
@@ -72,14 +153,17 @@ public:
     // -2 grows twice as much as one with width -1 &c)
     virtual void SetStatusWidths(int n, const int widths[]);
 
+    int GetStatusWidth(int n) const
+        { return m_panes.at(n).GetWidth(); }
+
     // field styles
     // ------------
 
-    // Set the field style. Use either wxSB_NORMAL (default) for a standard 3D
-    // border around a field, wxSB_FLAT for no border around a field, so that it
-    // appears flat or wxSB_POPOUT to make the field appear raised.
-    // Setting field styles only works on wxMSW
+    // Set the field border style to one of wxSB_XXX values.
     virtual void SetStatusStyles(int n, const int styles[]);
+
+    int GetStatusStyle(int n) const
+        { return m_panes.at(n).GetStyle(); }
 
     // geometry
     // --------
@@ -94,51 +178,70 @@ public:
     virtual int GetBorderX() const = 0;
     virtual int GetBorderY() const = 0;
 
+    wxSize GetBorders() const
+        { return wxSize(GetBorderX(), GetBorderY()); }
+
+    // controls
+    // --------
+
+    // Add a control (child of the wxStatusBar) to be shown at the specified
+    // field position #n. Note that you must delete the control to remove it
+    // from the status bar, as simply passing _nullptr_ will not do that.
+    bool AddFieldControl(int n, wxWindow* win);
+
+    // miscellaneous
+    // -------------
+
+    const wxStatusBarPane& GetField(int n) const
+        { return m_panes.at(n); }
+
+    // wxWindow overrides:
+
     // don't want status bars to accept the focus at all
-    virtual bool AcceptsFocus() const { return false; }
+    virtual bool AcceptsFocus() const override { return false; }
+
+    // the client size of a toplevel window doesn't include the status bar
+    virtual bool CanBeOutsideClientArea() const override { return true; }
 
 protected:
-    // set the widths array to NULL
-    void InitWidths();
+    // called after the status bar pane text changed and should update its
+    // display
+    virtual void DoUpdateStatusText(int number) = 0;
 
-    // free the status widths arrays
-    void FreeWidths();
+    // Position the added controls (added by AddFieldControl()), if any, in
+    // their corresponding destination.
+    void OnSize(wxSizeEvent& event);
 
-    // reset the widths
-    void ReinitWidths() { FreeWidths(); InitWidths(); }
+    // wxWindow overrides:
 
-    // same, for field styles
-    void InitStyles();
-    void FreeStyles();
-    void ReinitStyles() { FreeStyles(); InitStyles(); }
+#if wxUSE_TOOLTIPS
+   virtual void DoSetToolTip( wxToolTip *tip ) override
+        {
+            wxASSERT_MSG(!HasFlag(wxSTB_SHOW_TIPS),
+                         "Do not set tooltip(s) manually when using wxSTB_SHOW_TIPS!");
+            wxWindow::DoSetToolTip(tip);
+        }
+#endif // wxUSE_TOOLTIPS
+    virtual wxBorder GetDefaultBorder() const override { return wxBORDER_NONE; }
 
-    // same, for text stacks
-    void InitStacks();
-    void FreeStacks();
-    void ReinitStacks() { FreeStacks(); InitStacks(); }
+
+    // internal helpers & data:
 
     // calculate the real field widths for the given total available size
     wxArrayInt CalculateAbsWidths(wxCoord widthTotal) const;
 
-    // use these functions to access the stacks of field strings
-    wxListString *GetStatusStack(int i) const;
-    wxListString *GetOrCreateStatusStack(int i);
+    // should be called to remember if the pane text is currently being show
+    // ellipsized or not
+    void SetEllipsizedFlag(int n, bool isEllipsized);
 
-    // the current number of fields
-    int        m_nFields;
 
-    // the widths of the fields in pixels if !NULL, all fields have the same
-    // width otherwise
-    int       *m_statusWidths;
+    // the array with the pane infos:
+    wxStatusBarPaneArray m_panes;
 
-    // the styles of the fields
-    int       *m_statusStyles;
+    // if true overrides the width info of the wxStatusBarPanes
+    bool m_bSameWidthForAllPanes;
 
-    // stacks of previous values for PushStatusText/PopStatusText
-    // this is created on demand, use GetStatusStack/GetOrCreateStatusStack
-    wxListString **m_statusTextStacks;
-
-    DECLARE_NO_COPY_CLASS(wxStatusBarBase)
+    wxDECLARE_NO_COPY_CLASS(wxStatusBarBase);
 };
 
 // ----------------------------------------------------------------------------
@@ -147,24 +250,17 @@ protected:
 
 #if defined(__WXUNIVERSAL__)
     #define wxStatusBarUniv wxStatusBar
-
     #include "wx/univ/statusbr.h"
-#elif defined(__WXPALMOS__)
-    #define wxStatusBarPalm wxStatusBar
-
-    #include "wx/palmos/statusbr.h"
-#elif defined(__WIN32__) && wxUSE_NATIVE_STATUSBAR
-    #define wxStatusBar95 wxStatusBar
-
-    #include "wx/msw/statbr95.h"
+#elif defined(__WXMSW__) && wxUSE_NATIVE_STATUSBAR
+    #include "wx/msw/statusbar.h"
 #elif defined(__WXMAC__)
     #define wxStatusBarMac wxStatusBar
-
     #include "wx/generic/statusbr.h"
-    #include "wx/mac/statusbr.h"
+    #include "wx/osx/statusbr.h"
+#elif defined(__WXQT__)
+    #include "wx/qt/statusbar.h"
 #else
     #define wxStatusBarGeneric wxStatusBar
-
     #include "wx/generic/statusbr.h"
 #endif
 

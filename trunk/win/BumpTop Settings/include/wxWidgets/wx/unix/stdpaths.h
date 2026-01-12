@@ -2,10 +2,8 @@
 // Name:        wx/unix/stdpaths.h
 // Purpose:     wxStandardPaths for Unix systems
 // Author:      Vadim Zeitlin
-// Modified by:
 // Created:     2004-10-19
-// RCS-ID:      $Id: stdpaths.h 43340 2006-11-12 12:58:10Z RR $
-// Copyright:   (c) 2004 Vadim Zeitlin <vadim@wxwindows.org>
+// Copyright:   (c) 2004 Vadim Zeitlin <vadim@wxwidgets.org>
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -38,15 +36,27 @@ public:
 
 
     // implement base class pure virtuals
-    virtual wxString GetExecutablePath() const;
-    virtual wxString GetConfigDir() const;
-    virtual wxString GetUserConfigDir() const;
-    virtual wxString GetDataDir() const;
-    virtual wxString GetLocalDataDir() const;
-    virtual wxString GetUserDataDir() const;
-    virtual wxString GetPluginsDir() const;
-    virtual wxString GetLocalizedResourcesDir(const wxChar *lang,
-                                              ResourceCat category) const;
+    virtual wxString GetExecutablePath() const override;
+    virtual wxString GetConfigDir() const override;
+    virtual wxString GetUserConfigDir() const override;
+    virtual wxString GetDataDir() const override;
+    virtual wxString GetLocalDataDir() const override;
+    virtual wxString GetUserDataDir() const override;
+    virtual wxString GetPluginsDir() const override;
+    virtual wxString GetLocalizedResourcesDir(const wxString& lang,
+                                              ResourceCat category) const override;
+    virtual wxString GetSharedLibrariesDir() const override;
+#ifndef __VMS
+    virtual wxString GetUserDir(Dir userDir) const override;
+#endif
+    virtual wxString MakeConfigFileName(const wxString& basename,
+                                        ConfigFileConv conv = ConfigFileConv_Ext
+                                        ) const override;
+
+protected:
+    // Ctor is protected, use wxStandardPaths::Get() instead of instantiating
+    // objects of this class directly.
+    wxStandardPaths() = default;
 
 private:
     wxString m_prefix;

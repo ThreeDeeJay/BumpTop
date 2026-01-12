@@ -1,8 +1,7 @@
 /////////////////////////////////////////////////////////////////////////////
 // Name:        wx/gtk/app.h
-// Purpose:
+// Purpose:     wxApp definition for wxGTK
 // Author:      Robert Roebling
-// Id:          $Id: app.h 43879 2006-12-09 17:46:20Z PC $
 // Copyright:   (c) 1998 Robert Roebling, Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -14,9 +13,6 @@
 // classes
 //-----------------------------------------------------------------------------
 
-class WXDLLIMPEXP_CORE wxApp;
-class WXDLLIMPEXP_BASE wxLog;
-
 //-----------------------------------------------------------------------------
 // wxApp
 //-----------------------------------------------------------------------------
@@ -27,51 +23,72 @@ public:
     wxApp();
     virtual ~wxApp();
 
-    /* override for altering the way wxGTK intializes the GUI
+    /* override for altering the way wxGTK initializes the GUI
      * (palette/visual/colorcube). under wxMSW, OnInitGui() does nothing by
      * default. when overriding this method, the code in it is likely to be
      * platform dependent, otherwise use OnInit(). */
-    virtual bool OnInitGui();
+    virtual bool SetNativeTheme(const wxString& theme) override;
+    virtual AppearanceResult SetAppearance(Appearance appearance) override;
+    virtual bool OnInitGui() override;
 
     // override base class (pure) virtuals
-    virtual bool Yield(bool onlyIfNeeded = FALSE);
-    virtual void WakeUpIdle();
+    virtual void WakeUpIdle() override;
 
-    virtual bool Initialize(int& argc, wxChar **argv);
-    virtual void CleanUp();
+    virtual bool Initialize(int& argc, wxChar **argv) override;
+    virtual void CleanUp() override;
 
-    static bool InitialzeVisual();
-
-#ifdef __WXDEBUG__
     virtual void OnAssertFailure(const wxChar *file,
                                  int line,
                                  const wxChar *func,
                                  const wxChar *cond,
-                                 const wxChar *msg);
+                                 const wxChar *msg) override;
 
-    bool IsInAssert() const { return m_isInAssert; }
-#endif // __WXDEBUG__
+    // GTK-specific methods
+    // -------------------
 
-    guint m_idleTag;
-    // temporarily disable idle events
-    void SuspendIdleCallback();
+    // this can be overridden to return a specific visual to be used for GTK+
+    // instead of the default one (it's used by wxGLApp)
+    //
+    // must return XVisualInfo pointer (it is not freed by caller)
+    virtual void *GetXVisualInfo() { return nullptr; }
 
-    // Used by the the wxGLApp and wxGLCanvas class for GL-based X visual
-    // selection.
-    void           *m_glVisualInfo; // this is actually an XVisualInfo*
-    void           *m_glFBCInfo; // this is actually an GLXFBConfig*
-    // This returns the current visual: either that used by wxRootWindow
-    // or the XVisualInfo* for SGI.
-    GdkVisual      *GetGdkVisual();
-    
+    // Check if we're using a global menu. Currently this is only true when
+    // running under Ubuntu Unity and global menu is not disabled.
+    //
+    // This is mostly used in the implementation in order to work around
+    // various bugs arising due to this.
+    static bool GTKIsUsingGlobalMenu();
+
+    // Provide the ability to suppress GTK output. By default, all output
+    // will be suppressed, but the user can pass in a mask specifying the
+    // types of messages to suppress. Flags are defined by glib with the
+    // GLogLevelFlags enum.
+    static void GTKSuppressDiagnostics(int flags = -1);
+
+    // Allow wxWidgets to control GTK diagnostics. This is recommended because
+    // it prevents spurious GTK messages from appearing, but can't be done by
+    // default because it would result in a fatal error if the application
+    // calls g_log_set_writer_func() itself.
+    static void GTKAllowDiagnosticsControl();
+
+
+    // implementation only from now on
+    // -------------------------------
+
+    // check for pending events, without interference from our idle source
+    bool EventsPending();
+    bool DoIdle();
+
 private:
     // true if we're inside an assert modal dialog
-#ifdef __WXDEBUG__
     bool m_isInAssert;
-#endif // __WXDEBUG__
 
-    DECLARE_DYNAMIC_CLASS(wxApp)
-    DECLARE_EVENT_TABLE()
+#if wxUSE_THREADS
+    wxMutex m_idleMutex;
+#endif
+    unsigned m_idleSourceId;
+
+    wxDECLARE_DYNAMIC_CLASS(wxApp);
 };
 
 #endif // _WX_GTK_APP_H_

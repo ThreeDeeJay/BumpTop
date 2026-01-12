@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// Name:        fs_mem.h
+// Name:        wx/fs_mem.h
 // Purpose:     in-memory file system
 // Author:      Vaclav Slavik
 // Copyright:   (c) 2000 Vaclav Slavik
@@ -15,9 +15,13 @@
 
 #include "wx/filesys.h"
 
+#include <memory>
+#include <unordered_map>
+
+class wxMemoryFSFile;
+
 #if wxUSE_GUI
-    class WXDLLIMPEXP_FWD_CORE wxBitmap;
-    class WXDLLIMPEXP_FWD_CORE wxImage;
+    #include "wx/bitmap.h"
 #endif // wxUSE_GUI
 
 // ----------------------------------------------------------------------------
@@ -35,26 +39,42 @@ public:
     // name "memory:" + filename
     static void AddFile(const wxString& filename, const wxString& textdata);
     static void AddFile(const wxString& filename, const void *binarydata, size_t size);
-#if wxABI_VERSION >= 20805
     static void AddFileWithMimeType(const wxString& filename,
                                     const wxString& textdata,
                                     const wxString& mimetype);
     static void AddFileWithMimeType(const wxString& filename,
                                     const void *binarydata, size_t size,
                                     const wxString& mimetype);
-#endif // wxABI_VERSION >= 20805
 
     // Remove file from memory FS and free occupied memory
     static void RemoveFile(const wxString& filename);
 
-    virtual bool CanOpen(const wxString& location);
-    virtual wxFSFile* OpenFile(wxFileSystem& fs, const wxString& location);
-    virtual wxString FindFirst(const wxString& spec, int flags = 0);
-    virtual wxString FindNext();
+    virtual bool CanOpen(const wxString& location) override;
+    virtual wxFSFile* OpenFile(wxFileSystem& fs, const wxString& location) override;
+    virtual wxString FindFirst(const wxString& spec, int flags = 0) override;
+    virtual wxString FindNext() override;
 
 protected:
-    static bool CheckHash(const wxString& filename);
-    static wxHashTable *m_Hash;
+    // check that the given file is not already present in m_Hash; logs an
+    // error and returns false if it does exist
+    static bool CheckDoesntExist(const wxString& filename);
+
+    // add the given object to m_Hash, taking ownership of the pointer
+    static void DoAddFile(const wxString& filename, wxMemoryFSFile* file);
+
+private:
+    // the hash map indexed by the names of the files stored in the memory FS
+    using wxMemoryFSHash =
+        std::unordered_map<wxString, std::unique_ptr<wxMemoryFSFile>>;
+    static wxMemoryFSHash m_Hash;
+
+    // the file name currently being searched for, i.e. the argument of the
+    // last FindFirst() call or empty string if FindFirst() hasn't been called
+    // yet
+    wxString m_findArgument;
+
+    // iterator into m_Hash used by FindFirst/Next(), possibly m_Hash.end()
+    wxMemoryFSHash::const_iterator m_findIter;
 };
 
 // ----------------------------------------------------------------------------
@@ -81,7 +101,6 @@ public:
     {
         wxMemoryFSHandlerBase::AddFile(filename, binarydata, size);
     }
-#if wxABI_VERSION >= 20805
     static void AddFileWithMimeType(const wxString& filename,
                                     const wxString& textdata,
                                     const wxString& mimetype)
@@ -98,16 +117,15 @@ public:
                                                    binarydata, size,
                                                    mimetype);
     }
-#endif // wxABI_VERSION >= 20805
 
 #if wxUSE_IMAGE
     static void AddFile(const wxString& filename,
                         const wxImage& image,
-                        long type);
+                        wxBitmapType type);
 
     static void AddFile(const wxString& filename,
                         const wxBitmap& bitmap,
-                        long type);
+                        wxBitmapType type);
 #endif // wxUSE_IMAGE
 
 };

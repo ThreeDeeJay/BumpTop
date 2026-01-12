@@ -2,9 +2,7 @@
 // Name:        wx/aui/dockart.h
 // Purpose:     wxaui: wx advanced user interface - docking window manager
 // Author:      Benjamin I. Williams
-// Modified by:
 // Created:     2005-05-17
-// RCS-ID:      $Id: dockart.h 43154 2006-11-07 10:29:02Z BIW $
 // Copyright:   (C) Copyright 2005, Kirix Corporation, All Rights Reserved.
 // Licence:     wxWindows Library Licence, Version 3.1
 ///////////////////////////////////////////////////////////////////////////////
@@ -22,22 +20,33 @@
 
 #include "wx/pen.h"
 #include "wx/brush.h"
-#include "wx/bitmap.h"
+#include "wx/bmpbndl.h"
 #include "wx/colour.h"
+#include "wx/font.h"
+
+class WXDLLIMPEXP_FWD_AUI wxAuiPaneInfo;
 
 // dock art provider code - a dock provider provides all drawing
 // functionality to the wxAui dock manager.  This allows the dock
-// manager to have plugable look-and-feels
+// manager to have pluggable look-and-feels
 
 class WXDLLIMPEXP_AUI wxAuiDockArt
 {
 public:
 
-    wxAuiDockArt() { }
-    virtual ~wxAuiDockArt() { }
+    wxAuiDockArt() = default;
+    virtual ~wxAuiDockArt() = default;
+
+    wxNODISCARD virtual wxAuiDockArt* Clone() = 0;
+
+    // This function should be used for querying metrics in the new code, as it
+    // will scale them by the DPI of the provided window if necessary. The
+    // older GetMetric() function is kept for compatibility and shouldn't be
+    // used outside of this class itself.
+    virtual int GetMetricForWindow(int id, wxWindow* window);
 
     virtual int GetMetric(int id) = 0;
-    virtual void SetMetric(int id, int new_val) = 0;
+    virtual void SetMetric(int id, int newVal) = 0;
     virtual void SetFont(int id, const wxFont& font) = 0;
     virtual wxFont GetFont(int id) = 0;
     virtual wxColour GetColour(int id) = 0;
@@ -74,9 +83,12 @@ public:
     virtual void DrawPaneButton(wxDC& dc,
                           wxWindow* window,
                           int button,
-                          int button_state,
+                          int buttonState,
                           const wxRect& rect,
                           wxAuiPaneInfo& pane) = 0;
+
+    // Provide opportunity for subclasses to recalculate colours
+    virtual void UpdateColoursFromSystem() {}
 };
 
 
@@ -90,81 +102,96 @@ public:
 
     wxAuiDefaultDockArt();
 
-    int GetMetric(int metric_id);
-    void SetMetric(int metric_id, int new_val);
-    wxColour GetColour(int id);
-    void SetColour(int id, const wxColor& colour);
-    void SetFont(int id, const wxFont& font);
-    wxFont GetFont(int id);
+    wxNODISCARD wxAuiDockArt* Clone() override;
+    int GetMetric(int metricId) override;
+    void SetMetric(int metricId, int newVal) override;
+    wxColour GetColour(int id) override;
+    void SetColour(int id, const wxColor& colour) override;
+    void SetFont(int id, const wxFont& font) override;
+    wxFont GetFont(int id) override;
 
     void DrawSash(wxDC& dc,
                   wxWindow *window,
                   int orientation,
-                  const wxRect& rect);
+                  const wxRect& rect) override;
 
     void DrawBackground(wxDC& dc,
                   wxWindow *window,
                   int orientation,
-                  const wxRect& rect);
+                  const wxRect& rect) override;
 
     void DrawCaption(wxDC& dc,
                   wxWindow *window,
                   const wxString& text,
                   const wxRect& rect,
-                  wxAuiPaneInfo& pane);
+                  wxAuiPaneInfo& pane) override;
 
     void DrawGripper(wxDC& dc,
                   wxWindow *window,
                   const wxRect& rect,
-                  wxAuiPaneInfo& pane);
+                  wxAuiPaneInfo& pane) override;
 
     void DrawBorder(wxDC& dc,
                   wxWindow *window,
                   const wxRect& rect,
-                  wxAuiPaneInfo& pane);
+                  wxAuiPaneInfo& pane) override;
 
     void DrawPaneButton(wxDC& dc,
                   wxWindow *window,
                   int button,
-                  int button_state,
+                  int buttonState,
+                  const wxRect& rect,
+                  wxAuiPaneInfo& pane) override;
+
+#if WXWIN_COMPATIBILITY_3_0
+    wxDEPRECATED_MSG("This is not intended for the public API")
+    void DrawIcon(wxDC& dc,
                   const wxRect& rect,
                   wxAuiPaneInfo& pane);
+#endif
+
+    virtual void UpdateColoursFromSystem() override;
+
 
 protected:
 
     void DrawCaptionBackground(wxDC& dc, const wxRect& rect, bool active);
 
+    void DrawIcon(wxDC& dc, wxWindow *window, const wxRect& rect, wxAuiPaneInfo& pane);
+
+    void InitBitmaps();
+
 protected:
 
-    wxPen m_border_pen;
-    wxBrush m_sash_brush;
-    wxBrush m_background_brush;
-    wxBrush m_gripper_brush;
-    wxFont m_caption_font;
-    wxBitmap m_inactive_close_bitmap;
-    wxBitmap m_inactive_pin_bitmap;
-    wxBitmap m_inactive_maximize_bitmap;
-    wxBitmap m_inactive_restore_bitmap;
-    wxBitmap m_active_close_bitmap;
-    wxBitmap m_active_pin_bitmap;
-    wxBitmap m_active_maximize_bitmap;
-    wxBitmap m_active_restore_bitmap;
-    wxPen m_gripper_pen1;
-    wxPen m_gripper_pen2;
-    wxPen m_gripper_pen3;
-    wxColour m_base_colour;
-    wxColour m_active_caption_colour;
-    wxColour m_active_caption_gradient_colour;
-    wxColour m_active_caption_text_colour;
-    wxColour m_inactive_caption_colour;
-    wxColour m_inactive_caption_gradient_colour;
-    wxColour m_inactive_caption_text_colour;
-    int m_border_size;
-    int m_caption_size;
-    int m_sash_size;
-    int m_button_size;
-    int m_gripper_size;
-    int m_gradient_type;
+    wxPen m_borderPen;
+    wxBrush m_sashBrush;
+    wxBrush m_backgroundBrush;
+    wxBrush m_gripperBrush;
+    wxFont m_captionFont;
+    wxBitmapBundle m_inactiveCloseBitmap;
+    wxBitmapBundle m_inactivePinBitmap;
+    wxBitmapBundle m_inactiveMaximizeBitmap;
+    wxBitmapBundle m_inactiveRestoreBitmap;
+    wxBitmapBundle m_activeCloseBitmap;
+    wxBitmapBundle m_activePinBitmap;
+    wxBitmapBundle m_activeMaximizeBitmap;
+    wxBitmapBundle m_activeRestoreBitmap;
+    wxPen m_gripperPen1;
+    wxPen m_gripperPen2;
+    wxPen m_gripperPen3;
+    wxColour m_baseColour;
+    wxColour m_activeCaptionColour;
+    wxColour m_activeCaptionGradientColour;
+    wxColour m_activeCaptionTextColour;
+    wxColour m_inactiveCaptionColour;
+    wxColour m_inactiveCaptionGradientColour;
+    wxColour m_inactiveCaptionTextColour;
+    int m_borderSize;
+    int m_captionSize;
+    int m_sashSize;
+    int m_buttonSize;
+    int m_gripperSize;
+    int m_gradientType;
 };
 
 

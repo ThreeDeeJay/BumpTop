@@ -1,10 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Name:        gtk/dataform.h
+// Name:        wx/gtk/dataform.h
 // Purpose:     declaration of the wxDataFormat class
 // Author:      Vadim Zeitlin
-// Modified by:
 // Created:     19.10.99 (extracted from gtk/dataobj.h)
-// RCS-ID:      $Id: dataform.h 35055 2005-08-02 22:58:06Z MW $
 // Copyright:   (c) 1998 Vadim Zeitlin <zeitlin@dptmaths.ens-cachan.fr>
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,24 +18,32 @@ public:
 
     wxDataFormat();
     wxDataFormat( wxDataFormatId type );
-    wxDataFormat( const wxString &id );
-    wxDataFormat( const wxChar *id );
     wxDataFormat( NativeFormat format );
 
-    wxDataFormat& operator=(const wxDataFormat& format)
-        { m_type = format.m_type; m_format = format.m_format; return *this; }
+    // we have to provide all the overloads to allow using strings instead of
+    // data formats (as a lot of existing code does)
+    wxDataFormat( const wxString& id ) { InitFromString(id); }
+#ifndef wxNO_IMPLICIT_WXSTRING_ENCODING
+    wxDataFormat( const char *id ) { InitFromString(id); }
+#endif
+    wxDataFormat( const wchar_t *id ) { InitFromString(id); }
+    wxDataFormat( const wxCStrData& id ) { InitFromString(id); }
+
     wxDataFormat& operator=(NativeFormat format)
         { SetId(format); return *this; }
 
-    // comparison (must have both versions)
+    // comparison
+    bool operator==(wxDataFormatId type) const
+        { return m_type == type; }
+    bool operator!=(wxDataFormatId type) const
+        { return !(*this == type); }
     bool operator==(NativeFormat format) const
         { return m_format == (NativeFormat)format; }
     bool operator!=(NativeFormat format) const
-        { return m_format != (NativeFormat)format; }
-    bool operator==(wxDataFormatId format) const
-        { return m_type == (wxDataFormatId)format; }
-    bool operator!=(wxDataFormatId format) const
-        { return m_type != (wxDataFormatId)format; }
+        { return !(*this == (NativeFormat)format); }
+    bool operator==(const wxDataFormat& other) const;
+    bool operator!=(const wxDataFormat& other) const
+        { return !(*this == other); }
 
     // explicit and implicit conversions to NativeFormat which is one of
     // standard data types (implicit conversion is useful for preserving the
@@ -50,17 +56,18 @@ public:
     // string ids are used for custom types - this SetId() must be used for
     // application-specific formats
     wxString GetId() const;
-    void SetId( const wxChar *id );
+    void SetId( const wxString& id );
 
     // implementation
     wxDataFormatId GetType() const;
     void SetType( wxDataFormatId type );
 
 private:
+    // common part of ctors from format name
+    void InitFromString(const wxString& id);
+
     wxDataFormatId   m_type;
     NativeFormat     m_format;
-
-    void PrepareFormats();
 };
 
 #endif // _WX_GTK_DATAFORM_H

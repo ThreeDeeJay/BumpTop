@@ -3,7 +3,6 @@
 // Author:      Robert Roebling
 // Purpose:     GNOME VFS support
 // Created:     17/03/06
-// RCS-ID:      $Id: gvfs.h 43843 2006-12-07 05:44:44Z PC $
 // Copyright:   Robert Roebling
 // Licence:     wxWindows Licence
 /////////////////////////////////////////////////////////////////////////////
@@ -25,7 +24,7 @@
 class wxGnomeVFSMimeTypesManagerImpl: public wxMimeTypesManagerImpl
 {
 public:
-    wxGnomeVFSMimeTypesManagerImpl() { }
+    wxGnomeVFSMimeTypesManagerImpl() = default;
 
 protected:
     virtual bool DoAssociation(const wxString& strType,
@@ -42,12 +41,12 @@ protected:
 class wxGnomeVFSMimeTypesManagerFactory: public wxMimeTypesManagerFactory
 {
 public:
-    wxGnomeVFSMimeTypesManagerFactory() {}
+    wxGnomeVFSMimeTypesManagerFactory() = default;
 
     virtual wxMimeTypesManagerImpl *CreateMimeTypesManagerImpl();
 };
 
 #endif
-  // wxUSE_MIMETYPE 
+  // wxUSE_MIMETYPE
 
 #endif

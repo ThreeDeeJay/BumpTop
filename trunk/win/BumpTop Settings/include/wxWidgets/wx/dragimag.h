@@ -2,21 +2,21 @@
 // Name:        wx/dragimag.h
 // Purpose:     wxDragImage base header
 // Author:      Julian Smart
-// Modified by:
 // Created:
 // Copyright:   (c) Julian Smart
-// RCS-ID:      $Id: dragimag.h 33948 2005-05-04 18:57:50Z JS $
 // Licence:     wxWindows Licence
 /////////////////////////////////////////////////////////////////////////////
 
 #ifndef _WX_DRAGIMAG_H_BASE_
 #define _WX_DRAGIMAG_H_BASE_
 
+#include "wx/defs.h"
+
 #if wxUSE_DRAGIMAGE
 
-class WXDLLEXPORT wxRect;
-class WXDLLEXPORT wxMemoryDC;
-class WXDLLEXPORT wxDC;
+class WXDLLIMPEXP_FWD_CORE wxRect;
+class WXDLLIMPEXP_FWD_CORE wxMemoryDC;
+class WXDLLIMPEXP_FWD_CORE wxDC;
 
 #if defined(__WXMSW__)
 #   if defined(__WXUNIVERSAL__)
@@ -25,10 +25,6 @@ class WXDLLEXPORT wxDC;
 #   else
 #       include "wx/msw/dragimag.h"
 #   endif
-
-#elif defined(__WXMOTIF__)
-#   include "wx/generic/dragimgg.h"
-#   define wxDragImage wxGenericDragImage
 
 #elif defined(__WXGTK__)
 #   include "wx/generic/dragimgg.h"
@@ -42,7 +38,7 @@ class WXDLLEXPORT wxDC;
 #   include "wx/generic/dragimgg.h"
 #   define wxDragImage wxGenericDragImage
 
-#elif defined(__WXPM__)
+#elif defined(__WXQT__)
 #   include "wx/generic/dragimgg.h"
 #   define wxDragImage wxGenericDragImage
 

@@ -1,9 +1,7 @@
 /////////////////////////////////////////////////////////////////////////////
-// Name:        notebook.h
+// Name:        wx/generic/notebook.h
 // Purpose:     wxNotebook class (a.k.a. property sheet, tabbed dialog)
 // Author:      Julian Smart
-// Modified by:
-// RCS-ID:      $Id: notebook.h 41738 2006-10-08 17:37:23Z VZ $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -22,9 +20,9 @@
 // ----------------------------------------------------------------------------
 
 // fwd declarations
-class WXDLLEXPORT wxImageList;
-class WXDLLEXPORT wxWindow;
-class WXDLLEXPORT wxTabView;
+class WXDLLIMPEXP_FWD_CORE wxImageList;
+class WXDLLIMPEXP_FWD_CORE wxWindow;
+class WXDLLIMPEXP_FWD_CORE wxTabView;
 
 // ----------------------------------------------------------------------------
 // wxNotebook
@@ -43,30 +41,28 @@ public:
              const wxPoint& pos = wxDefaultPosition,
              const wxSize& size = wxDefaultSize,
              long style = 0,
-             const wxString& name = wxNotebookNameStr);
+             const wxString& name = wxASCII_STR(wxNotebookNameStr));
     // Create() function
   bool Create(wxWindow *parent,
               wxWindowID id,
               const wxPoint& pos = wxDefaultPosition,
               const wxSize& size = wxDefaultSize,
               long style = 0,
-              const wxString& name = wxNotebookNameStr);
+              const wxString& name = wxASCII_STR(wxNotebookNameStr));
     // dtor
   virtual ~wxNotebook();
 
   // accessors
   // ---------
-  // Find the position of the wxNotebookPage, -1 if not found.
+  // Find the position of the wxNotebookPage, wxNOT_FOUND if not found.
   int FindPagePosition(wxNotebookPage* page) const;
 
     // set the currently selected page, return the index of the previously
-    // selected one (or -1 on error)
+    // selected one (or wxNOT_FOUND on error)
     // NB: this function will _not_ generate wxEVT_NOTEBOOK_PAGE_xxx events
   int SetSelection(size_t nPage);
     // cycle thru the tabs
   //  void AdvanceSelection(bool bForward = true);
-    // get the currently selected page
-  int GetSelection() const { return m_nSelection; }
 
     // changes selected page without sending events
   int ChangeSelection(size_t nPage);
@@ -109,13 +105,13 @@ public:
                   wxNotebookPage *pPage,
                   const wxString& strText,
                   bool bSelect = false,
-                  int imageId = -1);
+                  int imageId = NO_IMAGE);
 
   // callbacks
   // ---------
   void OnSize(wxSizeEvent& event);
   void OnInternalIdle();
-  void OnSelChange(wxNotebookEvent& event);
+  void OnSelChange(wxBookCtrlEvent& event);
   void OnSetFocus(wxFocusEvent& event);
   void OnNavigationKey(wxNavigationKeyEvent& event);
 
@@ -129,7 +125,7 @@ public:
 
   // Implementation
 
-  // wxNotebook on Motif uses a generic wxTabView to implement itself.
+  // Obsolete, don't use.
   wxTabView *GetTabView() const { return m_tabView; }
   void SetTabView(wxTabView *v) { m_tabView = v; }
 
@@ -149,12 +145,10 @@ protected:
   // helper functions
   void ChangePage(int nOldSel, int nSel); // change pages
 
-  int m_nSelection;           // the current selection (-1 if none)
-
   wxTabView*   m_tabView;
 
-  DECLARE_DYNAMIC_CLASS(wxNotebook)
-  DECLARE_EVENT_TABLE()
+  wxDECLARE_DYNAMIC_CLASS(wxNotebook);
+  wxDECLARE_EVENT_TABLE();
 };
 
 #endif // _WX_NOTEBOOK_H_

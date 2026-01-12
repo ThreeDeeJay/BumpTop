@@ -2,10 +2,8 @@
 // Name:        wx/generic/fontpickerg.h
 // Purpose:     wxGenericFontButton header
 // Author:      Francesco Montorsi
-// Modified by:
 // Created:     14/4/2006
 // Copyright:   (c) Francesco Montorsi
-// RCS-ID:      $Id: fontpickerg.h 42999 2006-11-03 21:54:13Z VZ $
 // Licence:     wxWindows Licence
 /////////////////////////////////////////////////////////////////////////////
 
@@ -13,20 +11,17 @@
 #define _WX_FONTPICKER_H_
 
 #include "wx/button.h"
-#include "wx/cmndata.h"
+#include "wx/fontdata.h"
 
 //-----------------------------------------------------------------------------
-// wxGenericFontButton: a button which brings up a wxColourDialog
+// wxGenericFontButton: a button which brings up a wxFontDialog
 //-----------------------------------------------------------------------------
-
-#define wxFONTBTN_DEFAULT_STYLE \
-    (wxFNTP_FONTDESC_AS_LABEL | wxFNTP_USEFONT_FOR_LABEL)
 
 class WXDLLIMPEXP_CORE wxGenericFontButton : public wxButton,
                                              public wxFontPickerWidgetBase
 {
 public:
-    wxGenericFontButton() {}
+    wxGenericFontButton() = default;
     wxGenericFontButton(wxWindow *parent,
                         wxWindowID id,
                         const wxFont &initial = wxNullFont,
@@ -34,12 +29,18 @@ public:
                         const wxSize& size = wxDefaultSize,
                         long style = wxFONTBTN_DEFAULT_STYLE,
                         const wxValidator& validator = wxDefaultValidator,
-                        const wxString& name = wxFontPickerWidgetNameStr)
+                        const wxString& name = wxASCII_STR(wxFontPickerWidgetNameStr))
     {
         Create(parent, id, initial, pos, size, style, validator, name);
     }
 
-    virtual ~wxGenericFontButton() {}
+    virtual wxColour GetSelectedColour() const override
+        { return m_data.GetColour(); }
+
+    virtual void SetSelectedColour(const wxColour &colour) override
+        { m_data.SetColour(colour); UpdateFont(); }
+
+    virtual ~wxGenericFontButton() = default;
 
 
 public:     // API extensions specific for wxGenericFontButton
@@ -47,8 +48,8 @@ public:     // API extensions specific for wxGenericFontButton
     // user can override this to init font data in a different way
     virtual void InitFontData();
 
-    // returns the font data shown in wxColourDialog
-    wxFontData *GetFontData() { return &ms_data; }
+    // returns the font data shown in wxFontDialog
+    wxFontData *GetFontData() { return &m_data; }
 
 
 public:
@@ -60,22 +61,19 @@ public:
                 const wxSize& size = wxDefaultSize,
                 long style = wxFONTBTN_DEFAULT_STYLE,
                 const wxValidator& validator = wxDefaultValidator,
-                const wxString& name = wxFontPickerWidgetNameStr);
+                const wxString& name = wxASCII_STR(wxFontPickerWidgetNameStr));
 
     void OnButtonClick(wxCommandEvent &);
 
 
 protected:
 
-    void UpdateFont();
+    void UpdateFont() override;
 
-    // the colour data shown in wxColourPickerCtrlGeneric
-    // controls. This member is static so that all colour pickers
-    // in the program share the same set of custom colours.
-    static wxFontData ms_data;
+    wxFontData m_data;
 
 private:
-   DECLARE_DYNAMIC_CLASS(wxGenericFontButton)
+    wxDECLARE_DYNAMIC_CLASS(wxGenericFontButton);
 };
 
 

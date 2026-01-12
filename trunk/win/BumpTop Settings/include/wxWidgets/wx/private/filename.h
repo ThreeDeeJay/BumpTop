@@ -1,10 +1,8 @@
 /////////////////////////////////////////////////////////////////////////////
-// Name:        include/wx/private/filename.h
+// Name:        wx/private/filename.h
 // Purpose:     Internal declarations for src/common/filename.cpp
 // Author:      Mike Wetherell
-// Modified by:
 // Created:     2006-10-22
-// RCS-ID:      $Id: filename.h 42277 2006-10-23 13:10:12Z MW $
 // Copyright:   (c) 2006 Mike Wetherell
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -28,13 +26,13 @@
 #if wxUSE_FILE
 wxString wxCreateTempFileName(const wxString& prefix,
                               wxFile *fileTemp,
-                              bool *deleteOnClose = NULL);
+                              bool *deleteOnClose = nullptr);
 #endif
 
 #if wxUSE_FFILE
 wxString wxCreateTempFileName(const wxString& prefix,
                               wxFFile *fileTemp,
-                              bool *deleteOnClose = NULL);
+                              bool *deleteOnClose = nullptr);
 #endif
 
 // Returns an open temp file, if possible either an unlinked open file or one

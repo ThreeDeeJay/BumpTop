@@ -1,166 +1,173 @@
 /////////////////////////////////////////////////////////////////////////////
-// Name:        dcclient.h
+// Name:        wx/gtk/dcclient.h
 // Purpose:
 // Author:      Robert Roebling
-// Id:          $Id: dcclient.h 43590 2006-07-25 00:33:14Z VZ $
 // Copyright:   (c) 1998 Robert Roebling
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
-#ifndef __GTKDCCLIENTH__
-#define __GTKDCCLIENTH__
+#ifndef _WX_GTKDCCLIENT_H_
+#define _WX_GTKDCCLIENT_H_
 
-#include "wx/dc.h"
-#include "wx/region.h"
-
-class WXDLLIMPEXP_CORE wxWindow;
+#include "wx/gtk/dc.h"
 
 //-----------------------------------------------------------------------------
-// wxWindowDC
+// wxWindowDCImpl
 //-----------------------------------------------------------------------------
 
-class WXDLLIMPEXP_CORE wxWindowDC : public wxDC
+class WXDLLIMPEXP_CORE wxWindowDCImpl : public wxGTKDCImpl
 {
 public:
-    wxWindowDC();
-    wxWindowDC( wxWindow *win );
+    wxWindowDCImpl( wxDC *owner );
+    wxWindowDCImpl( wxDC *owner, wxWindow *win );
 
-    virtual ~wxWindowDC();
+    virtual ~wxWindowDCImpl();
 
-    virtual bool CanDrawBitmap() const { return true; }
-    virtual bool CanGetTextExtent() const { return true; }
+    virtual bool CanDrawBitmap() const override { return true; }
+    virtual bool CanGetTextExtent() const override { return true; }
 
-protected:
-    virtual void DoGetSize(int *width, int *height) const;
-    virtual bool DoFloodFill( wxCoord x, wxCoord y, const wxColour& col, int style=wxFLOOD_SURFACE );
-    virtual bool DoGetPixel( wxCoord x1, wxCoord y1, wxColour *col ) const;
+    virtual void DoGetSize(int *width, int *height) const override;
+    virtual bool DoFloodFill( wxCoord x, wxCoord y, const wxColour& col,
+                              wxFloodFillStyle style=wxFLOOD_SURFACE ) override;
+    virtual bool DoGetPixel( wxCoord x1, wxCoord y1, wxColour *col ) const override;
 
-    virtual void DoDrawLine( wxCoord x1, wxCoord y1, wxCoord x2, wxCoord y2 );
-    virtual void DoCrossHair( wxCoord x, wxCoord y );
+    virtual void DoDrawLine( wxCoord x1, wxCoord y1, wxCoord x2, wxCoord y2 ) override;
+    virtual void DoCrossHair( wxCoord x, wxCoord y ) override;
     virtual void DoDrawArc( wxCoord x1, wxCoord y1, wxCoord x2, wxCoord y2,
-                            wxCoord xc, wxCoord yc );
+                            wxCoord xc, wxCoord yc ) override;
     virtual void DoDrawEllipticArc( wxCoord x, wxCoord y, wxCoord width, wxCoord height,
-                                    double sa, double ea );
-    virtual void DoDrawPoint( wxCoord x, wxCoord y );
+                                    double sa, double ea ) override;
+    virtual void DoDrawPoint( wxCoord x, wxCoord y ) override;
 
-    virtual void DoDrawLines(int n, wxPoint points[],
-                             wxCoord xoffset, wxCoord yoffset);
-    virtual void DoDrawPolygon(int n, wxPoint points[],
+    virtual void DoDrawLines(int n, const wxPoint points[],
+                             wxCoord xoffset, wxCoord yoffset) override;
+    virtual void DoDrawPolygon(int n, const wxPoint points[],
                                wxCoord xoffset, wxCoord yoffset,
-                               int fillStyle = wxODDEVEN_RULE);
+                               wxPolygonFillMode fillStyle = wxODDEVEN_RULE) override;
 
-    virtual void DoDrawRectangle( wxCoord x, wxCoord y, wxCoord width, wxCoord height );
-    virtual void DoDrawRoundedRectangle( wxCoord x, wxCoord y, wxCoord width, wxCoord height, double radius = 20.0 );
-    virtual void DoDrawEllipse( wxCoord x, wxCoord y, wxCoord width, wxCoord height );
+    virtual void DoDrawRectangle( wxCoord x, wxCoord y, wxCoord width, wxCoord height ) override;
+    virtual void DoDrawRoundedRectangle( wxCoord x, wxCoord y, wxCoord width, wxCoord height, double radius = 20.0 ) override;
+    virtual void DoDrawEllipse( wxCoord x, wxCoord y, wxCoord width, wxCoord height ) override;
 
-    virtual void DoDrawIcon( const wxIcon &icon, wxCoord x, wxCoord y );
+    virtual void DoDrawIcon( const wxIcon &icon, wxCoord x, wxCoord y ) override;
     virtual void DoDrawBitmap( const wxBitmap &bitmap, wxCoord x, wxCoord y,
-                               bool useMask = false );
+                               bool useMask = false ) override;
 
-    virtual bool DoBlit( wxCoord xdest, wxCoord ydest, wxCoord width, wxCoord height,
+    virtual bool DoBlit( wxCoord xdest, wxCoord ydest,
+                         wxCoord width, wxCoord height,
                          wxDC *source, wxCoord xsrc, wxCoord ysrc,
-                         int logical_func = wxCOPY, bool useMask = false, wxCoord xsrcMask = -1, wxCoord ysrcMask = -1 );
+                         wxRasterOperationMode logical_func = wxCOPY,
+                         bool useMask = false,
+                         wxCoord xsrcMask = -1, wxCoord ysrcMask = -1 ) override;
 
-    virtual void DoDrawText( const wxString &text, wxCoord x, wxCoord y );
+    virtual void DoDrawText( const wxString &text, wxCoord x, wxCoord y ) override;
     virtual void DoDrawRotatedText(const wxString& text, wxCoord x, wxCoord y,
-                                   double angle);
+                                   double angle) override;
     virtual void DoGetTextExtent( const wxString &string,
                                 wxCoord *width, wxCoord *height,
-                                wxCoord *descent = (wxCoord *) NULL,
-                                wxCoord *externalLeading = (wxCoord *) NULL,
-                                wxFont *theFont = (wxFont *) NULL) const;
-    virtual bool DoGetPartialTextExtents(const wxString& text, wxArrayInt& widths) const;
-    virtual void DoSetClippingRegion( wxCoord x, wxCoord y, wxCoord width, wxCoord height );
-    virtual void DoSetClippingRegionAsRegion( const wxRegion &region );
+                                wxCoord *descent = nullptr,
+                                wxCoord *externalLeading = nullptr,
+                                const wxFont *theFont = nullptr) const override;
+    virtual bool DoGetPartialTextExtents(const wxString& text, wxArrayInt& widths) const override;
+    virtual void DoSetClippingRegion( wxCoord x, wxCoord y, wxCoord width, wxCoord height ) override;
+    virtual void DoSetDeviceClippingRegion( const wxRegion &region ) override;
+    virtual bool DoGetClippingRect(wxRect& rect) const override;
 
+    virtual wxCoord GetCharWidth() const override;
+    virtual wxCoord GetCharHeight() const override;
 
-public:
-    virtual wxCoord GetCharWidth() const;
-    virtual wxCoord GetCharHeight() const;
+    virtual void Clear() override;
 
-    virtual void Clear();
+    virtual void SetFont( const wxFont &font ) override;
+    virtual void SetPen( const wxPen &pen ) override;
+    virtual void SetBrush( const wxBrush &brush ) override;
+    virtual void SetBackground( const wxBrush &brush ) override;
+    virtual void SetLogicalFunction( wxRasterOperationMode function ) override;
+    virtual void SetTextForeground( const wxColour &col ) override;
+    virtual void SetTextBackground( const wxColour &col ) override;
+    virtual void SetBackgroundMode( int mode ) override;
 
-    virtual void SetFont( const wxFont &font );
-    virtual void SetPen( const wxPen &pen );
-    virtual void SetBrush( const wxBrush &brush );
-    virtual void SetBackground( const wxBrush &brush );
-    virtual void SetLogicalFunction( int function );
-    virtual void SetTextForeground( const wxColour &col );
-    virtual void SetTextBackground( const wxColour &col );
-    virtual void SetBackgroundMode( int mode );
-    virtual void SetPalette( const wxPalette& palette );
+#if wxUSE_PALETTE
+    virtual void SetPalette( const wxPalette& palette ) override;
+#endif
 
-    virtual void DestroyClippingRegion();
+    virtual void DestroyClippingRegion() override;
 
     // Resolution in pixels per logical inch
-    virtual wxSize GetPPI() const;
-    virtual int GetDepth() const;
+    virtual wxSize GetPPI() const override;
+    virtual int GetDepth() const override;
 
-    // overrriden here for RTL
-    virtual void SetDeviceOrigin( wxCoord x, wxCoord y );
-    virtual void SetAxisOrientation( bool xLeftRight, bool yBottomUp );
+    // overridden here for RTL
+    virtual void SetDeviceOrigin( wxCoord x, wxCoord y ) override;
+    virtual void SetAxisOrientation( bool xLeftRight, bool yBottomUp ) override;
 
 // protected:
     // implementation
     // --------------
 
-    GdkWindow    *m_window;
+    GdkWindow    *m_gdkwindow;
     GdkGC        *m_penGC;
     GdkGC        *m_brushGC;
     GdkGC        *m_textGC;
     GdkGC        *m_bgGC;
     GdkColormap  *m_cmap;
-    bool          m_isMemDC;
     bool          m_isScreenDC;
-    wxWindow     *m_owner;
     wxRegion      m_currentClippingRegion;
     wxRegion      m_paintClippingRegion;
+    bool          m_isClipBoxValid;
 
     // PangoContext stuff for GTK 2.0
     PangoContext *m_context;
     PangoLayout *m_layout;
     PangoFontDescription *m_fontdesc;
 
-    void SetUpDC();
+    void SetUpDC( bool ismem = false );
+    void DontClipSubWindows();
     void Destroy();
-    
-    virtual void ComputeScaleAndOrigin();
 
-    virtual GdkWindow *GetGDKWindow() const { return m_window; }
+    virtual void ComputeScaleAndOrigin() override;
+
+    virtual GdkWindow *GetGDKWindow() const override { return m_gdkwindow; }
+
+    // Update the internal clip box variables
+    void UpdateClipBox();
 
 private:
-    DECLARE_DYNAMIC_CLASS(wxWindowDC)
+    void DrawingSetup(GdkGC*& gc, bool& originChanged);
+    GdkPixmap* MonoToColor(GdkPixmap* monoPixmap, int x, int y, int w, int h) const;
+
+    wxDECLARE_ABSTRACT_CLASS(wxWindowDCImpl);
 };
 
 //-----------------------------------------------------------------------------
-// wxClientDC
+// wxClientDCImpl
 //-----------------------------------------------------------------------------
 
-class WXDLLIMPEXP_CORE wxClientDC : public wxWindowDC
+class WXDLLIMPEXP_CORE wxClientDCImpl : public wxWindowDCImpl
 {
 public:
-    wxClientDC() { }
-    wxClientDC( wxWindow *win );
+    wxClientDCImpl( wxDC *owner );
+    wxClientDCImpl( wxDC *owner, wxWindow *win );
 
-protected:
-    virtual void DoGetSize(int *width, int *height) const;
+    virtual void DoGetSize(int *width, int *height) const override;
 
-private:
-    DECLARE_DYNAMIC_CLASS(wxClientDC)
+    static bool
+    CanBeUsedForDrawing(const wxWindow* WXUNUSED(window)) { return true; }
+
+    wxDECLARE_ABSTRACT_CLASS(wxClientDCImpl);
 };
 
 //-----------------------------------------------------------------------------
-// wxPaintDC
+// wxPaintDCImpl
 //-----------------------------------------------------------------------------
 
-class WXDLLIMPEXP_CORE wxPaintDC : public wxClientDC
+class WXDLLIMPEXP_CORE wxPaintDCImpl : public wxClientDCImpl
 {
 public:
-    wxPaintDC() { }
-    wxPaintDC( wxWindow *win );
+    wxPaintDCImpl( wxDC *owner );
+    wxPaintDCImpl( wxDC *owner, wxWindow *win );
 
-private:
-    DECLARE_DYNAMIC_CLASS(wxPaintDC)
+    wxDECLARE_ABSTRACT_CLASS(wxPaintDCImpl);
 };
 
-#endif // __GTKDCCLIENTH__
+#endif // _WX_GTKDCCLIENT_H_

@@ -1,8 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Name:        wx/motif/dataobj.h
-// Purpose:     declaration of the wxDataObject class for Motif
+// Name:        wx/x11/dataobj.h
+// Purpose:     declaration of the wxDataObject class for X11
 // Author:      Julian Smart
-// RCS-ID:      $Id: dataobj.h 41020 2006-09-05 20:47:48Z VZ $
 // Copyright:   (c) 1998 Robert Roebling
 // Licence:     wxWindows licence
 ///////////////////////////////////////////////////////////////////////////////
@@ -11,16 +10,16 @@
 #define _WX_X11_DATAOBJ_H_
 
 // ----------------------------------------------------------------------------
-// wxDataObject is the same as wxDataObjectBase under wxMotif
+// wxDataObject is the same as wxDataObjectBase under X11
 // ----------------------------------------------------------------------------
 
 class WXDLLIMPEXP_CORE wxDataObject : public wxDataObjectBase
 {
 public:
     wxDataObject();
-    
+
 #ifdef __DARWIN__
-    virtual ~wxDataObject() { }
+    virtual ~wxDataObject() = default;
 #endif
 
     virtual bool IsSupportedFormat( const wxDataFormat& format, Direction dir = Get ) const;

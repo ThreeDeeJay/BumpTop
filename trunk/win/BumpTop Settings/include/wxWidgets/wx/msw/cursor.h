@@ -2,9 +2,7 @@
 // Name:        wx/msw/cursor.h
 // Purpose:     wxCursor class
 // Author:      Julian Smart
-// Modified by:
 // Created:     01/02/97
-// RCS-ID:      $Id: cursor.h 49804 2007-11-10 01:09:42Z VZ $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -12,35 +10,46 @@
 #ifndef _WX_CURSOR_H_
 #define _WX_CURSOR_H_
 
-#include "wx/msw/gdiimage.h"
-
 class WXDLLIMPEXP_FWD_CORE wxImage;
 
 // Cursor
-class WXDLLEXPORT wxCursor : public wxGDIImage
+class WXDLLIMPEXP_CORE wxCursor : public wxCursorBase
 {
 public:
     // constructors
     wxCursor();
+    wxCursor(const wxBitmap& bitmap, const wxPoint& hotSpot);
+    wxCursor(const wxBitmap& bitmap, int hotSpotX = 0, int hotSpotY = 0)
+        : wxCursor(bitmap, wxPoint(hotSpotX, hotSpotY)) { }
+#if wxUSE_IMAGE
     wxCursor(const wxImage& image);
-    wxCursor(const char bits[], int width, int height,
-             int hotSpotX = -1, int hotSpotY = -1,
-             const char maskBits[] = NULL);
+    wxCursor(const char* const* xpmData);
+#endif // wxUSE_IMAGE
+    wxCursor(const wxString& name, wxBitmapType type, const wxPoint& hotSpot)
+        : wxCursor(name, type, hotSpot.x, hotSpot.y) { }
     wxCursor(const wxString& name,
-             long flags = wxBITMAP_TYPE_CUR_RESOURCE,
+             wxBitmapType type = wxCURSOR_DEFAULT_TYPE,
              int hotSpotX = 0, int hotSpotY = 0);
-    wxCursor(int idCursor);
-    virtual ~wxCursor();
+    wxCursor(wxStockCursor id) { InitFromStock(id); }
+
+    virtual wxPoint GetHotSpot() const override;
 
     // implementation only
     void SetHCURSOR(WXHCURSOR cursor) { SetHandle((WXHANDLE)cursor); }
     WXHCURSOR GetHCURSOR() const { return (WXHCURSOR)GetHandle(); }
 
 protected:
-    virtual wxGDIImageRefData *CreateData() const;
+    void InitFromStock(wxStockCursor);
+
+    virtual wxGDIImageRefData *CreateData() const override;
 
 private:
-    DECLARE_DYNAMIC_CLASS(wxCursor)
+    void InitFromBitmap(const wxBitmap& bmp, const wxPoint& hotSpot);
+#if wxUSE_IMAGE
+    void InitFromImage(const wxImage& image);
+#endif // wxUSE_IMAGE
+
+    wxDECLARE_DYNAMIC_CLASS(wxCursor);
 };
 
 #endif

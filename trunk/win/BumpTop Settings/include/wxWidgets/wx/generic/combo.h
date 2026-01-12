@@ -2,9 +2,7 @@
 // Name:        wx/generic/combo.h
 // Purpose:     Generic wxComboCtrl
 // Author:      Jaakko Salli
-// Modified by:
 // Created:     Apr-30-2006
-// RCS-ID:      $Id: combo.h 41835 2006-10-09 20:12:19Z RR $
 // Copyright:   (c) Jaakko Salli
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
@@ -17,6 +15,8 @@
 // Only define generic if native doesn't have all the features
 #if !defined(wxCOMBOCONTROL_FULLY_FEATURED)
 
+#include "wx/containr.h"
+
 // ----------------------------------------------------------------------------
 // Generic wxComboCtrl
 // ----------------------------------------------------------------------------
@@ -26,18 +26,19 @@
 // all actions of single line text controls are supported
 
 // popup/dismiss the choice window
-#define wxACTION_COMBOBOX_POPUP     _T("popup")
-#define wxACTION_COMBOBOX_DISMISS   _T("dismiss")
+#define wxACTION_COMBOBOX_POPUP     wxT("popup")
+#define wxACTION_COMBOBOX_DISMISS   wxT("dismiss")
 
 #endif
 
-extern WXDLLIMPEXP_DATA_CORE(const wxChar) wxComboBoxNameStr[];
+extern WXDLLIMPEXP_DATA_CORE(const char) wxComboBoxNameStr[];
 
-class WXDLLEXPORT wxGenericComboCtrl : public wxComboCtrlBase
+class WXDLLIMPEXP_CORE wxGenericComboCtrl
+    : public wxNavigationEnabled<wxComboCtrlBase>
 {
 public:
     // ctors and such
-    wxGenericComboCtrl() : wxComboCtrlBase() { Init(); }
+    wxGenericComboCtrl() { Init(); }
 
     wxGenericComboCtrl(wxWindow *parent,
                        wxWindowID id = wxID_ANY,
@@ -46,8 +47,7 @@ public:
                        const wxSize& size = wxDefaultSize,
                        long style = 0,
                        const wxValidator& validator = wxDefaultValidator,
-                       const wxString& name = wxComboBoxNameStr)
-        : wxComboCtrlBase()
+                       const wxString& name = wxASCII_STR(wxComboBoxNameStr))
     {
         Init();
 
@@ -61,13 +61,13 @@ public:
                 const wxSize& size = wxDefaultSize,
                 long style = 0,
                 const wxValidator& validator = wxDefaultValidator,
-                const wxString& name = wxComboBoxNameStr);
+                const wxString& name = wxASCII_STR(wxComboBoxNameStr));
 
     virtual ~wxGenericComboCtrl();
 
     void SetCustomPaintWidth( int width );
 
-    virtual bool IsKeyPopupToggle(const wxKeyEvent& event) const;
+    virtual bool IsKeyPopupToggle(const wxKeyEvent& event) const override;
 
     static int GetFeatures() { return wxComboCtrlFeatures::All; }
 
@@ -80,8 +80,21 @@ public:
 
 protected:
 
+    // Dummies for platform-specific wxTextEntry implementations
+#if defined(__WXUNIVERSAL__)
+    // Looks like there's nothing we need to override here
+#elif defined(__WXGTK__)
+    virtual GtkEditable *GetEditable() const override { return nullptr; }
+    virtual GtkEntry *GetEntry() const override { return nullptr; }
+#elif defined(__WXOSX__)
+    virtual wxTextWidgetImpl * GetTextPeer() const override;
+#endif
+
+    // For better transparent background rendering
+    virtual bool HasTransparentBackground() override;
+
     // Mandatory virtuals
-    virtual void OnResize();
+    virtual void OnResize() override;
 
     // Event handlers
     void OnPaintEvent( wxPaintEvent& event );
@@ -90,9 +103,9 @@ protected:
 private:
     void Init();
 
-    DECLARE_EVENT_TABLE()
+    wxDECLARE_EVENT_TABLE();
 
-    DECLARE_DYNAMIC_CLASS(wxGenericComboCtrl)
+    wxDECLARE_DYNAMIC_CLASS(wxGenericComboCtrl);
 };
 
 
@@ -101,7 +114,7 @@ private:
 // If native wxComboCtrl was not defined, then prepare a simple
 // front-end so that wxRTTI works as expected.
 
-class WXDLLEXPORT wxComboCtrl : public wxGenericComboCtrl
+class WXDLLIMPEXP_CORE wxComboCtrl : public wxGenericComboCtrl
 {
 public:
     wxComboCtrl() : wxGenericComboCtrl() {}
@@ -113,18 +126,18 @@ public:
                 const wxSize& size = wxDefaultSize,
                 long style = 0,
                 const wxValidator& validator = wxDefaultValidator,
-                const wxString& name = wxComboBoxNameStr)
+                const wxString& name = wxASCII_STR(wxComboBoxNameStr))
         : wxGenericComboCtrl()
     {
         (void)Create(parent, id, value, pos, size, style, validator, name);
     }
 
-    virtual ~wxComboCtrl() {}
+    virtual ~wxComboCtrl() = default;
 
 protected:
 
 private:
-    DECLARE_DYNAMIC_CLASS(wxComboCtrl)
+    wxDECLARE_DYNAMIC_CLASS(wxComboCtrl);
 };
 
 #endif // _WX_COMBOCONTROL_H_
