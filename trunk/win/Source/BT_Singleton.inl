@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#define shared_ptr boost::shared_ptr
+#define exception std::exception
+
 template <class T>
 T *Singleton<T>::getInstance()
 {
@@ -22,13 +25,13 @@ T *Singleton<T>::getInstance()
 }
 
 template <class T>
-boost::shared_ptr<T> Singleton<T>::getSharedInstance()
+shared_ptr<T> Singleton<T>::getSharedInstance()
 {
 	// XXX: is this threadsafe?
-	static boost::shared_ptr<T> sharedInstance(new T);
+	static shared_ptr<T> sharedInstance(new T);
 
 #if BTDEBUG
-	static boost::shared_ptr<T> prevSharedInstance(sharedInstance);
+	static shared_ptr<T> prevSharedInstance(sharedInstance);
 	assert(sharedInstance == prevSharedInstance);
 #endif
 
