@@ -22,7 +22,7 @@ T *Singleton<T>::getInstance()
 }
 
 template <class T>
-boost::shared_ptr<T> Singleton<T>::getSharedInstance()
+std::shared_ptr<T> Singleton<T>::getSharedInstance()
 {
 	// XXX: is this threadsafe?
 	static shared_ptr<T> sharedInstance(new T);

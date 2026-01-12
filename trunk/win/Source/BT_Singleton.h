@@ -24,7 +24,7 @@ class Singleton
 public:
 
 	static inline T *getInstance();
-	static inline boost::shared_ptr<T> getSharedInstance();
+	static inline std::shared_ptr<T> getSharedInstance();
 };
 
 // -----------------------------------------------------------------------------
